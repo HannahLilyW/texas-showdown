@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<form id="loginform" method="">
+<label for="nameInput">Name:</label>
+<input type="text" id="nameInput">
+</form>
+
+<div id="playersInLobby">Players in Lobby:</div>
+{% for i in range(11) %}
+  <div>{{ i }}</div>
+{% endfor %}
+{% endblock %}
+
+{% block more_css %}
+{% endblock %}
+
+{% block more_js %}
+{% endblock %}
