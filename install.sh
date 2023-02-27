@@ -35,6 +35,15 @@ cp -r dist /var/www/html/
 
 cp -r /root/texas-showdown/texas /usr/lib
 
+# install the requirements for the django server in a python virtual environment
+cd /usr/lib/texas/
+python3 -m venv env
+source env/bin/activate
+pip install -r requirements.txt
+
+cd texas
+python manage.py migrate
+
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import secrets; print(secrets.token_urlsafe())')
 
@@ -59,15 +68,6 @@ ExecStart=/bin/bash -c 'cd / && source env/bin/activate && python manage.py runs
 [Install]
 WantedBy=multi-user.target
 EOF
-
-# install the requirements for the django server in a python virtual environment
-cd /usr/lib/texas/
-python3 -m venv env
-source env/bin/activate
-pip install -r requirements.txt
-
-cd texas
-python manage.py migrate
 
 systemctl daemon-reload
 systemctl enable httpd

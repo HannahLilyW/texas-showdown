@@ -20,6 +20,8 @@ python manage.py runserver
 
 # Update production environment
 
+Tested only on Rocky Linux 8
+
 ## First-time setup
 
 Run the following as root on the server:
@@ -27,6 +29,7 @@ Run the following as root on the server:
 cd /root
 git clone https://github.com/HannahLilyW/texas-showdown.git
 cd texas-showdown
+chmod 700 *.sh
 ./install.sh
 ```
 
