@@ -22,33 +22,12 @@ python manage.py runserver
 
 ## First-time setup
 
-Ensure the latest version of nodejs 16 is installed on the server. On Rocky Linux 8, install by running the following as root:
+Run the following as root on the server:
 ```
-dnf module reset nodejs
-dnf module install nodejs:16
-```
-
-Ensure httpd is installed on the server. On Rocky Linux 8, install by running the following as root:
-```
-dnf install httpd
-```
-
-Create the file `/etc/httpd/conf.d/texas.conf` and make it have the following contents, replacing XX.XX.XX.XX with the server's IP:
-```
-<VirtualHost XX.XX.XX.XX:80>
-    DocumentRoot "/var/www/html/dist/"
-</VirtualHost>
-```
-
-On the server, run the following as root from the /root directory:
-```
+cd /root
 git clone https://github.com/HannahLilyW/texas-showdown.git
-cd texas-showdown/vue-project/
-npm install
-npm run build
-cp -r dist /var/www/html/
-systemctl restart httpd
-cd /root/texas-showdown/texas/
+cd texas-showdown
+./install.sh
 ```
 
 ## Subsequent updates
@@ -58,8 +37,5 @@ Run the following as root:
 ```
 cd /root/texas-showdown/
 git pull
-cd vue-project/
-npm run build
-cp -r dist /var/www/html/
-systemctl restart httpd
+./update.sh
 ```
