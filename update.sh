@@ -17,4 +17,3 @@ cd texas
 python manage.py migrate
 
 systemctl restart httpd
-systemctl restart texas

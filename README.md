@@ -29,7 +29,6 @@ Run the following as root on the server:
 cd /root
 git clone https://github.com/HannahLilyW/texas-showdown.git
 cd texas-showdown
-chmod 700 *.sh
 ./install.sh
 ```
 

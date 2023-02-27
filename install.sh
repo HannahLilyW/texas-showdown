@@ -60,6 +60,7 @@ echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
 [django]
 secret_key = "$djangoSecretKey"
+is_development = false
 EOF
 
 echo "Running migrations..."

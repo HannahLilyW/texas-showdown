@@ -26,11 +26,15 @@ config.read(BASE_DIR / 'config.ini')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config['django']['secret_key']
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+# Only allow secure cookies in production
+SESSION_COOKIE_SECURE = not config['django'].getboolean('is_development')
+CSRF_COOKIE_SECURE = not config['django'].getboolean('is_development')
+
+# Only allow https in production
+SECURE_SSL_REDIRECT = not config['django'].getboolean('is_development')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = config['django'].getboolean('is_development')
 
 ALLOWED_HOSTS = ['localhost']
 
@@ -44,6 +48,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework'
 ]
 
 MIDDLEWARE = [
