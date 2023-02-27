@@ -18,6 +18,7 @@ fi
 
 dnf install httpd
 dnf install python39
+dnf install python39-mod_wsgi
 
 # This should get the server's IP
 ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
@@ -69,19 +70,19 @@ python manage.py migrate
 useradd django
 
 # create systemd service file for django server
-echo "Writing to /etc/systemd/system/texas.service..."
-cat > /etc/systemd/system/texas.service << EOF
-[Unit]
-Description=Texas Showdown Django Rest Framework service
+# echo "Writing to /etc/systemd/system/texas.service..."
+# cat > /etc/systemd/system/texas.service << EOF
+# [Unit]
+# Description=Texas Showdown Django Rest Framework service
 
-[Service]
-User=django
-WorkingDirectory=/usr/lib/texas
-ExecStart=/bin/bash -c 'cd / && source env/bin/activate && python manage.py runserver'
+# [Service]
+# User=django
+# WorkingDirectory=/usr/lib/texas
+# ExecStart=/bin/bash -c 'cd / && source env/bin/activate && python manage.py runserver'
 
-[Install]
-WantedBy=multi-user.target
-EOF
+# [Install]
+# WantedBy=multi-user.target
+# EOF
 
 systemctl daemon-reload
 systemctl enable httpd
