@@ -38,15 +38,15 @@ cp -r /root/texas-showdown/texas /usr/lib
 
 echo "Installing requirements for django server in python virtual environment..."
 cd /usr/lib/texas/
-python3 -m venv env
+python3.9 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import secrets; print(secrets.token_urlsafe())')
 
-echo "Writing to /usr/lib/texas/config.ini..."
-cat > /usr/lib/texas/config.ini << EOF
+echo "Writing to /usr/lib/texas/texas/config.ini..."
+cat > /usr/lib/texas/texas/config.ini << EOF
 [django]
 secret_key = "$djangoSecretKey"
 EOF
