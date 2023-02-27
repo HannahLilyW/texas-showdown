@@ -27,11 +27,21 @@ cat > /etc/httpd/conf.d/texas.conf << EOF
 <VirtualHost $ipAddress:80>
     DocumentRoot "/var/www/html/dist/"
 </VirtualHost>
+
+WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
+WSGIPythonHome /usr/lib/texas/env
+WSGiPythonPath /usr/lib/texas/texas
+
+<Directory /usr/lib/texas/texas/texas>
+<Files wsgi.py>
+Require all granted
+</Files>
+</Directory>
 EOF
 
 cd /root/texas-showdown/vue-project/
-npm install
-npm run build
+# npm install
+# npm run build
 cp -r dist /var/www/html/
 
 cp -r /root/texas-showdown/texas /usr/lib
@@ -43,7 +53,7 @@ source env/bin/activate
 pip install -r requirements.txt
 
 # generate a secret key for the django server
-djangoSecretKey=$(python -c 'import secrets; print(secrets.token_urlsafe())')
+djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; "".join(secrets.choice(alphabet) for i in range(64))')
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
@@ -75,6 +85,6 @@ EOF
 
 systemctl daemon-reload
 systemctl enable httpd
-systemctl enable texas
+# systemctl enable texas
 systemctl restart httpd
-systemctl restart texas
+# systemctl restart texas

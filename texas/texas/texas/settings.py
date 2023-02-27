@@ -26,6 +26,9 @@ config.read(BASE_DIR / 'config.ini')
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = config['django']['secret_key']
 
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
