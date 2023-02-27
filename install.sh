@@ -22,6 +22,7 @@ dnf install python39
 # This should get the server's IP
 ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
 
+echo "Writing to /etc/httpd/conf.d/texas.conf..."
 cat > /etc/httpd/conf.d/texas.conf << EOF
 <VirtualHost $ipAddress:80>
     DocumentRoot "/var/www/html/dist/"
@@ -35,18 +36,20 @@ cp -r dist /var/www/html/
 
 cp -r /root/texas-showdown/texas /usr/lib
 
-# install the requirements for the django server in a python virtual environment
+echo "Installing requirements for django server in python virtual environment..."
 cd /usr/lib/texas/
 python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 
+echo "Running migrations..."
 cd texas
 python manage.py migrate
 
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import secrets; print(secrets.token_urlsafe())')
 
+echo "Writing to /usr/lib/texas/config.ini..."
 cat > /usr/lib/texas/config.ini << EOF
 [django]
 secret_key = "$djangoSecretKey"
@@ -56,6 +59,7 @@ EOF
 useradd django
 
 # create systemd service file for django server
+echo "Writing to /etc/systemd/system/texas.service..."
 cat > /etc/systemd/system/texas.service << EOF
 [Unit]
 Description=Texas Showdown Django Rest Framework service
