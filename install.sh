@@ -42,10 +42,6 @@ python3 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 
-echo "Running migrations..."
-cd texas
-python manage.py migrate
-
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import secrets; print(secrets.token_urlsafe())')
 
@@ -54,6 +50,10 @@ cat > /usr/lib/texas/config.ini << EOF
 [django]
 secret_key = "$djangoSecretKey"
 EOF
+
+echo "Running migrations..."
+cd texas
+python manage.py migrate
 
 # create django user
 useradd django
