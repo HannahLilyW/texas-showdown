@@ -41,8 +41,8 @@ Require all granted
 EOF
 
 cd /root/texas-showdown/vue-project/
-# npm install
-# npm run build
+npm install
+npm run build
 cp -r dist /var/www/html/
 
 cp -r /root/texas-showdown/texas /usr/lib
@@ -54,7 +54,7 @@ source env/bin/activate
 pip install -r requirements.txt
 
 # generate a secret key for the django server
-djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; "".join(secrets.choice(alphabet) for i in range(64))')
+djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
@@ -69,23 +69,6 @@ python manage.py migrate
 # create django user
 useradd django
 
-# create systemd service file for django server
-# echo "Writing to /etc/systemd/system/texas.service..."
-# cat > /etc/systemd/system/texas.service << EOF
-# [Unit]
-# Description=Texas Showdown Django Rest Framework service
-
-# [Service]
-# User=django
-# WorkingDirectory=/usr/lib/texas
-# ExecStart=/bin/bash -c 'cd / && source env/bin/activate && python manage.py runserver'
-
-# [Install]
-# WantedBy=multi-user.target
-# EOF
-
 systemctl daemon-reload
 systemctl enable httpd
-# systemctl enable texas
 systemctl restart httpd
-# systemctl restart texas
