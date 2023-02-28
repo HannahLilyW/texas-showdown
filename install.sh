@@ -56,11 +56,15 @@ pip install -r requirements.txt
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
+echo "Please enter the domain name for the server (example: example.com):"
+read hostName
+
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
 [django]
-secret_key = "$djangoSecretKey"
+secret_key = $djangoSecretKey
 is_development = false
+hostname = $hostName
 EOF
 
 echo "Running migrations..."

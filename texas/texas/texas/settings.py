@@ -36,7 +36,7 @@ SECURE_SSL_REDIRECT = not config['django'].getboolean('is_development')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config['django'].getboolean('is_development')
 
-ALLOWED_HOSTS = ['localhost']
+ALLOWED_HOSTS = ['localhost', config['django']['hostname']]
 
 
 # Application definition
