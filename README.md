@@ -24,6 +24,8 @@ Tested only on Rocky Linux 8
 
 ## First-time setup
 
+Follow the steps here for initial setup: https://www.digitalocean.com/community/tutorials/initial-server-setup-with-rocky-linux-8
+
 Run the following as root on the server:
 ```
 cd /root

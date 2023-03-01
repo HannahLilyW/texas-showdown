@@ -1,6 +1,6 @@
 <script setup lang="ts">
 
-    const backendUrl = "/texas-showdown/";
+    const backendUrl = "/texas_api/";
 
     // Form data
     let text: string = "";

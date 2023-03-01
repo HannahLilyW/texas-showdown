@@ -19,6 +19,10 @@ fi
 dnf install httpd
 dnf install python39
 dnf install python39-mod_wsgi
+dnf install epel-release
+dnf install certbot
+dnf install python3-certbot-apache
+dnf install mod_ssl
 
 # This should get the server's IP
 ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
@@ -58,6 +62,8 @@ djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.as
 
 echo "Please enter the domain name for the server (example: example.com):"
 read hostName
+
+certbot --apache -d $hostName
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
