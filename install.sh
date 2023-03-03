@@ -33,6 +33,17 @@ cat > /etc/httpd/conf.d/texas.conf << EOF
     DocumentRoot "/var/www/html/dist/"
 </VirtualHost>
 
+<Directory /var/www/html/dist>
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+</Directory>
+
 WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
 WSGIPythonHome /usr/lib/texas/env
 WSGiPythonPath /usr/lib/texas/texas

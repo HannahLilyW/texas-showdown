@@ -43,3 +43,8 @@ cd /root/texas-showdown/
 git pull
 ./update.sh
 ```
+
+# Authentication
+The site uses the TokenAuthentication scheme provided by Django REST Framework. For more info see https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication
+
+TokenAuthentication is better than SessionAuthentication because SessionAuthentication is vulnerable to CSRF attacks. See https://stackoverflow.com/questions/54169145/django-rest-framework-session-auth-vs-token-auth-csrf for more info.
