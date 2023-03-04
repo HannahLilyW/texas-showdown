@@ -4,8 +4,8 @@ from django.core.exceptions import ValidationError
 from rest_framework import views, permissions, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
+from texas.logging import log
 import json
-import logging
 import re
 
 
@@ -58,7 +58,7 @@ class CreateAccountView(views.APIView):
         try:
             user = User.objects.create(username=username, password=password)
         except Exception as e:
-            logging.error(f'Error creating account: Unexpected error creating user object: {e}')
+            log.error(f'Error creating account: Unexpected error creating user object: {e}')
             return Response('Error creating account', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
         token = Token.objects.create(user=user)
