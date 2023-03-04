@@ -42,7 +42,10 @@ function createAccount(event: Event) {
 
     if (isValid()) {
         // Send the data
-        post("create_account/", {"username": username, "password": password}).then(r => {
+        post("create_account/", {
+            "username": username.value,
+            "password": password.value
+        }).then(r => {
             if (!r['error']) {
                 error.value = false
                 console.log('no error')
