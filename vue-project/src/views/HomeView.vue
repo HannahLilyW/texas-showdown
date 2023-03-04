@@ -1,25 +1,8 @@
 <script setup lang="ts">
-// import TheWelcome from '../components/TheWelcome.vue'
 </script>
 
 <template>
-  <nav>
-    <div class="route-wrapper">
-      <RouterLink to="/create-account">
-        <div class="route button" v-if="true">
-          Create Account
-        </div>
-      </RouterLink>
-      <RouterLink to="/login">
-        <div class="route button" v-if="true">
-          Log In
-        </div>
-      </RouterLink>
-    </div>
-  </nav>
-  <!-- <main>
-    <TheWelcome />
-  </main> -->
+  <div>Welcome, User!</div>
 </template>
 
 <style scoped>

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { post } from '../api.js'
+import { postCreateAccount } from '../api.js'
 import { watch, ref } from 'vue'
 import type { Ref } from 'vue'
+import router from '../router'
 
 // Form data
 let username: Ref<string> = ref("");
@@ -42,17 +43,11 @@ function createAccount(event: Event) {
 
     if (isValid()) {
         // Send the data
-        post("create_account/", {
-            "username": username.value,
-            "password": password.value
-        }).then(r => {
-            if (!r['error']) {
-                error.value = false
-                console.log('no error')
-            } else {
-                error.value = r['error']
+        postCreateAccount(username.value, password.value).then(resp => {
+            if (resp && resp['status'] == 'success') {
+                router.push('/home')
             }
-        })
+        });
     }
 };
 </script>

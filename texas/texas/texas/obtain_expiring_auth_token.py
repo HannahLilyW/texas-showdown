@@ -24,4 +24,4 @@ class ObtainExpiringAuthToken(ObtainAuthToken):
             # Delete the existing token and create a new one.
             token.delete()
             token = Token.objects.create(user=user)
-        return Response({'token': token.key})
+        return Response({'token': token.key, 'username': user.username})

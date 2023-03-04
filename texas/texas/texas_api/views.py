@@ -56,7 +56,7 @@ class CreateAccountView(views.APIView):
         # Validation complete.
 
         try:
-            user = User.objects.create(username=username, password=password)
+            user = User.objects.create_user(username=username, password=password)
         except Exception as e:
             log.error(f'Error creating account: Unexpected error creating user object: {e}')
             return Response('Error creating account', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -65,5 +65,5 @@ class CreateAccountView(views.APIView):
 
         return Response({
             'token': token.key,
-            'user_id': user.pk
+            'username': user.username
         })
