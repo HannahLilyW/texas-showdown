@@ -5,12 +5,16 @@
 <template>
   <nav>
     <div class="route-wrapper">
-      <div class="route" v-if="true">
-        <RouterLink to="/create-account">Create Account</RouterLink>
-      </div>
-      <div class="route" v-if="true">
-        <RouterLink to="/login">Log In</RouterLink>
-      </div>
+      <RouterLink to="/create-account">
+        <div class="route button" v-if="true">
+          Create Account
+        </div>
+      </RouterLink>
+      <RouterLink to="/login">
+        <div class="route button" v-if="true">
+          Log In
+        </div>
+      </RouterLink>
     </div>
   </nav>
   <!-- <main>
@@ -22,9 +26,13 @@
 .route-wrapper {
   display: flex;
   align-items: center;
+  gap: 8px;
+  margin: 8px;
 }
 .route {
-  padding-right: 8px;
+  margin-right: 8px;
+  margin: auto;
+  width: 150px;
 }
 
 </style>
