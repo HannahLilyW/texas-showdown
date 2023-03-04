@@ -88,8 +88,13 @@ echo "Running migrations..."
 cd texas
 python manage.py migrate
 
-# create django user
-useradd django
+# change the database owner to apache
+# and permanently change the selinux file context of the database and the directory it's in so apache is allowed to write to it
+chown apache:apache /usr/lib/texas/texas/db.sqlite3
+chown apache:apache /usr/lib/texas/texas
+semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
+semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
+restorecon -RF /usr/lib/texas/texas
 
 systemctl daemon-reload
 systemctl enable httpd

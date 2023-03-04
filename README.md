@@ -44,6 +44,9 @@ git pull
 ./update.sh
 ```
 
+# Where to find backend logs
+Backend error logs are saved at `/var/log/httpd/error_log`
+
 # Authentication
 The site uses the TokenAuthentication scheme provided by Django REST Framework. For more info see https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication
 
