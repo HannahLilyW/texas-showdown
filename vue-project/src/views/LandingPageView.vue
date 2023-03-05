@@ -1,34 +1,28 @@
 <script setup lang="ts">
+import router from '../router'
+
+function createAccount() {
+  router.push('/create-account');
+}
+
+function logIn() {
+  router.push('/login');
+}
+
 </script>
 
 <template>
   <nav>
-    <div class="route-wrapper">
-      <RouterLink to="/create-account">
-        <div class="route button" v-if="true">
+    <div class="buttons-row">
+        <div class="button" @click="createAccount()">
           Create Account
         </div>
-      </RouterLink>
-      <RouterLink to="/login">
-        <div class="route button" v-if="true">
+        <div class="button" @click="logIn()">
           Log In
         </div>
-      </RouterLink>
     </div>
   </nav>
 </template>
 
 <style scoped>
-.route-wrapper {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 8px;
-}
-.route {
-  margin-right: 8px;
-  margin: auto;
-  width: 150px;
-}
-
 </style>

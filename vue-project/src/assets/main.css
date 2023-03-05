@@ -8,9 +8,17 @@
 * {
   font-family: rye;
   color: var(--color-text);
+  text-decoration: none;
 }
 div, a {
   background-color: transparent;
+}
+
+.buttons-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px;
 }
 
 .button {
@@ -23,6 +31,9 @@ div, a {
   display: flex;
   justify-content: center;
   font-size: 16px;
+
+  margin-right: 8px;
+  padding: 4px 8px;
 }
 
 .button:hover {

@@ -9,6 +9,7 @@ let username: Ref<string> = ref("");
 let password: Ref<string> = ref("");
 let retypePassword: Ref<string> = ref("");
 
+// Status variables
 let passwordsMismatch: Ref<boolean> = ref(false);
 let invalid: Ref<boolean> = ref(true);
 let error: Ref<boolean|string> = ref(false);
@@ -65,6 +66,10 @@ function createAccount(event: Event) {
         })
     }
 };
+
+function cancel() {
+    router.push('/');
+}
 </script>
 
 <template>
@@ -86,7 +91,12 @@ function createAccount(event: Event) {
     </form>
     <div class="error" v-if="passwordsMismatch">Passwords do not match</div>
     <div class="error" v-if="error">{{ error }}</div>
-    <button class="button" :class="{disabled: invalid}" @click="createAccount($event)">Create New Account</button>
+    <div class="buttons-row">
+        <button class="button" :class="{disabled: invalid}" @click="createAccount($event)">Create New Account</button>
+        <button class="button" @click="cancel()">
+            Cancel
+        </button>
+    </div>
 </template>
 
 <style scoped>
