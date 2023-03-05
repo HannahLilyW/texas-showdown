@@ -24,7 +24,7 @@ function isValid() {
     )
 }
 
-watch(username, (newVal) => {
+watch(username, () => {
     invalid.value = !isValid();
 })
 watch(password, (newVal) => {
@@ -44,6 +44,7 @@ function createAccount(event: Event) {
     if (isValid()) {
         // Send the data
         postCreateAccount(username.value, password.value).then(resp => {
+            console.log(`resp: ${resp? resp['status'] : 'idk'}`)
             if (resp && resp['status'] == 'success') {
                 router.push('/home')
             }

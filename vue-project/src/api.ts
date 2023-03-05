@@ -67,6 +67,7 @@ export async function postLogin(username: string, password: string) {
     }
     try {
         response.json().then(responseJson => {
+            console.log(`responseJson: ${responseJson}`)
             if (responseJson['token'] && responseJson['username']) {
                 token = responseJson['token'];
                 uname = responseJson['username'];
