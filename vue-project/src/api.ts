@@ -3,9 +3,9 @@ import router from './router'
 const baseUrl: string = "/texas_api/";
 
 let token: string = "";
-let uname: string = "";
+export let username: string = "";
 
-async function postWithoutAuth(url: string, data: Record<string, any>) {
+export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {
         method: "POST",
         mode: "same-origin", // If a request is made to another origin with this mode set, the result is an error. Used to ensure that a request is always being made to your origin. See https://developer.mozilla.org/en-US/docs/Web/API/Request/mode
@@ -40,43 +40,10 @@ export async function post(url: string, data: Record<string, any>) {
     return response;
 }
 
-export async function postCreateAccount(username: string, password: string) {
-    const response = await postWithoutAuth('create_account/', {'username': username, 'password': password});
-    if (response.status != 200) {
-        return {"status": "error", "error": "Unable to create account"};
-    }
-    try {
-        response.json().then(responseJson => {
-            if (responseJson['token'] && responseJson['username']) {
-                token = responseJson['token'];
-                uname = responseJson['username'];
-            } else {
-                return {"status": "error", "error": "Unable to create account"};
-            }
-            return {"status": "success", "username": uname};
-        });
-    } catch (e) {
-        return {"status": "error", "error": "Unable to create account"};
-    }
+export function updateToken(newToken: string) {
+    token = newToken;
 }
 
-export async function postLogin(username: string, password: string) {
-    const response = await postWithoutAuth('login/', {'username': username, 'password': password});
-    if (response.status != 200) {
-        return {"status": "error", "error": "Unable to login"};
-    }
-    try {
-        response.json().then(responseJson => {
-            console.log(`responseJson: ${responseJson}`)
-            if (responseJson['token'] && responseJson['username']) {
-                token = responseJson['token'];
-                uname = responseJson['username'];
-            } else {
-                return {"status": "error", "error": "Unable to login"};
-            }
-            return {"status": "success", "username": uname};
-        });
-    } catch (e) {
-        return {"status": "error", "error": "Unable to login"};
-    }
+export function updateUsername(newUsername: string) {
+    username = newUsername;
 }

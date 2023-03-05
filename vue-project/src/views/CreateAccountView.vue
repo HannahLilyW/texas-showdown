@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { postCreateAccount } from '../api.js'
+import { postWithoutAuth, updateToken, updateUsername } from '../api.js'
 import { watch, ref } from 'vue'
 import type { Ref } from 'vue'
 import router from '../router'
@@ -37,18 +37,32 @@ watch(retypePassword, (newVal) => {
 })
 
 function createAccount(event: Event) {
+    error.value = false;
 
     // Needed because by default, pressing a button in a form will reload the page. We don't want that.
     event.preventDefault();
 
     if (isValid()) {
         // Send the data
-        postCreateAccount(username.value, password.value).then(resp => {
-            console.log(`resp: ${resp? resp['status'] : 'idk'}`)
-            if (resp && resp['status'] == 'success') {
-                router.push('/home')
+        postWithoutAuth('create_account/', {'username': username.value, 'password': password.value}).then(response => {
+            try {
+                response.json().then(responseJson => {
+                    if (response.status != 200) {
+                        error.value = `Error creating account: ${responseJson.toString()}`;
+                        return;
+                    }
+                    if (responseJson['token'] && responseJson['username']) {
+                        updateToken(responseJson['token']);
+                        updateUsername(responseJson['username']);
+                        router.push('/home');
+                    } else {
+                        error.value = 'Error creating account: Bad response from server';
+                    }
+                })
+            } catch (e) {
+                error.value = `Error creating account: ${e}`;
             }
-        });
+        })
     }
 };
 </script>
