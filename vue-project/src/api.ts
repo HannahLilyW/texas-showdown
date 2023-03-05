@@ -41,7 +41,7 @@ export async function post(url: string, data: Record<string, any>) {
 }
 
 export async function postCreateAccount(username: string, password: string) {
-    const response = await postWithoutAuth('create_account', {'username': username, 'password': password});
+    const response = await postWithoutAuth('create_account/', {'username': username, 'password': password});
     if (response.status != 200) {
         return {"status": "error", "error": "Unable to create account"};
     }
@@ -61,7 +61,7 @@ export async function postCreateAccount(username: string, password: string) {
 }
 
 export async function postLogin(username: string, password: string) {
-    const response = await postWithoutAuth('/login', {'username': username, 'password': password});
+    const response = await postWithoutAuth('login/', {'username': username, 'password': password});
     if (response.status != 200) {
         return {"status": "error", "error": "Unable to login"};
     }
