@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { Ref } from 'vue'
-import { postWithoutAuth, updateToken, updateUsername } from '../api.js'
-import router from '../router'
+import { ref } from 'vue';
+import type { Ref } from 'vue';
+import { postWithoutAuth, updateToken, updateUsername } from '../api.js';
+import router from '../router';
 
 // Form data
 let username: Ref<string> = ref("");
@@ -27,7 +27,7 @@ function login(event: Event) {
                 if (responseJson['token'] && responseJson['username']) {
                     updateToken(responseJson['token']);
                     updateUsername(responseJson['username']);
-                    router.push('/home');
+                    router.push('/');
                 } else {
                     error.value = 'Error logging in';
                 }

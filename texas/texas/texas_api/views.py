@@ -67,3 +67,10 @@ class CreateAccountView(views.APIView):
             'token': token.key,
             'username': user.username
         })
+
+
+class LogOutView(views.APIView):
+    # Endpoint for logging out
+    def post(self, request, format=None):
+        Token.objects.get(user=user).delete()
+        return Response('ok')

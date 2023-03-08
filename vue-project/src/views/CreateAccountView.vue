@@ -55,7 +55,7 @@ function createAccount(event: Event) {
                     if (responseJson['token'] && responseJson['username']) {
                         updateToken(responseJson['token']);
                         updateUsername(responseJson['username']);
-                        router.push('/home');
+                        router.push('/');
                     } else {
                         error.value = 'Error creating account: Bad response from server';
                     }

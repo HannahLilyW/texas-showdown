@@ -1,15 +1,27 @@
 <script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-// import HelloWorld from './components/HelloWorld.vue'
+import router from './router';
+import { RouterView } from 'vue-router'
+import { username, logout } from './api.js';
+
+function goToLanding() {
+  router.push('/');
+}
+
 </script>
 
 <template>
   <header>
     <div class="title-wrapper">
-      <RouterLink to="/"><img alt="Flag of Texas" class="logo" src="@/assets/flag64.png" width="64" height="43" /></RouterLink>
-      <div id="title">
+      <img alt="Flag of Texas" class="logo point" src="@/assets/flag64.png" width="64" height="43" @click="goToLanding()"/>
+      <div id="title" class="point" @click="goToLanding()">
         TEXAS SHOWDOWN
       </div>
+    </div>
+    <div class="user-info" v-if="username">
+      <div>
+        Welcome, {{ username }}
+      </div>
+      <div class="button" @click="logout()">Log Out</div>
     </div>
   </header>
 
@@ -19,6 +31,18 @@ import { RouterLink, RouterView } from 'vue-router'
 </template>
 
 <style scoped>
+
+header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.user-info {
+  display: flex;
+  justify-content: end;
+  align-items: center;
+}
+
 .title-wrapper {
   display: flex;
   align-items: center;

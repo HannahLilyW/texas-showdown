@@ -9,5 +9,6 @@ router = routers.DefaultRouter()
 urlpatterns = [
     path('create_account/', views.CreateAccountView.as_view()),
     path('login/', ObtainExpiringAuthToken.as_view()),
+    path('logout/', views.LogOutView.as_view()),
     path('', include(router.urls)),
 ]
