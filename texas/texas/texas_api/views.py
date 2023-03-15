@@ -1,10 +1,13 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from rest_framework import views, permissions, status
+from rest_framework import views, viewsets, mixins, permissions, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
+from rest_framework.decorators import action
 from texas.logging import log
+from texas_api.models import Game, Player
+from texas_api.serializers import CreateGameSerializer, GameSerializer
 import json
 import re
 
@@ -26,8 +29,6 @@ class CreateAccountView(views.APIView):
 
         # Validation
         if not isinstance(username, str):
-            print(username)
-            print(type(username))
             return Response('Username must be a string', status=status.HTTP_400_BAD_REQUEST)
         if not isinstance(password, str):
             return Response('Password must be a string', status=status.HTTP_400_BAD_REQUEST)
@@ -57,6 +58,7 @@ class CreateAccountView(views.APIView):
 
         try:
             user = User.objects.create_user(username=username, password=password)
+            player = Player.objects.create(user=user)
         except Exception as e:
             log.error(f'Error creating account: Unexpected error creating user object: {e}')
             return Response('Error creating account', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -72,5 +74,34 @@ class CreateAccountView(views.APIView):
 class LogOutView(views.APIView):
     # Endpoint for logging out
     def post(self, request, format=None):
-        Token.objects.get(user=user).delete()
+        Token.objects.get(user=request.user).delete()
         return Response('ok')
+
+
+class GameViewSet(
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
+    # Endpoints for creating/updating/retrieving games
+    queryset = Game.objects.none()
+
+    def get_queryset(self):
+        if self.action == 'create':
+            return Game.objects.none()
+        else:
+            return Game.objects.none()
+
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CreateGameSerializer
+        else:
+            return GameSerializer
+
+    @action(detail=False)
+    def get_current_game(self, request):
+        player = Player.objects.get(user=request.user)
+        if player.current_game:
+            serializer = GameSerializer(player.current_game)
+            return Response(serializer.data)
+        else:
+            return Response(None, status=status.HTTP_204_NO_CONTENT)

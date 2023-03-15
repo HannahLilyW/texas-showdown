@@ -11,6 +11,9 @@ import os
 
 from django.core.wsgi import get_wsgi_application
 
+import socketio
+from texas.sio_server import sio_server
+
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'texas.settings')
 
-application = get_wsgi_application()
+application = socketio.WSGIApp(sio_server, get_wsgi_application())

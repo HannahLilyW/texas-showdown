@@ -1,4 +1,4 @@
-import router from './router';
+import router from '../router';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 
@@ -7,7 +7,6 @@ const baseUrl: string = "/texas_api/";
 let token: string = sessionStorage.getItem("token") || "";
 let tokenCreated: Date|null = sessionStorage.getItem("tokenCreated") ? new Date(sessionStorage.getItem("tokenCreated") || "") : null;
 export let username: Ref<string> = ref(sessionStorage.getItem("username") || "");
-
 
 export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {
@@ -65,7 +64,9 @@ export async function get(url: string) {
 
 export function updateToken(newToken: string) {
     sessionStorage.setItem("token", newToken);
-    sessionStorage.setItem("tokenCreated", Date.now().toString());
+    const now = Date.now();
+    tokenCreated = new Date(now);
+    sessionStorage.setItem("tokenCreated", now.toString());
     token = newToken;
 }
 

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import { postWithoutAuth, updateToken, updateUsername } from '../api.js';
+import { postWithoutAuth, updateToken, updateUsername } from '../services/api.js';
 import router from '../router';
 
 // Form data
@@ -10,11 +10,8 @@ let password: Ref<string> = ref("");
 
 let error: Ref<boolean|string> = ref(false);
 
-function login(event: Event) {
+function login() {
     error.value = false;
-
-    // Needed because by default, pressing a button in a form will reload the page. We don't want that.
-    event.preventDefault();
 
     // Send the data
     postWithoutAuth('login/', {'username': username.value, 'password': password.value}).then(response => {
@@ -44,9 +41,9 @@ function cancel() {
 </script>
 
 <template>
-    <header>
+    <h2>
         Log In
-    </header>
+    </h2>
 
     <form>
         <label for="username">Username:</label>
@@ -56,7 +53,7 @@ function cancel() {
     </form>
     <div class="error" v-if="error">{{ error }}</div>
     <div class="buttons-row">
-        <button class="button" @click="login($event)">
+        <button class="button" @click="login()">
             Log In
         </button>
         <button class="button" @click="cancel()">
@@ -70,6 +67,7 @@ label {
     padding: 4px;
     margin: 4px;
     white-space: nowrap;
+    justify-self: end;
 }
 form {
     display: grid;

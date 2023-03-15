@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import router from './router';
 import { RouterView } from 'vue-router'
-import { username, logout } from './api.js';
+import { username, logout } from './services/api.js';
+
+if (!username.value) {
+  // Stop people from accidentally going to a page they need to be logged in for, before logging in
+  router.push('/');
+}
 
 function goToLanding() {
   router.push('/');

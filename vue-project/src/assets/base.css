@@ -1,26 +1,11 @@
-/* semantic color variables for this project */
-/* :root {
-  --color-background: #F8F0E3;
-  
-  --color-button: #C1B2A4;
-  --color-button-shadow: #7B7269;
-
-  --color-border: var(--vt-c-divider-light-2);
-  --color-border-hover: var(--vt-c-divider-light-1);
-
-  --color-heading: var(--vt-c-text-light-1);
-  --color-text: #342211;
-
-  --section-gap: 160px;
-} */
-
 /* @media (prefers-color-scheme: dark) { */
 :root {
   --color-background: #342211;
   --color-text: #E5DFDA;
   
   --color-button: #84694D;
-  --color-button-shadow: #654321;
+  --color-button-shadow: #51361A;
+  --color-button-pressed: #654321;
   --color-button-hover: #9D8771;
   --color-button-disabled: #888888;
   --color-button-disabled-shadow: #666666;
@@ -49,7 +34,6 @@ body {
   min-height: 100vh;
   color: var(--color-text);
   background: var(--color-background);
-  transition: color 0.5s, background-color 0.5s;
   line-height: 1.6;
   font-size: 16px;
   text-rendering: optimizeLegibility;

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { postWithoutAuth, updateToken, updateUsername } from '../api.js'
+import { postWithoutAuth, updateToken, updateUsername } from '../services/api.js'
 import { watch, ref } from 'vue'
 import type { Ref } from 'vue'
 import router from '../router'
@@ -37,15 +37,15 @@ watch(retypePassword, (newVal) => {
     invalid.value = !isValid();
 })
 
-function createAccount(event: Event) {
+function createAccount() {
     error.value = false;
-
-    // Needed because by default, pressing a button in a form will reload the page. We don't want that.
-    event.preventDefault();
 
     if (isValid()) {
         // Send the data
-        postWithoutAuth('create_account/', {'username': username.value, 'password': password.value}).then(response => {
+        postWithoutAuth('create_account/', {
+            'username': username.value,
+            'password': password.value
+        }).then(response => {
             try {
                 response.json().then(responseJson => {
                     if (response.status != 200) {
@@ -73,9 +73,9 @@ function cancel() {
 </script>
 
 <template>
-    <header>
+    <h2>
         Create New Account
-    </header>
+    </h2>
     <div>
         <p>Usernames must be 1-150 characters and may consist of letters, numbers, and underscores.</p>
         <p>Passwords must be 8-150 characters and may only contain letters, digits, and the following characters: _ ! @ # $ % ^ & * ( )</p>
@@ -92,10 +92,10 @@ function cancel() {
     <div class="error" v-if="passwordsMismatch">Passwords do not match</div>
     <div class="error" v-if="error">{{ error }}</div>
     <div class="buttons-row">
-        <button class="button" :class="{disabled: invalid}" @click="createAccount($event)">Create New Account</button>
-        <button class="button" @click="cancel()">
+        <div class="button" :class="{disabled: invalid}" @click="createAccount()">Create New Account</div>
+        <div class="button" @click="cancel()">
             Cancel
-        </button>
+        </div>
     </div>
 </template>
 
@@ -104,6 +104,7 @@ label {
     padding: 4px;
     margin: 4px;
     white-space: nowrap;
+    justify-self: end;
 }
 form {
     display: grid;
