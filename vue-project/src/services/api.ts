@@ -5,7 +5,7 @@ import { io } from "socket.io-client";
 
 const baseUrl: string = "/texas_api/";
 
-const socket = io(baseUrl);
+const socket = io("/texas_api");
 
 socket.on("connect", () => {
     console.log('connected!');
