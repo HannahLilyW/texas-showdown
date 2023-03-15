@@ -46,7 +46,8 @@ cat > /etc/httpd/conf.d/texas.conf << EOF
 
 WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
 WSGIPythonHome /usr/lib/texas/env
-WSGiPythonPath /usr/lib/texas/texas
+WSGIPythonPath /usr/lib/texas/texas
+WSGIPassAuthorization On
 
 <Directory /usr/lib/texas/texas/texas>
 <Files wsgi.py>

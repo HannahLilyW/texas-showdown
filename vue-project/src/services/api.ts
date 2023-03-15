@@ -1,8 +1,15 @@
 import router from '../router';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
+import { io } from "socket.io-client";
 
 const baseUrl: string = "/texas_api/";
+
+const socket = io(baseUrl);
+
+socket.on("connect", () => {
+    console.log('connected!');
+});
 
 let token: string = sessionStorage.getItem("token") || "";
 let tokenCreated: Date|null = sessionStorage.getItem("tokenCreated") ? new Date(sessionStorage.getItem("tokenCreated") || "") : null;
