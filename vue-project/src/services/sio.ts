@@ -5,3 +5,7 @@ const socket = io();
 socket.on("connect", () => {
     console.log('connected!');
 });
+
+socket.on("my event", (...args) => {
+    console.log(args)
+})
