@@ -25,36 +25,7 @@ dnf install python3-certbot-apache
 dnf install mod_ssl
 
 # This should get the server's IP
-ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
-
-echo "Writing to /etc/httpd/conf.d/texas.conf..."
-cat > /etc/httpd/conf.d/texas.conf << EOF
-<VirtualHost $ipAddress:80>
-    DocumentRoot "/var/www/html/dist/"
-</VirtualHost>
-
-<Directory /var/www/html/dist>
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
-</Directory>
-
-WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
-WSGIPythonHome /usr/lib/texas/env
-WSGIPythonPath /usr/lib/texas/texas
-WSGIPassAuthorization On
-
-<Directory /usr/lib/texas/texas/texas>
-<Files wsgi.py>
-Require all granted
-</Files>
-</Directory>
-EOF
+# ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
 
 cd /root/texas-showdown/vue-project/
 npm install
@@ -74,6 +45,34 @@ djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.as
 
 echo "Please enter the domain name for the server (example: example.com):"
 read hostName
+
+echo "Writing to /etc/httpd/conf.d/texas.conf..."
+cat > /etc/httpd/conf.d/texas.conf << EOF
+<Directory /var/www/html/dist>
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteRule . /index.html [L]
+</IfModule>
+</Directory>
+
+SSLProxyEngine on
+ProxyPass "/socket.io/" "https://$hostName/texas_api/socket.io/"
+
+WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
+WSGIPythonHome /usr/lib/texas/env
+WSGIPythonPath /usr/lib/texas/texas
+WSGIPassAuthorization On
+
+<Directory /usr/lib/texas/texas/texas>
+<Files wsgi.py>
+Require all granted
+</Files>
+</Directory>
+EOF
 
 certbot --apache -d $hostName
 
