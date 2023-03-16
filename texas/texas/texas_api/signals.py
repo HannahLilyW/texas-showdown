@@ -7,5 +7,5 @@ from texas.logging import log
 
 @receiver(post_save, sender=Game)
 def update_game(sender, instance, **kwargs):
-    sio_server.emit('my event', {'data': 'foobar'})
-    log.error('emitted a signal for my event.')
+    sio_server.emit('myevent', {'data': 'foobar'})
+    log.error('emitted a signal for myevent.')

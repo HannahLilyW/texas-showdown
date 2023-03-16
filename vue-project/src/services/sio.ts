@@ -6,6 +6,8 @@ socket.on("connect", () => {
     console.log('connected!');
 });
 
-socket.on("my event", (...args) => {
+socket.onAny((eventName, ...args) => {
+    console.log('caught some event')
+    console.log(eventName)
     console.log(args)
-})
+});
