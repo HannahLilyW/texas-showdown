@@ -1,8 +1,11 @@
 import router from '../router';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
+import { io, Socket } from "socket.io-client";
 
 const baseUrl: string = "/texas_api/";
+
+let socket: Socket|null = null;
 
 let token: string = sessionStorage.getItem("token") || "";
 let tokenCreated: Date|null = sessionStorage.getItem("tokenCreated") ? new Date(sessionStorage.getItem("tokenCreated") || "") : null;
@@ -76,12 +79,44 @@ export function updateUsername(newUsername: string) {
 }
 
 export function logout() {
-    post('logout/', {}).then(response => {})
-    sessionStorage.removeItem("username");
-    sessionStorage.removeItem("token");
-    sessionStorage.removeItem("tokenCreated");
-    token = "";
-    tokenCreated = null;
-    username.value = "";
-    router.push('/');
+    post('logout/', {}).then(response => {
+        sessionStorage.removeItem("username");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("tokenCreated");
+        token = "";
+        tokenCreated = null;
+        username.value = "";
+        router.push('/');
+    })
+}
+
+export function startSocket() {
+    if (socket) {
+        socket.close();
+    }
+    socket = io({
+        auth: {
+            token: token
+        }
+    });
+
+    socket.on("connect", () => {
+        console.log('connected!');
+    });
+
+    socket.on("disconnect", () => {
+        console.log('disconnected!');
+    })
+    
+    socket.onAny((eventName, ...args) => {
+        console.log('caught some event')
+        console.log(eventName)
+        console.log(args)
+    });
+}
+
+export function stopSocket() {
+    if (socket) {
+        socket.close();
+    }
 }
