@@ -1,5 +1,6 @@
 from rest_framework.authtoken.models import Token
 from texas.sio_server import sio_server
+from texas.logging import log
 
 
 @sio_server.event
