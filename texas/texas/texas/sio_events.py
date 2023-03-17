@@ -8,9 +8,8 @@ def connect(sid, environ, auth=''):
     try:
         token = Token.objects.get(key=auth['token'])
     except Exception as e:
-        log.error(f'exception type: {type(e)}')
-        log.error(f'exception: {e}')
-        log.error(f'auth: {auth}')
-        log.error(f'auth type: {type(auth)}')
-        log.error(f'auth token: {auth["token"]}')
-        log.error(f'auth token type: {type(auth["token"])}')
+        return False
+
+    log.error(f'user: {token.user}')
+    log.error(f'user type: {type(token.user)}')
+    sio_server.save_session(sid, {'user': token.user})

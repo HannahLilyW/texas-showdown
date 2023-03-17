@@ -97,7 +97,6 @@ export function startSocket() {
     socket = io({
         auth: {
             token: token
-            // token: 'bad'
         }
     });
 
