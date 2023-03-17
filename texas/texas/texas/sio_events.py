@@ -10,3 +10,7 @@ def connect(sid, environ, auth=''):
     except Exception as e:
         log.error(f'exception type: {type(e)}')
         log.error(f'exception: {e}')
+        log.error(f'auth: {auth}')
+        log.error(f'auth type: {type(auth)}')
+        log.error(f'auth token: {auth["token"]}')
+        log.error(f'auth token type: {type(auth["token"])}')
