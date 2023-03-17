@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { get, startSocket, stopSocket } from '../services/api.js';
+import { get, startSocket, stopSocket, currentGame } from '../services/api.js';
 import { ref, onBeforeUnmount } from 'vue';
 import type { Ref } from 'vue';
-import type { Game } from '../models';
 
-let currentGame: Ref<Game|null> = ref(null);
 let loading: Ref<boolean> = ref(true);
 
 function getCurrentGame() {
@@ -36,7 +34,9 @@ getCurrentGame();
 </script>
 
 <template>
-
+<div v-if="currentGame">
+    <h2>{{ currentGame.created_by }}</h2>
+</div>
 </template>
 
 <style scoped>

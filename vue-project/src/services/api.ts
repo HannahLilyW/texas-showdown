@@ -2,6 +2,7 @@ import router from '../router';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { io, Socket } from "socket.io-client";
+import type { Game } from '../models';
 
 const baseUrl: string = "/texas_api/";
 
@@ -9,7 +10,9 @@ let socket: Socket|null = null;
 
 let token: string = sessionStorage.getItem("token") || "";
 let tokenCreated: Date|null = sessionStorage.getItem("tokenCreated") ? new Date(sessionStorage.getItem("tokenCreated") || "") : null;
+
 export let username: Ref<string> = ref(sessionStorage.getItem("username") || "");
+export let currentGame: Ref<Game|null> = ref(null);
 
 export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {
@@ -100,18 +103,10 @@ export function startSocket() {
         }
     });
 
-    socket.on("connect", () => {
-        console.log('connected!');
-    });
-
-    socket.on("disconnect", () => {
-        console.log('disconnected!');
-    })
-    
     socket.onAny((eventName, ...args) => {
-        console.log('caught some event')
-        console.log(eventName)
-        console.log(args)
+        if (eventName == 'update_game') {
+            console.log(args);
+        }
     });
 }
 
