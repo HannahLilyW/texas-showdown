@@ -1,4 +1,5 @@
 from rest_framework.authtoken.models import Token
+from texas import sio_server
 
 
 @sio_server.event
