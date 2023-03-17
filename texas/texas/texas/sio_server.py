@@ -8,4 +8,8 @@ sio_server = socketio.Server(async_mode='threading')
 
 @sio_server.event
 def connect(sid, environ, auth=''):
-    log.error(f'sid: {sid} environ: {environ} auth: {auth}')
+    try:
+        token = Token.objects.get(auth['token'])
+    except Exception as e:
+        log.error(f'exception type: {type(exception)}')
+        log.error(f'exception: {exception}')
