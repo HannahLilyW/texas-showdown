@@ -1,13 +1,30 @@
-import { io } from "socket.io-client";
+import { io, Socket } from "socket.io-client";
 
-const socket = io();
+let socket: Socket|null = null;
 
-socket.on("connect", () => {
-    console.log('connected!');
-});
+export function start() {
+    if (socket) {
+        socket.close();
+    }
+    socket = io();
 
-socket.onAny((eventName, ...args) => {
-    console.log('caught some event')
-    console.log(eventName)
-    console.log(args)
-});
+    socket.on("connect", () => {
+        console.log('connected!');
+    });
+
+    socket.on("disconnect", () => {
+        console.log('disconnected!');
+    })
+    
+    socket.onAny((eventName, ...args) => {
+        console.log('caught some event')
+        console.log(eventName)
+        console.log(args)
+    });
+}
+
+export function stop() {
+    if (socket) {
+        socket.close();
+    }
+}

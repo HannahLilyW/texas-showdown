@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { get } from '../services/api.js';
-import { ref } from 'vue';
+import { ref, onBeforeUnmount } from 'vue';
 import type { Ref } from 'vue';
 import type { Game } from '../models';
-import '../services/sio.js';
+import { start, stop } from '../services/sio.js';
 
 let currentGame: Ref<Game|null> = ref(null);
 let loading: Ref<boolean> = ref(true);
@@ -18,6 +18,7 @@ function getCurrentGame() {
             response.json().then(responseJson => {
                 if (response.status == 200) {
                     currentGame.value = responseJson;
+                    start();
                     loading.value = false;
                 } else {
                     console.log(`unexpected response. status: ${response.status} response: ${responseJson}`)
@@ -28,6 +29,8 @@ function getCurrentGame() {
         }
     })
 }
+
+onBeforeUnmount(() => stop());
 
 getCurrentGame();
 
