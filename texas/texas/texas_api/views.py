@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.db.models import F, Count
 from rest_framework import views, viewsets, mixins, permissions, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -85,19 +86,13 @@ class GameViewSet(
     # Endpoints for creating/updating/retrieving games
     queryset = Game.objects.none()
 
-    def get_queryset(self):
-        if self.action == 'create':
-            return Game.objects.none()
-        else:
-            return Game.objects.none()
-
     def get_serializer_class(self):
         if self.action == 'create':
             return CreateGameSerializer
         else:
             return GameSerializer
 
-    @action(detail=False)
+    @action(detail=False, methods=['get'])
     def get_current_game(self, request):
         player = Player.objects.get(user=request.user)
         if player.current_game:
@@ -105,3 +100,46 @@ class GameViewSet(
             return Response(serializer.data)
         else:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=False, methods=['get'])
+    def get_existing_games(self, request):
+        # Get games that have not started yet and still need players.
+        games = Game.objects.annotate(Count('player')).filter(
+            num_players__gt=F('player__count'),
+            is_started=False
+        )
+        serializer = GameSerializer(games, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def join_game(self, request):
+        # Verify user is not already in a game
+        player = Player.objects.get(user=request.user)
+        if player.current_game:
+            return Response('You are already in a game', status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify user supplied game id is valid
+        game_id = request.data.get('id', None)
+        if not game_id:
+            return Response('Game id required', status=HTTP_400_BAD_REQUEST)
+        if type(game_id) is not int:
+            return Response('Invalid game id', status=HTTP_400_BAD_REQUEST)
+        try:
+            game = Game.objects.get(id=game_id)
+        except Exception as e:
+            return Response('Invalid game id', status=HTTP_400_BAD_REQUEST)
+        if game.is_started:
+            return Response('Game already started', status=HTTP_400_BAD_REQUEST)
+        if len(game.player_set.all()) == game.num_players:
+            return Response('Game is full', status=HTTP_400_BAD_REQUEST)
+
+        player.current_game = game
+        player.save()
+        return Response('ok')
+    
+    @action(detail=False, methods=['post'])
+    def leave_game(self, request):
+        player = Player.objects.get(user=request.user)
+        player.current_game = None
+        player.save()
+        return Response('ok')

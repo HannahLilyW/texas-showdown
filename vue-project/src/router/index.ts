@@ -27,6 +27,11 @@ const router = createRouter({
             path: '/active-game',
             name: 'active-game',
             component: () => import('../views/ActiveGameView.vue')
+        },
+        {
+            path: '/join-existing-game',
+            name: 'join-existing-game',
+            component: () => import('../views/JoinExistingGameView.vue')
         }
     ]
 })

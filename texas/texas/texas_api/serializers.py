@@ -23,6 +23,7 @@ class CreateGameSerializer(serializers.ModelSerializer):
         # request.user is inserted by Django Rest Framework based on the provided token,
         # so we don't need to do any extra validation here.
         data['created_by'] = self.context['request'].user
+        data['owner'] = self.context['request'].user
         return data
     
     def create(self, validated_data):
@@ -40,7 +41,14 @@ class CreateGameSerializer(serializers.ModelSerializer):
         return ret
 
 
+class PlayerNameListField(serializers.RelatedField):
+    def to_representation(self, value):
+        return value.user.username
+
+
 class GameSerializer(serializers.ModelSerializer):
+    player_set = PlayerNameListField(many=True, read_only=True)
+
     class Meta:
         model = Game
         fields = '__all__'
@@ -49,4 +57,5 @@ class GameSerializer(serializers.ModelSerializer):
         # Return usernames rather than user ids
         ret = super().to_representation(instance)
         ret['created_by'] = User.objects.get(id=ret['created_by']).username
+        ret['owner'] = User.objects.get(id=ret['owner']).username
         return ret

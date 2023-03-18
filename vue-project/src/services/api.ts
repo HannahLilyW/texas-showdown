@@ -4,6 +4,8 @@ import type { Ref } from 'vue';
 import { io, Socket } from "socket.io-client";
 import type { Game } from '../models';
 
+const isDevelopment = false;
+
 const baseUrl: string = "/texas_api/";
 
 let socket: Socket|null = null;
@@ -46,6 +48,16 @@ export async function post(url: string, data: Record<string, any>) {
         referrerPolicy: "no-referrer", // The Referer header will be omitted: sent requests do not include any referrer information. See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Referrer-Policy
         body: JSON.stringify(data),
     });
+    if (response.status == 401) {
+        // Authentication failure. Prompt for login again.
+        sessionStorage.removeItem("username");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("tokenCreated");
+        token = "";
+        tokenCreated = null;
+        username.value = "";
+        router.push('/login');
+    }
     return response;
 }
 
@@ -65,6 +77,16 @@ export async function get(url: string) {
         },
         referrerPolicy: "no-referrer"
     });
+    if (response.status == 401) {
+        // Authentication failure. Prompt for login again.
+        sessionStorage.removeItem("username");
+        sessionStorage.removeItem("token");
+        sessionStorage.removeItem("tokenCreated");
+        token = "";
+        tokenCreated = null;
+        username.value = "";
+        router.push('/login');
+    }
     return response;
 }
 
@@ -97,17 +119,20 @@ export function startSocket() {
     if (socket) {
         socket.close();
     }
-    socket = io({
-        auth: {
-            token: token
-        }
-    });
 
-    socket.onAny((eventName, ...args) => {
-        if (eventName == 'update_game') {
-            console.log(args);
-        }
-    });
+    if (!isDevelopment) {
+        socket = io({
+            auth: {
+                token: token
+            }
+        });
+
+        socket.onAny((eventName, ...args) => {
+            if (eventName == 'update_game') {
+                console.log(args);
+            }
+        });
+    }
 }
 
 export function stopSocket() {
