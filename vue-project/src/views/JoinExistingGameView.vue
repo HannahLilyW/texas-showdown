@@ -42,14 +42,16 @@ getExistingGames();
 <template>
 <h2>Join Existing Game</h2>
 <template v-if="!loading">
-    <div class="buttons-column" v-if="existingGames">
+    <div class="buttons-column" v-if="existingGames && existingGames.length">
         <div class="button" v-for="game in existingGames" @click="joinGame(game)">
             {{ game.owner }}'s game - {{ game.betting ? 'High Stakes' : 'Just for Fun' }} ({{ game.player_set.length }} out of {{ game.num_players }} players)
         </div>
     </div>
     <template v-else>
-        <p>No existing games to join.</p>
-        <div class="button" @click=createNewGame()>Create New Game</div>
+        <div class="buttons-row">
+            <p>No existing games to join.</p>
+            <div class="button" @click=createNewGame()>Create New Game</div>
+        </div>
     </template>
 </template>
 

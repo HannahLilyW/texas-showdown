@@ -145,7 +145,7 @@ class GameViewSet(
         if not game:
             return Response('You are not in a game', status=HTTP_400_BAD_REQUEST)
         if game.owner == request.user:
-            if len(game.player_set) > 1:
+            if len(game.player_set.all()) > 1:
                 # Change the owner to another player.
                 for other in game.player_set:
                     if other != player:
@@ -154,7 +154,6 @@ class GameViewSet(
         player.current_game = None
         player.position = None
         player.save()
-        game = player.current_game
-        if not len(game.player_set) and not game.is_started:
+        if not len(game.player_set.all()) and not game.is_started:
             game.delete()
         return Response('ok')
