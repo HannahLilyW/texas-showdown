@@ -15,3 +15,6 @@ class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
     current_game = models.ForeignKey(Game, on_delete=models.SET_NULL, null=True)
     position = models.IntegerField(null=True) # used to determine turn order
+
+    class Meta:
+        ordering = ['position', 'pk']

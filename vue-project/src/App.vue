@@ -57,7 +57,5 @@ header {
   font-size: 32px;
   padding-left: 8px;
 }
-.container {
-  margin: 8px;
-}
+
 </style>

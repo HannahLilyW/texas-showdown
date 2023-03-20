@@ -44,7 +44,10 @@ class CreateGameSerializer(serializers.ModelSerializer):
 
 class PlayerNameListField(serializers.RelatedField):
     def to_representation(self, value):
-        return value.user.username
+        return {
+            'username': value.user.username,
+            'position': value.position
+        }
 
 
 class GameSerializer(serializers.ModelSerializer):

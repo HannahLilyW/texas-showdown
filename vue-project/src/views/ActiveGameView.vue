@@ -35,6 +35,14 @@ function leaveGame() {
     })
 }
 
+function startGame() {
+    post('games/start_game/', {}).then(response => {
+        response.json().then(responseJson => {
+            currentGame.value = responseJson;
+        })
+    })
+}
+
 onBeforeUnmount(() => stopSocket());
 
 getCurrentGame();
@@ -42,21 +50,53 @@ getCurrentGame();
 </script>
 
 <template>
-<div v-if="currentGame">
+<div v-if="currentGame && !currentGame.is_started">
     <h2>{{ currentGame.created_by }}'s game</h2>
     <p>Players:</p>
-    <li v-for="player in currentGame.player_set">{{ player }}{{ player == currentGame.owner ? ' (Owner)' : ''}}</li>
+    <li v-for="player in currentGame.player_set">{{ player.username }}{{ player.username == currentGame.owner ? ' (Owner)' : ''}}</li>
     <div v-if="currentGame.player_set.length < currentGame.num_players">Waiting for {{ currentGame.num_players - currentGame.player_set.length }} more player(s).</div>
     <div v-if="(currentGame.player_set.length  == currentGame.num_players) && (username != currentGame.owner)">
         Waiting for {{ currentGame.owner }} to start the game.
     </div>
     <div class="buttons-row">
-        <div class="button" v-if="username == currentGame.owner">Start Game</div>
+        <div class="button"
+            v-if="username == currentGame.owner && (currentGame.num_players == currentGame.player_set.length)"
+            @click="startGame()">Start Game</div>
+        <div class="button" @click="leaveGame()">Leave Game</div>
+    </div>
+</div>
+<div v-if="currentGame && currentGame.is_started">
+    <div class="current-game-background">
+        <div>Player</div>
+        <div>Play</div>
+        <div>Tricks</div>
+        <div>Score</div>
+        <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
+            <div class="player-username">{{ player.username }}</div>
+            <div class="player-play"></div>
+            <div class="player-tricks">tricks</div>
+            <div class="player-score">5</div>
+        </template>
+    </div>
+    <div class="buttons-row">
         <div class="button" @click="leaveGame()">Leave Game</div>
     </div>
 </div>
 </template>
 
 <style scoped>
+.current-game-background {
+    background-color: #35654d;
+    width: 100vw;
+    height: 100%;
+    display: grid;
+    grid-template-columns: 10% 20% 60% 10%;
+    justify-items: center;
+    align-items: center;
+}
+
+.player-play {
+    height: 80px;
+}
 
 </style>

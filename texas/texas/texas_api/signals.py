@@ -3,7 +3,3 @@ from django.dispatch import receiver
 from texas_api.models import Game, Player
 from texas.sio_server import sio_server
 from texas.logging import log
-
-@receiver(post_save, sender=Game)
-def update_game(sender, instance, **kwargs):
-    sio_server.emit('update_game', instance, room=str(instance.id))

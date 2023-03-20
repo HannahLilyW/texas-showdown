@@ -147,13 +147,38 @@ class GameViewSet(
         if game.owner == request.user:
             if len(game.player_set.all()) > 1:
                 # Change the owner to another player.
-                for other in game.player_set:
+                for other in game.player_set.all():
                     if other != player:
-                        game.owner = other
+                        game.owner = other.user
                         game.save()
+        if len(game.player_set.all()) == 1:
+            if not game.is_started:
+                game.delete()
+        else:
+            # Get the other players in the game that have a higher position than this player,
+            # and move them each down one position.
+            other_players = game.player_set.filter(position__gt=player.position).all()
+            for other_player in other_players:
+                other_player.position -= 1
+                other_player.save()
         player.current_game = None
         player.position = None
         player.save()
-        if not len(game.player_set.all()) and not game.is_started:
-            game.delete()
+        return Response('ok')
+
+    @action(detail=False, methods=['post'])
+    def start_game(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=HTTP_400_BAD_REQUEST)
+        if game.owner != request.user:
+            return Response('Only the game owner can start the game', status=HTTP_400_BAD_REQUEST)
+        if game.is_started:
+            return Response('Game already started', status=HTTP_400_BAD_REQUEST)
+        if game.num_players != len(game.player_set.all()):
+            return Response('Not enough players to start the game', status=HTTP_400_BAD_REQUEST)
+        
+        game.is_started = True
+        game.save()
         return Response('ok')

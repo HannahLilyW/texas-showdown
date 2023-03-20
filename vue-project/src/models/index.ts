@@ -6,5 +6,10 @@ export type Game = {
     betting: boolean,
     is_started: boolean,
     owner: string,
-    player_set: string[]
+    player_set: Player[]
+}
+
+export type Player = {
+    username: string,
+    position: number
 }
