@@ -31,6 +31,7 @@ class CreateGameSerializer(serializers.ModelSerializer):
         # Set the player's current_game to this one.
         player = Player.objects.get(user=self.context['request'].user)
         player.current_game = game
+        player.position = 0
         player.save()
         return game
 

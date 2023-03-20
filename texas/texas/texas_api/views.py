@@ -100,7 +100,7 @@ class GameViewSet(
             return Response(serializer.data)
         else:
             return Response(None, status=status.HTTP_204_NO_CONTENT)
-    
+
     @action(detail=False, methods=['get'])
     def get_existing_games(self, request):
         # Get games that have not started yet and still need players.
@@ -133,6 +133,7 @@ class GameViewSet(
         if len(game.player_set.all()) == game.num_players:
             return Response('Game is full', status=HTTP_400_BAD_REQUEST)
 
+        player.position = len(game.player_set.all())
         player.current_game = game
         player.save()
         return Response('ok')
@@ -140,6 +141,21 @@ class GameViewSet(
     @action(detail=False, methods=['post'])
     def leave_game(self, request):
         player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=HTTP_400_BAD_REQUEST)
+        if game.owner == request.user:
+            if len(game.player_set) == 1:
+                game.delete()
+            else:
+                # Change the owner to another player.
+                for other in game.player_set:
+                    if other != player:
+                        game.owner = other
+                        game.save()
         player.current_game = None
+        player.position = None
         player.save()
+        if not len(game.player_set) and not game.is_started:
+            game.delete()
         return Response('ok')
