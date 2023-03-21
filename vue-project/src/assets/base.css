@@ -1,4 +1,3 @@
-/* @media (prefers-color-scheme: dark) { */
 :root {
   --color-background: #342211;
   --color-text: #E5DFDA;
@@ -13,8 +12,17 @@
   --color-input-background: #9D8771;
   --color-input-text: #342211;
 
+  --color-card-background: #E5DFDA;
+
+  --color-card-black: #010206;
+  --color-card-red: #F2653E;
+  --color-card-blue: #1F85B8;
+  --color-card-brown: #905532;
+  --color-card-green: #2DAC5E;
+  --color-card-yellow: #F8A940;
+  --color-card-purple: #8B489C;
+  --color-card-gray: #818688;
 }
-/* } */
 
 *,
 *::before,
