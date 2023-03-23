@@ -7,8 +7,18 @@ import CactusIcon from './icons/IconCactus.vue';
 import StarIcon from './icons/IconStar.vue';
 import WheelIcon from './icons/IconWheel.vue';
 import SkullIcon from './icons/IconSkull.vue';
+import { computed } from 'vue'
 
 const props = defineProps(['number'])
+
+const color = computed(() => {
+    for (let key in colorsToNumbers) {
+        if (colorsToNumbers[key].indexOf(Number(props.number)) != -1) {
+            return key;
+        }
+    }
+    return 'black';
+})
 
 const colorsToNumbers: Record<string, number[]> = {
     "black": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
@@ -30,15 +40,6 @@ const colorsToHex: Record<string, string> = {
     "yellow": "#F8A940",
     "purple": "#8B489C",
     "gray": "#818688",
-}
-
-let color: string = "";
-
-for (let key in colorsToNumbers) {
-    if (colorsToNumbers[key].indexOf(Number(props.number)) != -1) {
-        color = key;
-        break;
-    }
 }
 
 </script>

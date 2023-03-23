@@ -18,3 +18,9 @@ class Player(models.Model):
 
     class Meta:
         ordering = ['position', 'pk']
+
+
+class Card(models.Model):
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True)
+    number = models.IntegerField()

@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { get, post, startSocket, stopSocket, currentGame, username } from '../services/api.js';
+import { get, post, startSocket, stopSocket, currentGame, hand, username } from '../services/api.js';
 import { ref, onBeforeUnmount } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
+import Card from '../components/Card.vue';
 
 let loading: Ref<boolean> = ref(true);
 
@@ -16,6 +17,7 @@ function getCurrentGame() {
             response.json().then(responseJson => {
                 if (response.status == 200) {
                     currentGame.value = responseJson;
+                    getHand();
                     startSocket();
                     loading.value = false;
                 } else {
@@ -41,6 +43,43 @@ function startGame() {
             currentGame.value = responseJson;
         })
     })
+}
+
+function getHand() {
+    get('players/hand/').then(response => {
+        response.json().then(responseJson => {
+            hand.value = responseJson.sort((a: number, b: number) => {return a-b});
+        })
+    })
+}
+
+function dragStart(event: DragEvent, cardNumber: number) {
+    if (event.dataTransfer) {
+        event.dataTransfer.setData("cardNumber", cardNumber.toString());
+        event.dataTransfer.dropEffect = "move";
+    }
+}
+
+function dragEnter(event: DragEvent) {
+    event.preventDefault();
+}
+
+function dragOver(event: DragEvent) {
+    event.preventDefault();
+}
+
+function drop(event: DragEvent, targetNumber: number) {
+    if (event.dataTransfer) {
+        const droppedNumber = Number(event.dataTransfer.getData("cardNumber"));
+        const droppedIndex = hand.value?.indexOf(droppedNumber);
+        const targetIndex = hand.value?.indexOf(targetNumber);
+        if (droppedIndex != -1) {
+            hand.value?.splice(droppedIndex || 0, 1); // delete this card from its old position
+        }
+        if (targetIndex != -1) {
+            hand.value?.splice(targetIndex || 0, 0, droppedNumber) // add the card after the card it was dropped on.
+        }
+    }
 }
 
 onBeforeUnmount(() => stopSocket());
@@ -78,6 +117,20 @@ getCurrentGame();
             <div class="player-score">5</div>
         </template>
     </div>
+    <h2>Your Hand</h2>
+    <div class="hand" v-if="hand">
+        <Card
+            class="card"
+            :id="'handCard' + cardNumber"
+            :number="cardNumber"
+            v-for="cardNumber in hand"
+            draggable="true"
+            @dragstart="dragStart($event, cardNumber)"
+            @dragenter="dragEnter($event)"
+            @dragover="dragOver($event)"
+            @drop="drop($event, cardNumber)"
+        ></Card>
+    </div>
     <div class="buttons-row">
         <div class="button" @click="leaveGame()">Leave Game</div>
     </div>
@@ -97,6 +150,16 @@ getCurrentGame();
 
 .player-play {
     height: 80px;
+}
+
+.hand {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+}
+
+.card {
+    cursor: pointer;
 }
 
 </style>
