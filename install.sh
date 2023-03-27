@@ -12,17 +12,17 @@ then
     echo "Node is already installed and on correct version (16)"
 else
     echo "Node v16 doesn't seem to be installed. Attempting to install..."
-    dnf module reset nodejs
-    dnf module install nodejs:16
+    dnf -y module reset nodejs
+    dnf -y module install nodejs:16
 fi
 
-dnf install httpd
-dnf install python39
-dnf install python39-mod_wsgi
-dnf install epel-release
-dnf install certbot
-dnf install python3-certbot-apache
-dnf install mod_ssl
+dnf -y install httpd
+dnf -y install python39
+dnf -y install python39-mod_wsgi
+dnf -y install epel-release
+dnf -y install certbot
+dnf -y install python3-certbot-apache
+dnf -y install mod_ssl
 
 # This should get the server's IP
 # ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
@@ -74,7 +74,8 @@ Require all granted
 </Directory>
 EOF
 
-certbot --apache -d $hostName
+# certbot --apache -d $hostName
+openssl req -x509 -nodes -newkey rsa:2048 -days 3650 -keyout /root/certs/self-signed.key -out /root/certs/self-signed.crt
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
@@ -92,10 +93,10 @@ python manage.py migrate
 # and permanently change the selinux file context of the database and the directory it's in so apache is allowed to write to it
 chown apache:apache /usr/lib/texas/texas/db.sqlite3
 chown apache:apache /usr/lib/texas/texas
-semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
-semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
-restorecon -RF /usr/lib/texas/texas
+# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
+# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
+# restorecon -RF /usr/lib/texas/texas
 
-systemctl daemon-reload
+# systemctl daemon-reload
 systemctl enable httpd
-systemctl restart httpd
+# systemctl restart httpd
