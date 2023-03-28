@@ -4,7 +4,7 @@ docker-build:
 
 # Run the container (Just kill the terminal once it hangs)
 docker-run:
-	docker run --tty -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged -p 80:80 -p 443:443 --name texas texas
+	docker run -d --tty -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged -p 80:80 -p 443:443 --name texas texas
 
 # Run the development install script inside the container
 docker-install:
