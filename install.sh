@@ -74,8 +74,7 @@ Require all granted
 </Directory>
 EOF
 
-# certbot --apache -d $hostName
-openssl req -x509 -nodes -newkey rsa:2048 -days 3650 -keyout /root/certs/self-signed.key -out /root/certs/self-signed.crt
+certbot --apache -d $hostName
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
@@ -93,10 +92,10 @@ python manage.py migrate
 # and permanently change the selinux file context of the database and the directory it's in so apache is allowed to write to it
 chown apache:apache /usr/lib/texas/texas/db.sqlite3
 chown apache:apache /usr/lib/texas/texas
-# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
-# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
-# restorecon -RF /usr/lib/texas/texas
+semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
+semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
+restorecon -RF /usr/lib/texas/texas
 
-# systemctl daemon-reload
+systemctl daemon-reload
 systemctl enable httpd
-# systemctl restart httpd
+systemctl restart httpd
