@@ -29,7 +29,7 @@ make docker-build
 # Run the container (Just kill the terminal once it hangs)
 make docker-run
 
-# Run the development install script inside the container
+# Run the development install script inside the container (Just press enter through the openssl prompts)
 make docker-install
 
 # Start a shell inside the container
