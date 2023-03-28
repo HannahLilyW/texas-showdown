@@ -43,11 +43,15 @@ pip install -r requirements.txt
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
-echo "Please enter the domain name for the server (example: example.com):"
-read hostName
-
 echo "Writing to /etc/httpd/conf.d/texas.conf..."
 cat > /etc/httpd/conf.d/texas.conf << EOF
+<VirtualHost *:443>
+ServerName localhost
+DocumentRoot "/var/www/html/dist/"
+SSLCertificateFile /root/certs/self-signed.crt
+SSLCertificateKeyFile /root/certs/self-signed.key
+Include /etc/letsencrypt/options-ssl-apache.conf
+</VirtualHost>
 <Directory /var/www/html/dist>
 <IfModule mod_rewrite.c>
   RewriteEngine On
@@ -60,7 +64,7 @@ cat > /etc/httpd/conf.d/texas.conf << EOF
 </Directory>
 
 SSLProxyEngine on
-ProxyPass "/socket.io/" "https://$hostName/texas_api/socket.io/"
+ProxyPass "/socket.io/" "https://localhost/texas_api/socket.io/"
 
 WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
 WSGIPythonHome /usr/lib/texas/env
@@ -74,14 +78,31 @@ Require all granted
 </Directory>
 EOF
 
-certbot --apache -d $hostName
+echo "Writing to /etc/letsencrypt/options-ssl-apache.conf..."
+cat > /etc/letsencrypt/options-ssl-apache.conf << EOF
+SSLEngine on
+
+SSLProtocol             all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
+SSLCipherSuite          ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+SSLHonorCipherOrder     off
+SSLSessionTickets       off
+
+SSLOptions +StrictRequire
+
+# Add vhost name to log entries:
+LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" vhost_combined
+LogFormat "%v %h %l %u %t \"%r\" %>s %b" vhost_common
+EOF
+
+mkdir -p /root/certs/
+openssl req -x509 -nodes -newkey rsa:2048 -days 3650 -keyout /root/certs/self-signed.key -out /root/certs/self-signed.crt
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
 [django]
 secret_key = $djangoSecretKey
-is_development = false
-hostname = $hostName
+is_development = true
+hostname = localhost
 EOF
 
 echo "Running migrations..."
@@ -92,9 +113,9 @@ python manage.py migrate
 # and permanently change the selinux file context of the database and the directory it's in so apache is allowed to write to it
 chown apache:apache /usr/lib/texas/texas/db.sqlite3
 chown apache:apache /usr/lib/texas/texas
-semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
-semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
-restorecon -RF /usr/lib/texas/texas
+# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
+# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
+# restorecon -RF /usr/lib/texas/texas
 
 systemctl daemon-reload
 systemctl enable httpd
