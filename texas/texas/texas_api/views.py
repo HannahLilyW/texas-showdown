@@ -7,10 +7,11 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
-from texas_api.models import Game, Player
+from texas_api.models import Game, Player, Card
 from texas_api.serializers import CreateGameSerializer, GameSerializer
 import json
 import re
+import secrets  # Cryptographically secure randomness
 
 
 class CreateAccountView(views.APIView):
@@ -121,17 +122,17 @@ class GameViewSet(
         # Verify user supplied game id is valid
         game_id = request.data.get('id', None)
         if not game_id:
-            return Response('Game id required', status=HTTP_400_BAD_REQUEST)
+            return Response('Game id required', status=status.HTTP_400_BAD_REQUEST)
         if type(game_id) is not int:
-            return Response('Invalid game id', status=HTTP_400_BAD_REQUEST)
+            return Response('Invalid game id', status=status.HTTP_400_BAD_REQUEST)
         try:
             game = Game.objects.get(id=game_id)
         except Exception as e:
-            return Response('Invalid game id', status=HTTP_400_BAD_REQUEST)
+            return Response('Invalid game id', status=status.HTTP_400_BAD_REQUEST)
         if game.is_started:
-            return Response('Game already started', status=HTTP_400_BAD_REQUEST)
+            return Response('Game already started', status=status.HTTP_400_BAD_REQUEST)
         if len(game.player_set.all()) == game.num_players:
-            return Response('Game is full', status=HTTP_400_BAD_REQUEST)
+            return Response('Game is full', status=status.HTTP_400_BAD_REQUEST)
 
         player.position = len(game.player_set.all())
         player.current_game = game
@@ -143,7 +144,7 @@ class GameViewSet(
         player = Player.objects.get(user=request.user)
         game = player.current_game
         if not game:
-            return Response('You are not in a game', status=HTTP_400_BAD_REQUEST)
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
         if game.owner == request.user:
             if len(game.player_set.all()) > 1:
                 # Change the owner to another player.
@@ -171,14 +172,46 @@ class GameViewSet(
         player = Player.objects.get(user=request.user)
         game = player.current_game
         if not game:
-            return Response('You are not in a game', status=HTTP_400_BAD_REQUEST)
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
         if game.owner != request.user:
-            return Response('Only the game owner can start the game', status=HTTP_400_BAD_REQUEST)
+            return Response('Only the game owner can start the game', status=status.HTTP_400_BAD_REQUEST)
         if game.is_started:
-            return Response('Game already started', status=HTTP_400_BAD_REQUEST)
+            return Response('Game already started', status=status.HTTP_400_BAD_REQUEST)
         if game.num_players != len(game.player_set.all()):
-            return Response('Not enough players to start the game', status=HTTP_400_BAD_REQUEST)
+            return Response('Not enough players to start the game', status=status.HTTP_400_BAD_REQUEST)
         
+        deck = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+            21, 22, 23, 24, 25, 26, 27, 28, 29,
+            31, 32, 33, 34, 35, 36, 37, 38,
+            41, 42, 43, 44, 45, 46, 47,
+            51, 52, 53, 54, 55, 56,
+            61, 62, 63, 64, 65,
+            71, 72, 73, 74
+        ]
+        shuffled_deck = []
+
+        for i in range(len(deck)):
+            card_num = secrets.choice(deck)
+            deck.remove(card_num)
+            shuffled_deck.append(card_num)
+            player_receiving_card = game.player_set.get(position=i % game.num_players)
+            card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
+            card.save()
+
         game.is_started = True
         game.save()
         return Response('ok')
+
+
+class PlayerViewSet(
+    viewsets.GenericViewSet
+):
+    queryset = Player.objects.none()
+
+    @action(detail=False, methods=['get'])
+    def hand(self, request):
+        player = Player.objects.get(user=request.user)
+        hand = [h.number for h in player.card_set.all()]
+        return Response(hand)
