@@ -26,11 +26,14 @@ Tested on Ubuntu
 # Build the container (Should only need to do this once unless the Dockerfile changes.)
 make docker-build
 
-# Run the container (Just kill the terminal once it hangs)
+# Create and initialize the container
 make docker-run
 
 # Run the development install script inside the container (Just press enter through the openssl prompts)
 make docker-install
+
+# Run the httpd daemon
+make docker-httpd
 
 # Start a shell inside the container
 make docker-sh

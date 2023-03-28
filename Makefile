@@ -2,13 +2,17 @@
 docker-build:
 	docker build -t texas .
 
-# Run the container (Just kill the terminal once it hangs)
+# Create and initialize the container
 docker-run:
-	docker run -d --tty -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged -p 80:80 -p 443:443 --name texas texas
+	sudo docker run -dit --tty -v /sys/fs/cgroup:/sys/fs/cgroup:ro --privileged -p 80:80 -p 443:443 --name texas texas
 
 # Run the development install script inside the container
 docker-install:
-	docker exec -it texas bash -c "/root/texas-showdown/devinstall.sh"
+	sudo docker exec -it texas bash -c "/root/texas-showdown/devinstall.sh"
+
+# Run the httpd daemon
+docker-httpd:
+	docker exec -it texas httpd
 
 # Start a shell inside the container
 docker-sh:
