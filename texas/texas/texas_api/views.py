@@ -7,11 +7,12 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
-from texas_api.models import Game, Player, Card
+from texas_api.models import Game, Player, Card, TurnHistory
 from texas_api.serializers import CreateGameSerializer, GameSerializer
 import json
 import re
 import secrets  # Cryptographically secure randomness
+import math
 
 
 class CreateAccountView(views.APIView):
@@ -164,6 +165,13 @@ class GameViewSet(
                 other_player.save()
         player.current_game = None
         player.position = None
+        player.is_turn = False
+        player.waiting_for_continue = False
+        player.tricks = 0
+        player.score = 0
+        for card in player.card_set.all():
+            card.player = None
+            card.save()
         player.save()
         return Response('ok')
 
@@ -199,9 +207,19 @@ class GameViewSet(
             player_receiving_card = game.player_set.get(position=i % game.num_players)
             card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
             card.save()
+            if (card_num == 0):
+                player_receiving_card.is_turn = True
+                player_receiving_card.save()
 
         game.is_started = True
         game.save()
+        return Response('ok')
+    
+    @action(detail=False, methods=['post'])
+    def continue_game(self, request):
+        player = Player.objects.get(user=request.user)
+        player.waiting_for_continue = False
+        player.save()
         return Response('ok')
 
 
@@ -215,3 +233,189 @@ class PlayerViewSet(
         player = Player.objects.get(user=request.user)
         hand = [h.number for h in player.card_set.all()]
         return Response(hand)
+
+
+class CardViewSet(
+    viewsets.GenericViewSet
+):
+    queryset = Card.objects.none()
+
+    @action(detail=False, methods=['post'])
+    def play(self, request, **kwargs):
+        black = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+        red = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+        blue = [21, 22, 23, 24, 25, 26, 27, 28, 29]
+        brown = [31, 32, 33, 34, 35, 36, 37, 38]
+        green = [41, 42, 43, 44, 45, 46, 47]
+        yellow = [51, 52, 53, 54, 55, 56]
+        purple = [61, 62, 63, 64, 65]
+        gray = [71, 72, 73, 74]
+
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if not player.is_turn:
+            return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
+
+        # Ensure we are not waiting for any players to click "continue"
+        for other_player in game.player_set.all():
+            if other_player.waiting_for_continue:
+                return Response('Cannot play now, waiting for at least 1 player to click continue', status=status.HTTP_400_BAD_REQUEST)
+
+        card = player.card_set.filter(number=int(request.data.get('number'))).first()
+        if not card:
+            return Response('You do not have that card', status=status.HTTP_400_BAD_REQUEST)
+
+        first_turn_of_trick = math.floor(game.turn / game.num_players) * game.num_players
+        is_first_turn_of_trick = first_turn_of_trick == game.turn
+
+        # Ensure this card is a valid card to play at this point in the game
+        if game.turn == 0:
+            # This is the first turn of the hand.
+            # The only valid card to play is the 0.
+            if request.data.get('number') != 0:
+                return Response('You must play the 0', status=status.HTTP_400_BAD_REQUEST)
+        elif is_first_turn_of_trick:
+            # This is the first turn of the trick, but not the first turn of the hand.
+            # The player can play anything in their hand.
+            pass
+        else:
+            # This is not the first turn of the trick.
+            # If the player has any cards with colors that have already been played in the trick,
+            # they must play one of those cards.
+            # Otherwise, they can play anything.
+
+            # Get the cards that have already been played in the trick
+            turn_histories_in_trick = game.turnhistory_set.filter(hand=game.hand, turn__gte=first_turn_of_trick)
+
+            # Get the colors which have already been played
+            played_colors = []
+            for turn_history in turn_histories_in_trick:
+                for color in [black, red, blue, brown, green, yellow, purple, gray]:
+                    if turn_history.card.number in color:
+                        played_colors += color
+            
+            # Check if the user has any cards in colors which have already been played
+            can_play_anything = True
+            for hand_card in player.card_set.all():
+                if hand_card.number in played_colors:
+                    can_play_anything = False
+                    break
+
+            if not can_play_anything:
+                if card.number not in played_colors:
+                    return Response('You must play one of your cards which is a color that has already been played', status=status.HTTP_400_BAD_REQUEST)
+
+        # Create the TurnHistory
+        turn_history = TurnHistory.objects.create(
+            game=game,
+            turn=game.turn,
+            hand=game.hand,
+            player=player,
+            card=card
+        )
+
+        # Update the game state
+        if game.turn < 59:
+            game.turn += 1
+        else:
+            game.turn = 0
+            game.hand += 1
+        game.save()
+
+        # Remove the card from this player's hand
+        card.player = None
+        card.save()
+
+        # Make it the next player's turn
+        player.is_turn = False
+        player.save()
+
+        first_turn_of_trick = math.floor(game.turn / game.num_players) * game.num_players
+        is_first_turn_of_trick = first_turn_of_trick == game.turn
+        if game.turn == 0:
+            # The next turn is the first turn of the hand.
+
+            # Transfer the tricks taken this round to each player's score.
+            # Determine if the game is finished (if a player has >= 10 points).
+            for other_player in game.player_set.all():
+                other_player.score += other_player.tricks
+                other_player.tricks = 0
+                other_player.save()
+                if other_player.score >= 10:
+                    game.is_finished = True
+                    game.save()
+
+            # Shuffle the deck and give players their cards.
+            # The next player is the one who gets the 0.
+            deck = [
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                21, 22, 23, 24, 25, 26, 27, 28, 29,
+                31, 32, 33, 34, 35, 36, 37, 38,
+                41, 42, 43, 44, 45, 46, 47,
+                51, 52, 53, 54, 55, 56,
+                61, 62, 63, 64, 65,
+                71, 72, 73, 74
+            ]
+            shuffled_deck = []
+
+            for i in range(len(deck)):
+                card_num = secrets.choice(deck)
+                deck.remove(card_num)
+                shuffled_deck.append(card_num)
+                player_receiving_card = game.player_set.get(position=i % game.num_players)
+                card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
+                card.save()
+                if (card_num == 0):
+                    player_receiving_card.is_turn = True
+                    player_receiving_card.save()
+
+            # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
+            for player in game.player_set.all():
+                player.waiting_for_continue = True
+                player.save()
+        elif is_first_turn_of_trick:
+            # The next turn is the first turn of the trick, but not the first turn of the hand.
+            # Analyze the last trick to figure out who goes first in this trick.
+            first_turn_of_last_trick = first_turn_of_trick - game.num_players
+            turn_histories_in_last_trick = game.turnhistory_set.filter(turn__lt=first_turn_of_trick, turn__gte=first_turn_of_last_trick)
+
+            # Figure out which color(s) occured the most times
+            color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
+            colors = [black, red, blue, brown, green, yellow, purple, gray]
+            for turn_history in turn_histories_in_last_trick:
+                for index, color in enumerate(colors):
+                    if turn_history.card.number in color:
+                        color_frequencies[index] += 1
+            max_colors = []
+            for index in range(len(color_frequencies)):
+                if color_frequencies[index] == max(color_frequencies):
+                    max_colors += colors[index]
+
+            # For cards played in that (those) color(s), figure out which card had the highest number
+            max_number = 0
+            for turn_history in turn_histories_in_last_trick:
+                if (turn_history.card.number in max_colors) and (turn_history.card.number > max_number):
+                    max_number = turn_history.card.number
+
+            player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
+            player_taking_trick.is_turn = True
+            player_taking_trick.tricks += 1
+            player_taking_trick.save()
+
+            # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
+            for player in game.player_set.all():
+                player.waiting_for_continue = True
+                player.save()
+        else:
+            # The next turn is not the first turn of the trick.
+            # The next player is the one with position (current_player.position + 1) % num_players
+            next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+            next_player.is_turn = True
+            next_player.save()
+
+        return Response('ok')
