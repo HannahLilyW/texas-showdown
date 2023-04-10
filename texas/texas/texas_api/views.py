@@ -348,6 +348,8 @@ class CardViewSet(
                 if other_player.score >= 10:
                     game.is_finished = True
                     game.save()
+                    # Don't give players new cards if game is finished.
+                    return Response('ok')
 
             # Shuffle the deck and give players their cards.
             # The next player is the one who gets the 0.
