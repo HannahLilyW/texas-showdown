@@ -265,7 +265,12 @@ class CardViewSet(
             if other_player.waiting_for_continue:
                 return Response('Cannot play now, waiting for at least 1 player to click continue', status=status.HTTP_400_BAD_REQUEST)
 
-        card = player.card_set.filter(number=int(request.data.get('number'))).first()
+        unvalidated_number = request.data.get('number')
+        if (type(unvalidated_number) is not int) or (unvalidated_number < 0) or (unvalidated_number > 74):
+            return Response('Invalid card number', status=status.HTTP_400_BAD_REQUEST)
+        validated_number = unvalidated_number
+
+        card = player.card_set.filter(number=validated_number).first()
         if not card:
             return Response('You do not have that card', status=status.HTTP_400_BAD_REQUEST)
 
@@ -276,7 +281,7 @@ class CardViewSet(
         if game.turn == 0:
             # This is the first turn of the hand.
             # The only valid card to play is the 0.
-            if request.data.get('number') != 0:
+            if validated_number != 0:
                 return Response('You must play the 0', status=status.HTTP_400_BAD_REQUEST)
         elif is_first_turn_of_trick:
             # This is the first turn of the trick, but not the first turn of the hand.
