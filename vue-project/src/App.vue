@@ -38,8 +38,10 @@ function goToLanding() {
 <style scoped>
 
 header {
+  width: 100%;
   display: flex;
   justify-content: space-between;
+  flex-wrap: wrap;
 }
 
 .user-info {

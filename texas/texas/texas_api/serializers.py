@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from texas_api.models import Game, Player
+from texas_api.models import Game, Player, TurnHistory
 from django.contrib.auth.models import User
 
 
@@ -46,12 +46,27 @@ class PlayerNameListField(serializers.RelatedField):
     def to_representation(self, value):
         return {
             'username': value.user.username,
-            'position': value.position
+            'position': value.position,
+            'is_turn': value.is_turn,
+            'waiting_for_continue': value.waiting_for_continue,
+            'tricks': value.tricks,
+            'score': value.score
+        }
+
+
+class TurnHistoryListField(serializers.RelatedField):
+    def to_representation(self, value):
+        return {
+            'turn': value.turn,
+            'hand': value.hand,
+            'player': value.player.user.username,
+            'card': value.card.number
         }
 
 
 class GameSerializer(serializers.ModelSerializer):
     player_set = PlayerNameListField(many=True, read_only=True)
+    turnhistory_set = TurnHistoryListField(many=True, read_only=True)
 
     class Meta:
         model = Game

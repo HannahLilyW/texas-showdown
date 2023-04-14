@@ -7,6 +7,7 @@ from texas.obtain_expiring_auth_token import ObtainExpiringAuthToken
 router = routers.DefaultRouter()
 router.register(r'games', views.GameViewSet)
 router.register(r'players', views.PlayerViewSet)
+router.register(r'cards', views.CardViewSet)
 
 urlpatterns = [
     path('create_account/', views.CreateAccountView.as_view()),
