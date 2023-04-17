@@ -10,6 +10,14 @@ export type Game = {
     turn: number,
     hand: number,
     turnhistory_set: TurnHistory[]
+    is_finished: boolean,
+    winners: string[]
+}
+
+export type GameMetadata = {
+    id: number,
+    created: Date,
+    owner: string
 }
 
 export type Player = {

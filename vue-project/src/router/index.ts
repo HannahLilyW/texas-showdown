@@ -34,10 +34,14 @@ const router = createRouter({
             component: () => import('../views/JoinExistingGameView.vue')
         },
         {
-            // This is for designing the card component. delete when done
-            path: '/card/:number',
-            name: 'card',
-            component: () => import('../components/Card.vue'),
+            path: '/view-completed-games',
+            name: 'view-completed-games',
+            component: () => import('../views/ViewCompletedGamesView.vue')
+        },
+        {
+            path: '/view-completed-game/:id',
+            name: 'view-completed-game',
+            component: () => import('../views/ViewCompletedGameView.vue'),
             props: true
         }
     ]

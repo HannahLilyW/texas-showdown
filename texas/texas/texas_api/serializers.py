@@ -64,9 +64,15 @@ class TurnHistoryListField(serializers.RelatedField):
         }
 
 
+class WinnerListField(serializers.RelatedField):
+    def to_representation(self, value):
+        return value.username
+
+
 class GameSerializer(serializers.ModelSerializer):
     player_set = PlayerNameListField(many=True, read_only=True)
     turnhistory_set = TurnHistoryListField(many=True, read_only=True)
+    winners = WinnerListField(many=True, read_only=True)
 
     class Meta:
         model = Game
@@ -76,5 +82,17 @@ class GameSerializer(serializers.ModelSerializer):
         # Return usernames rather than user ids
         ret = super().to_representation(instance)
         ret['created_by'] = User.objects.get(id=ret['created_by']).username
+        ret['owner'] = User.objects.get(id=ret['owner']).username
+        return ret
+
+
+class FinishedGameListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        fields = ['id', 'owner', 'created']
+    
+    def to_representation(self, instance):
+        # Return usernames rather than ids
+        ret = super().to_representation(instance)
         ret['owner'] = User.objects.get(id=ret['owner']).username
         return ret

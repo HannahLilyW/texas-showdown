@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory
-from texas_api.serializers import CreateGameSerializer, GameSerializer
+from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer
 import json
 import re
 import secrets  # Cryptographically secure randomness
@@ -112,7 +112,19 @@ class GameViewSet(
         )
         serializer = GameSerializer(games, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def get_finished_games(self, request):
+        games = Game.objects.filter(is_finished=True)
+        serializer = FinishedGameListSerializer(games, many=True)
+        return Response(serializer.data)
     
+    @action(detail=True, methods=['get'])
+    def get_finished_game(self, request, pk=None):
+        game = Game.objects.get(id=pk)
+        serializer = GameSerializer(game)
+        return Response(serializer.data)
+
     @action(detail=False, methods=['post'])
     def join_game(self, request):
         # Verify user is not already in a game
@@ -353,8 +365,20 @@ class CardViewSet(
                 if other_player.score >= 10:
                     game.is_finished = True
                     game.save()
-                    # Don't give players new cards if game is finished.
-                    return Response('ok')
+
+            if game.is_finished:
+                # Figure out the winner(s) of the game
+
+                # Find the lowest score
+                lowest_score = game.player_set.order_by('-score')[0].score
+
+                # Get all players with the lowest score. These players are the winners.
+                for other_player in game.player_set.filter(score=lowest_score):
+                    game.winners.add(other_player.user)
+                    game.save()
+
+                # Don't give players new cards if game is finished.
+                return Response('ok')
 
             # Shuffle the deck and give players their cards.
             # The next player is the one who gets the 0.
@@ -389,7 +413,7 @@ class CardViewSet(
             # The next turn is the first turn of the trick, but not the first turn of the hand.
             # Analyze the last trick to figure out who goes first in this trick.
             first_turn_of_last_trick = first_turn_of_trick - game.num_players
-            turn_histories_in_last_trick = game.turnhistory_set.filter(turn__lt=first_turn_of_trick, turn__gte=first_turn_of_last_trick)
+            turn_histories_in_last_trick = game.turnhistory_set.filter(hand=game.hand, turn__lt=first_turn_of_trick, turn__gte=first_turn_of_last_trick)
 
             # Figure out which color(s) occured the most times
             color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]

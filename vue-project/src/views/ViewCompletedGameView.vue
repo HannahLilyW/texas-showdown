@@ -1,0 +1,67 @@
+<script setup lang="ts">
+import { get } from '../services/api.js';
+import type { Game } from '../models';
+import { ref } from 'vue';
+import type { Ref } from 'vue';
+import Card from '../components/Card.vue';
+
+const props = defineProps(['id']);
+
+let game: Ref<Game|null> = ref(null);
+let winners: Ref<string> = ref('');
+
+function getCompletedGame() {
+    get(`games/${props.id}/get_finished_game/`).then(response => {
+        response.json().then(responseJson => {
+            game.value = responseJson;
+
+
+            winners.value = responseJson.winners[0];
+            for (let index in responseJson.winners) {
+                if (Number(index) > 0) {
+                    winners.value += `, ${responseJson.winners[index]}`
+                }
+            }
+
+        })
+    })
+}
+
+getCompletedGame();
+
+</script>
+
+<template>
+    <div class="turnhistory-set" v-if="game">
+        <template v-for="turnhistory in game.turnhistory_set">
+            <div class="hand" v-if="turnhistory.turn == 0">Hand {{ turnhistory.hand }}</div>
+            <div class="spacer" v-if="(turnhistory.turn % game.num_players) == 0"></div>
+            <div class="turnhistory">
+                <div>{{ turnhistory.player }} played </div>
+                <Card
+                    :number="turnhistory.card"
+                ></Card>
+            </div>
+        </template>
+        <div>Winner(s): {{ winners }}</div>
+    </div>
+</template>
+
+<style scoped>
+.turnhistory-set {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+.turnhistory {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.spacer {
+    height: 4px;
+}
+</style>
