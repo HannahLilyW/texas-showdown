@@ -55,6 +55,23 @@ const playersWaitingForContinue = computed(() => {
     return [];
 })
 
+const winners = computed(() => {
+    /**
+     * Returns a nicely formatted string containing the list of winners if the game is finished,
+     * else returns an empty string
+     */
+    if (currentGame.value && currentGame.value.is_finished) {
+        let ret = currentGame.value.winners[0]
+        for  (let index in currentGame.value.winners) {
+            if (Number(index) > 0) {
+                ret += `, ${currentGame.value.winners[index]}`;
+            }
+        }
+        return ret;
+    }
+    return '';
+})
+
 function getCurrentGame() {
     get('games/get_current_game/').then(response => {
         if (response.status == 204) {
@@ -202,7 +219,10 @@ getCurrentGame();
         </template>
     </div>
     <div class="game-status">
-        <template v-if="playersWaitingForContinue.length">
+        <template v-if="currentGame.is_finished">
+            Game over! {{ winners }} won!
+        </template>
+        <template v-else-if="playersWaitingForContinue.length">
             {{ currentGame.player_set.find(player => player.is_turn)?.username }} took the trick!
             <br/>
             <template v-if="playersWaitingForContinue.length > 1">
@@ -222,7 +242,6 @@ getCurrentGame();
         </template>
     </div>
     <div class="buttons-row">
-        <h2>Your Hand</h2>
         <div class="button" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">Continue</div>
         <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">
             <div class="button" v-if="typeof activeCard == 'number'" @click="playActiveCard()">Play the {{activeCard}}</div>

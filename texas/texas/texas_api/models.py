@@ -12,6 +12,7 @@ class Game(models.Model):
     is_finished = models.BooleanField(default=False)
     turn = models.IntegerField(default=0)
     hand = models.IntegerField(default=1)
+    winners = models.ManyToManyField(User, blank=True, related_name='winner')
 
 
 class Player(models.Model):
