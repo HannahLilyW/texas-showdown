@@ -47,7 +47,7 @@ function cancel() {
 
     <form>
         <label for="username">Username:</label>
-        <input id="username" v-model="username" maxlength="150">
+        <input id="username" v-model="username" maxlength="32">
         <label for="password">Password:</label>
         <input id="password" type="password" v-model="password" maxlength="150">
     </form>

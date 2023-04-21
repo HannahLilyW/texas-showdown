@@ -16,7 +16,7 @@ let error: Ref<boolean|string> = ref(false);
 
 function isValid() {
     return ((username.value.length > 0) &&
-        (username.value.length <= 150) &&
+        (username.value.length <= 32) &&
         (username.value.match(/^[A-Za-z0-9_]+$/)) &&
         (password.value.length > 7) &&
         (password.value.length <= 150) &&
@@ -77,13 +77,13 @@ function cancel() {
         Create New Account
     </h2>
     <div>
-        <p>Usernames must be 1-150 characters and may consist of letters, numbers, and underscores.</p>
+        <p>Usernames must be 1-32 characters and may consist of letters, numbers, and underscores.</p>
         <p>Passwords must be 8-150 characters and may only contain letters, digits, and the following characters: _ ! @ # $ % ^ & * ( )</p>
     </div>
 
     <form>
         <label for="username">Username:</label>
-        <input id="username" v-model="username" maxlength="150">
+        <input id="username" v-model="username" maxlength="32">
         <label for="password">New Password:</label>
         <input id="password" type="password" v-model="password" maxlength="150">
         <label for="retypePassword">Retype Password:</label>
