@@ -18,7 +18,10 @@ import math
 
 def sio_update_game(game_id):
     log.error('here 1')
-    game = Game.objects.get(game_id)
+    try:
+        game = Game.objects.get(game_id)
+    except Exception as e:
+        log.error(e)
     log.error('here 2')
     serializer = GameSerializer(game)
     log.error('here 3')
