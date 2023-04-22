@@ -19,7 +19,7 @@ import math
 def sio_update_game(game_id):
     log.error('here 1')
     try:
-        game = Game.objects.get(game_id)
+        game = Game.objects.get(id=game_id)
     except Exception as e:
         log.error(e)
     log.error('here 2')
