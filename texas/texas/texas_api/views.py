@@ -17,14 +17,8 @@ import math
 
 
 def sio_update_game(game_id):
-    log.error('here 1')
-    try:
-        game = Game.objects.get(id=game_id)
-    except Exception as e:
-        log.error(e)
-    log.error('here 2')
+    game = Game.objects.get(id=game_id)
     serializer = GameSerializer(game)
-    log.error('here 3')
     sio_server.emit('update_game', serializer.data, room=str(game.id))
 
 
