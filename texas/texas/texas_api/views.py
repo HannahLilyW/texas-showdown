@@ -8,11 +8,17 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory
-from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer
+from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
+from texas.sio_server import sio_server
 import json
 import re
 import secrets  # Cryptographically secure randomness
 import math
+
+
+def sio_update_game(game):
+    serializer = GameSerializer(game)
+    sio_server.emit('update_game', serializer.data, room=str(game.id))
 
 
 class CreateAccountView(views.APIView):
@@ -150,6 +156,9 @@ class GameViewSet(
         player.position = len(game.player_set.all())
         player.current_game = game
         player.save()
+
+        sio_update_game(game)
+
         return Response('ok')
     
     @action(detail=False, methods=['post'])
@@ -185,6 +194,9 @@ class GameViewSet(
             card.player = None
             card.save()
         player.save()
+
+        sio_update_game(game)
+
         return Response('ok')
 
     @action(detail=False, methods=['post'])
@@ -225,6 +237,9 @@ class GameViewSet(
 
         game.is_started = True
         game.save()
+
+        sio_update_game(game)
+
         return Response('ok')
     
     @action(detail=False, methods=['post'])
@@ -232,6 +247,9 @@ class GameViewSet(
         player = Player.objects.get(user=request.user)
         player.waiting_for_continue = False
         player.save()
+
+        sio_update_game(game)
+
         return Response('ok')
 
 
@@ -378,6 +396,7 @@ class CardViewSet(
                     game.save()
 
                 # Don't give players new cards if game is finished.
+                sio_update_game(game)
                 return Response('ok')
 
             # Shuffle the deck and give players their cards.
@@ -449,4 +468,5 @@ class CardViewSet(
             next_player.is_turn = True
             next_player.save()
 
+        sio_update_game(game)
         return Response('ok')

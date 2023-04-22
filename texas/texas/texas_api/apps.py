@@ -7,4 +7,3 @@ class TexasApiConfig(AppConfig):
 
     def ready(self):
         import texas.sio_events
-        import texas_api.signals
