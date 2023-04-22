@@ -17,8 +17,11 @@ import math
 
 
 def sio_update_game(game_id):
+    log.error('here 1')
     game = Game.objects.get(game_id)
+    log.error('here 2')
     serializer = GameSerializer(game)
+    log.error('here 3')
     sio_server.emit('update_game', serializer.data, room=str(game.id))
 
 
