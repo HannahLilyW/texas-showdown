@@ -29,9 +29,16 @@ export type Player = {
     score: number
 }
 
+export type PlayerStatistic = {
+    username: string,
+    wins: number,
+    losses: number
+}
+
 export type TurnHistory = {
     turn: number,
     hand: number,
     player: string,
-    card: number
+    card: number|null,
+    end_game: boolean
 }

@@ -43,7 +43,12 @@ const router = createRouter({
             name: 'view-completed-game',
             component: () => import('../views/ViewCompletedGameView.vue'),
             props: true
-        }
+        },
+        {
+            path: '/view-player-statistics',
+            name: 'view-player-statistics',
+            component: () => import('../views/ViewPlayerStatisticsView.vue')
+        },
     ]
 })
 

@@ -56,15 +56,19 @@ class PlayerNameListField(serializers.RelatedField):
 
 class TurnHistoryListField(serializers.RelatedField):
     def to_representation(self, value):
+        card_number = None
+        if value.card:
+            card_number = value.card.number
         return {
             'turn': value.turn,
             'hand': value.hand,
             'player': value.player.user.username,
-            'card': value.card.number
+            'card': card_number,
+            'end_game': value.end_game
         }
 
 
-class WinnerListField(serializers.RelatedField):
+class UsernameListField(serializers.RelatedField):
     def to_representation(self, value):
         return value.username
 
@@ -72,7 +76,8 @@ class WinnerListField(serializers.RelatedField):
 class GameSerializer(serializers.ModelSerializer):
     player_set = PlayerNameListField(many=True, read_only=True)
     turnhistory_set = TurnHistoryListField(many=True, read_only=True)
-    winners = WinnerListField(many=True, read_only=True)
+    winners = UsernameListField(many=True, read_only=True)
+    losers = UsernameListField(many=True, read_only=True)
 
     class Meta:
         model = Game
@@ -96,3 +101,22 @@ class FinishedGameListSerializer(serializers.ModelSerializer):
         ret = super().to_representation(instance)
         ret['owner'] = User.objects.get(id=ret['owner']).username
         return ret
+
+
+class PlayerStatisticSerializer(serializers.ModelSerializer):
+    username = serializers.SerializerMethodField()
+    wins = serializers.SerializerMethodField()
+    losses = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Player
+        fields = ['username', 'wins', 'losses']
+    
+    def get_username(self, obj):
+        return obj.user.username
+    
+    def get_wins(self, obj):
+        return obj.user.winner.count()
+
+    def get_losses(self, obj):
+        return obj.user.loser.count()

@@ -128,6 +128,8 @@ class GameViewSet(
     @action(detail=True, methods=['get'])
     def get_finished_game(self, request, pk=None):
         game = Game.objects.get(id=pk)
+        if not game.is_finished:
+            return Response('Game is not finished', status=status.HTTP_400_BAD_REQUEST)
         serializer = GameSerializer(game)
         return Response(serializer.data)
 
@@ -167,23 +169,44 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
-        if game.owner == request.user:
-            if len(game.player_set.all()) > 1:
-                # Change the owner to another player.
-                for other in game.player_set.all():
-                    if other != player:
-                        game.owner = other.user
-                        game.save()
-        if len(game.player_set.all()) == 1:
-            if not game.is_started:
+
+        if not game.is_started:
+            if len(game.player_set.all()) == 1:
                 game.delete()
-        else:
-            # Get the other players in the game that have a higher position than this player,
-            # and move them each down one position.
-            other_players = game.player_set.filter(position__gt=player.position).all()
-            for other_player in other_players:
-                other_player.position -= 1
-                other_player.save()
+            else:
+                if game.owner == request.user:
+                    # Change the owner to another player.
+                    for other in game.player_set.all():
+                        if other != player:
+                            game.owner = other.user
+                            game.save()
+                # Get the other players in the game that have a higher position than this player,
+                # and move them each down one position.
+                other_players = game.player_set.filter(position__gt=player.position).all()
+                for other_player in other_players:
+                    other_player.position -= 1
+                    other_player.save()
+        elif not game.is_finished:
+            # The player is ending the game by leaving.
+            # Add a special TurnHistory to show this in the game log.
+            TurnHistory.objects.create(
+                game=game,
+                turn=game.turn,
+                hand=game.hand,
+                player=player,
+                end_game=True
+            )
+            game.is_finished = True
+
+            # This player should lose, and all other players should win.
+            game.losers.add(player.user)
+            game.save()
+            for other_player in game.player_set.all():
+                if other_player != player:
+                    game.winners.add(other_player.user)
+                    game.save()
+        # Else, the game is already finished and nothing more needs to be done to the game state.
+
         player.current_game = None
         player.position = None
         player.is_turn = False
@@ -263,6 +286,12 @@ class PlayerViewSet(
         player = Player.objects.get(user=request.user)
         hand = [h.number for h in player.card_set.all()]
         return Response(hand)
+    
+    @action(detail=False, methods=['get'])
+    def view_player_statistics(self, request):
+        players = Player.objects.all()
+        serializer = PlayerStatisticSerializer(players, many=True)
+        return Response(serializer.data)
 
 
 class CardViewSet(
@@ -393,6 +422,11 @@ class CardViewSet(
                 # Get all players with the lowest score. These players are the winners.
                 for other_player in game.player_set.filter(score=lowest_score):
                     game.winners.add(other_player.user)
+                    game.save()
+                
+                # The remaining players (the ones with higher scores) are the losers.
+                for other_player in game.player_set.filter(score__gt=lowest_score):
+                    game.losers.add(other_player.user)
                     game.save()
 
                 # Don't give players new cards if game is finished.
