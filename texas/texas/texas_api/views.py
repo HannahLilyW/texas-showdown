@@ -35,8 +35,8 @@ class CreateAccountView(views.APIView):
             return Response('Username must be a string', status=status.HTTP_400_BAD_REQUEST)
         if not isinstance(password, str):
             return Response('Password must be a string', status=status.HTTP_400_BAD_REQUEST)
-        if len(username) > 150:
-            return Response('Username must be 150 characters or fewer', status=status.HTTP_400_BAD_REQUEST)
+        if len(username) > 32:
+            return Response('Username must be 32 characters or fewer', status=status.HTTP_400_BAD_REQUEST)
         if len(password) > 150:
             return Response('Password must be 150 characters or fewer', status=status.HTTP_400_BAD_REQUEST)
         if len(username) < 1:
