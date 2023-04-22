@@ -219,7 +219,7 @@ class GameViewSet(
             card.save()
         player.save()
 
-        sio_update_game(game)
+        sio_update_game(game.id)
 
         return Response('ok')
 
@@ -262,7 +262,7 @@ class GameViewSet(
         game.is_started = True
         game.save()
 
-        sio_update_game(game)
+        sio_update_game(game.id)
 
         return Response('ok')
     
@@ -272,7 +272,7 @@ class GameViewSet(
         player.waiting_for_continue = False
         player.save()
 
-        sio_update_game(game)
+        sio_update_game(game.id)
 
         return Response('ok')
 
@@ -431,7 +431,7 @@ class CardViewSet(
                     game.save()
 
                 # Don't give players new cards if game is finished.
-                sio_update_game(game)
+                sio_update_game(game.id)
                 return Response('ok')
 
             # Shuffle the deck and give players their cards.
@@ -503,5 +503,5 @@ class CardViewSet(
             next_player.is_turn = True
             next_player.save()
 
-        sio_update_game(game)
+        sio_update_game(game.id)
         return Response('ok')
