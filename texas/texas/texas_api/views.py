@@ -16,7 +16,8 @@ import secrets  # Cryptographically secure randomness
 import math
 
 
-def sio_update_game(game):
+def sio_update_game(game_id):
+    game = Game.objects.get(game_id)
     serializer = GameSerializer(game)
     sio_server.emit('update_game', serializer.data, room=str(game.id))
 
@@ -159,7 +160,7 @@ class GameViewSet(
         player.current_game = game
         player.save()
 
-        sio_update_game(game)
+        sio_update_game(game.id)
 
         return Response('ok')
     
