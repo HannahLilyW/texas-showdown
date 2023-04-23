@@ -13,6 +13,7 @@ class Game(models.Model):
     turn = models.IntegerField(default=0)
     hand = models.IntegerField(default=1)
     winners = models.ManyToManyField(User, blank=True, related_name='winner')
+    losers = models.ManyToManyField(User, blank=True, related_name='loser')
 
 
 class Player(models.Model):
@@ -43,3 +44,4 @@ class TurnHistory(models.Model):
     hand = models.IntegerField()
     player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True)
     card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True)
+    end_game = models.BooleanField(default=False)
