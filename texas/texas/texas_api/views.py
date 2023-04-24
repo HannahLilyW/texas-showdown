@@ -19,7 +19,7 @@ import math
 def sio_update_game(game_id):
     log.error(f'sio_update_game {game_id}')
     try:
-        game = Game.objects.get(id=game_id)
+        game = Game.objects.get(id=int(game_id))
     except Exception as e:
         log.error(e)
     serializer = GameSerializer(game)
