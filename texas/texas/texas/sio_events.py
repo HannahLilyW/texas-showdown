@@ -1,7 +1,9 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.authtoken.models import Token
 from texas.sio_server import sio_server
-from texas_api.models import Game, Player
 from texas.logging import log
+from texas_api.models import Game, Player
+from texas_api.serializers import GameSerializer
 
 
 @sio_server.event
@@ -19,4 +21,15 @@ def connect(sid, environ, auth=''):
     sio_server.save_session(sid, {'username': token.user.username})
     log.error(f'adding {token.user.username} to room {active_game.id}')
     sio_server.enter_room(sid, str(active_game.id))
-    sio_server.send(f'{token.user.username} entered the room.', str(active_game.id))
+
+
+def sio_update_game(game_id):
+    log.error(f'sio_update_game {game_id}')
+    try:
+        game = Game.objects.get(id=int(game_id))
+    except ObjectDoesNotExist as e:
+        sio_server.send(None, room=str(game_id))
+        return
+    serializer = GameSerializer(game)
+    log.error(f'emitting update_game: {serializer.data}')
+    sio_server.send(serializer.data, room=str(game_id))

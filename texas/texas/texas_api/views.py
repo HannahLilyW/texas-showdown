@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
-from texas.sio_server import sio_update_game
+from texas.sio_events import sio_update_game
 import json
 import re
 import secrets  # Cryptographically secure randomness
