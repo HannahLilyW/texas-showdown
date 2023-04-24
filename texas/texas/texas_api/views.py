@@ -1,7 +1,6 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError, ObjectDoesNotExist
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ValidationError
 from django.db.models import F, Count
 from rest_framework import views, viewsets, mixins, permissions, status
 from rest_framework.response import Response
@@ -10,23 +9,11 @@ from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
-from texas.sio_server import sio_server
+from texas.sio_server import sio_update_game
 import json
 import re
 import secrets  # Cryptographically secure randomness
 import math
-
-
-def sio_update_game(game_id):
-    log.error(f'sio_update_game {game_id}')
-    try:
-        game = Game.objects.get(id=int(game_id))
-    except ObjectDoesNotExist as e:
-        sio_server.emit('update_game', None, room=str(game_id))
-        return
-    serializer = GameSerializer(game)
-    log.error(f'emitting update_game: {serializer.data}')
-    sio_server.emit('update_game', serializer.data, room=str(game_id))
 
 
 class CreateAccountView(views.APIView):
