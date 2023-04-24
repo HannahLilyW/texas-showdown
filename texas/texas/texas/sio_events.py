@@ -1,6 +1,7 @@
 from rest_framework.authtoken.models import Token
 from texas.sio_server import sio_server
 from texas_api.models import Game, Player
+from texas.logging import log
 
 
 @sio_server.event
