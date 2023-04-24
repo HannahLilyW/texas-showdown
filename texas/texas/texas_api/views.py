@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import F, Count
 from rest_framework import views, viewsets, mixins, permissions, status
 from rest_framework.response import Response
@@ -20,12 +21,12 @@ def sio_update_game(game_id):
     log.error(f'sio_update_game {game_id}')
     try:
         game = Game.objects.get(id=int(game_id))
-    except Exception as e:
-        log.error(e)
-        log.error(type(e))
+    except ObjectDoesNotExist as e:
+        sio_server.emit('update_game', None, room=str(game_id))
+        return
     serializer = GameSerializer(game)
     log.error(f'emitting update_game: {serializer.data}')
-    sio_server.emit('update_game', serializer.data, room=str(game.id))
+    sio_server.emit('update_game', serializer.data, room=str(game_id))
 
 
 class CreateAccountView(views.APIView):
