@@ -176,6 +176,7 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        game_id = game.id
 
         if not game.is_started:
             if len(game.player_set.all()) == 1:
@@ -227,7 +228,7 @@ class GameViewSet(
 
         log.error('here 2')
 
-        sio_update_game(game.id)
+        sio_update_game(game_id)
 
         log.error('here 3')
 
