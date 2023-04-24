@@ -15,5 +15,6 @@ def connect(sid, environ, auth=''):
     if not active_game:
         return False
 
-    sio_server.save_session(sid, {'user': token.user})
+    sio_server.save_session(sid, {'username': token.user.username})
+    log.error(f'adding {token.user.username} to room {active_game.id}')
     sio_server.enter_room(sid, str(active_game.id))

@@ -129,8 +129,6 @@ export function startSocket() {
             }
         });
 
-        console.log(socket)
-
         socket.onAny((eventName, ...args) => {
             console.log(args)
             if (eventName == 'update_game') {
