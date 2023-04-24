@@ -22,6 +22,7 @@ def sio_update_game(game_id):
         game = Game.objects.get(id=int(game_id))
     except Exception as e:
         log.error(e)
+        log.error(type(e))
     serializer = GameSerializer(game)
     log.error(f'emitting update_game: {serializer.data}')
     sio_server.emit('update_game', serializer.data, room=str(game.id))
