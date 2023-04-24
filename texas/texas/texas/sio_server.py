@@ -1,7 +1,7 @@
 import socketio
 
 
-sio_server = socketio.Server(async_mode='threading')
+sio_server = socketio.Server(async_mode='threading', logger=True, engineio_logger=True)
 
 
 def sio_update_game(game_id):
