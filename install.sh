@@ -57,11 +57,7 @@ Description=Daphne service
 [Service]
 User=daphne
 WorkingDirectory=/usr/lib/texas
-ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas && 
-daphne -e ssl:8443:privateKey=/etc/letsencrypt/live/$hostName/privkey.pem:certKey=/etc/letsencrypt/live/$hostName/cert.pem texas.asgi:application'
-
-[Install]
-WantedBy=multi-user.target
+ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas && daphne -e ssl:8443:privateKey=/etc/letsencrypt/live/$hostName/privkey.pem:certKey=/etc/letsencrypt/live/$hostName/cert.pem texas.asgi:application'
 
 [Install]
 WantedBy=multi-user.target
