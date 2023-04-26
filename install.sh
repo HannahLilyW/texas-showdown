@@ -41,6 +41,12 @@ read hostName
 
 certbot -d $hostName
 
+mkdir /usr/lib/texas/texas/certs
+cp /etc/letsencrypt/live/$hostName/privkey.pem /usr/lib/texas/texas/certs/privkey.pem
+cp /etc/letsencrypt/live/$hostName/cert.pem /usr/lib/texas/texas/certs/cert.pem
+chown daphne /usr/lib/texas/texas/certs/privkey.pem
+chown daphne /usr/lib/texas/texas/certs/cert.pem
+
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
 [django]
@@ -57,7 +63,7 @@ Description=Daphne service
 [Service]
 User=daphne
 WorkingDirectory=/usr/lib/texas
-ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas && daphne -e ssl:8443:privateKey=/etc/letsencrypt/live/$hostName/privkey.pem:certKey=/etc/letsencrypt/live/$hostName/cert.pem texas.asgi:application'
+ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas && daphne -e ssl:8443:privateKey=/usr/lib/texas/texas/certs/privkey.pem:certKey=/usr/lib/texas/texas/certs/cert.pem texas.asgi:application'
 
 [Install]
 WantedBy=multi-user.target
