@@ -19,12 +19,34 @@ fi
 dnf -y install python39
 dnf -y install epel-release
 dnf -y install certbot
-dnf -y install iptables
+dnf -y install nginx
+dnf -y install python3-certbot-nginx
+
+echo "Please enter the domain name for the server (example: example.com):"
+read hostName
 
 cd /root/texas-showdown/vue-project/
 npm install
 npm run build
-cp -r dist /var/www/html/
+mkdir -p /usr/share/nginx/$hostName/html
+cp -r dist/* /usr/share/nginx/$hostName/html/
+chown -R nginx:nginx /usr/share/nginx/$hostName/html
+
+echo "Writing to /etc/nginx/conf.d/$hostName.conf..."
+cat > /etc/nginx/conf.d/$hostName.conf << EOF
+server {
+        listen 80;
+
+        root /usr/share/nginx/$hostName/html;
+        index index.html index.htm index.nginx-debian.html;
+
+        server_name $hostName www.$hostName;
+
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+EOF
 
 cp -r /root/texas-showdown/texas /usr/lib
 
@@ -37,9 +59,6 @@ pip install -r requirements.txt
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
-echo "Please enter the domain name for the server (example: example.com):"
-read hostName
-
 certbot -d $hostName
 
 useradd daphne
@@ -49,9 +68,6 @@ cp /etc/letsencrypt/live/$hostName/privkey.pem /usr/lib/texas/texas/certs/privke
 cp /etc/letsencrypt/live/$hostName/cert.pem /usr/lib/texas/texas/certs/cert.pem
 chown daphne /usr/lib/texas/texas/certs/privkey.pem
 chown daphne /usr/lib/texas/texas/certs/cert.pem
-
-# work around the fact that the daphne user cannot bind to low ports
-iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
