@@ -50,6 +50,9 @@ chown daphne /usr/lib/texas/texas/certs/cert.pem
 mkdir /run/daphne
 chown daphne /run/daphne
 
+# work around the fact that the daphne user cannot bind to low ports
+iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 8443
+
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
 [django]
@@ -66,7 +69,7 @@ Description=Daphne service
 [Service]
 User=daphne
 WorkingDirectory=/usr/lib/texas
-ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas && daphne -u /run/daphne/daphne.sock -e ssl:443:privateKey=/usr/lib/texas/texas/certs/privkey.pem:certKey=/usr/lib/texas/texas/certs/cert.pem texas.asgi:application'
+ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas && daphne -u /run/daphne/daphne.sock -e ssl:8443:privateKey=/usr/lib/texas/texas/certs/privkey.pem:certKey=/usr/lib/texas/texas/certs/cert.pem texas.asgi:application'
 
 [Install]
 WantedBy=multi-user.target
