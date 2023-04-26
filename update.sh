@@ -16,4 +16,4 @@ source env/bin/activate
 cd texas
 python manage.py migrate
 
-systemctl restart httpd
+systemctl restart daphne

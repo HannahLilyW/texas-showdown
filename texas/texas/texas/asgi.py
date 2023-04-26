@@ -15,5 +15,9 @@ from texas.sio_server import sio_server
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'texas.settings')
 
-application = socketio.ASGIApp(sio_server, get_asgi_application())
-# application = get_asgi_application()
+static_files = {
+    '/static': '/var/www/html/dist',
+}
+
+application = socketio.ASGIApp(sio_server, get_asgi_application(), static_files=static_files)
+
