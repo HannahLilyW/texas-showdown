@@ -11,7 +11,7 @@ from asgiref.sync import sync_to_async
 async def connect(sid, environ, auth=''):
     try:
         get_token = sync_to_async(Token.objects.get)
-        token = get_token(key=auth['token'])
+        token = await get_token(key=auth['token'])
     except Exception as e:
         # Returning False means the connection was rejected.
         log.error(f'rejected connection for user because of invalid token. error: {e}')
