@@ -16,9 +16,15 @@ async def connect(sid, environ, auth=''):
         # Returning False means the connection was rejected.
         log.error(f'rejected connection for user because of invalid token. error: {e}')
         return False
+    
+    def sync_get_user(token):
+        return token.user
+    
+    get_user = sync_to_async(sync_get_user)
+    user = await get_user(token)
 
     get_player = sync_to_async(Player.objects.get)
-    player = await get_player(user=token.user)
+    player = await get_player(user=user)
 
     def sync_get_active_game(player):
         return player.current_game
@@ -29,8 +35,8 @@ async def connect(sid, environ, auth=''):
         log.error('rejected connection for user because no active game')
         return False
 
-    sio_server.save_session(sid, {'username': token.user.username})
-    log.error(f'adding {token.user.username} to room {active_game.id}')
+    sio_server.save_session(sid, {'username': user.username})
+    log.error(f'adding {user.username} to room {active_game.id}')
     sio_server.enter_room(sid, str(active_game.id))
 
 
