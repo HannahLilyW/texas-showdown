@@ -5,10 +5,13 @@ then
     exit
 fi
 
+echo "Please enter the domain name for the server (example: example.com):"
+read hostName
+
 cd /root/texas-showdown/vue-project/
 npm run build
-rm -rf /var/www/html/dist
-cp -r dist /var/www/html/
+rm -rf /usr/share/nginx/$hostName/html/*
+cp -r dist/* /usr/share/nginx/$hostName/html/
 
 cp -r /root/texas-showdown/texas /usr/lib
 cd /usr/lib/texas/
@@ -17,3 +20,4 @@ cd texas
 python manage.py migrate
 
 systemctl restart daphne
+systemctl restart nginx
