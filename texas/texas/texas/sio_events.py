@@ -37,6 +37,8 @@ async def connect(sid, environ, auth=''):
 
     sio_server.save_session(sid, {'username': user.username})
 
+    await server.emit('update_game', {'data': 'foo1'})
+
 
 async def async_sio_update_game(game_id):
     log.error(f'sio_update_game {game_id}')
@@ -52,9 +54,9 @@ async def async_sio_update_game(game_id):
         return serializer.data
 
     get_data = sync_to_async(sync_get_data)
-    data = get_data(serializer)
+    data = await get_data(serializer)
 
-    await sio_server.emit('update_game', {'data': 'foo'}, room=str(game_id))
+    await sio_server.emit('update_game', {'data': 'foo'})
 
 
 sio_update_game = async_to_sync(async_sio_update_game, force_new_loop=True)
