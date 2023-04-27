@@ -45,8 +45,10 @@ def sio_update_game(game_id):
     try:
         game = Game.objects.get(id=int(game_id))
     except ObjectDoesNotExist as e:
-        sio_server.send(None)
+        sio_server.emit('update_game', {'data': 'foobar'})
+        # sio_server.emit('update_game', None)
         return
     serializer = GameSerializer(game)
+    sio_server.emit('update_game', {'data': 'foobar'})
     log.error(f'emitting update_game: {serializer.data}')
-    sio_server.send(serializer.data)
+    # sio_server.emit('update_game', serializer.data)
