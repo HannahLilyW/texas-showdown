@@ -43,11 +43,10 @@ async def connect(sid, environ, auth=''):
 async def sio_update_game(game_id):
     log.error(f'sio_update_game {game_id}')
     try:
-        game = Game.objects.get(id=int(game_id))
+        get_game = sync_to_async(Game.objects.get)
+        game = await get_game(id=int(game_id))
     except ObjectDoesNotExist as e:
         log.error(f'object does not exist: {e}')
-        sio_server.emit('update_game', {'data': 'foobar'}, room='21')
-        # sio_server.emit('update_game', None)
         return
     serializer = GameSerializer(game)
     log.error(f'emitting update_game: {serializer.data}')
