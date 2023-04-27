@@ -129,8 +129,6 @@ export function startSocket() {
             }
         });
 
-        console.log(socket.io)
-
         socket.onAny((eventName, ...args) => {
             console.log(args[0]);
             currentGame.value = args[0];

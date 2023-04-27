@@ -7,7 +7,7 @@ from texas_api.serializers import GameSerializer
 
 
 @sio_server.event
-def connect(sid, environ, auth=''):
+async def connect(sid, environ, auth=''):
     try:
         token = Token.objects.get(key=auth['token'])
     except Exception as e:
