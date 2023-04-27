@@ -55,4 +55,4 @@ async def sio_update_game(game_id):
     get_data = sync_to_async(sync_get_data)
     data = get_data(serializer)
 
-    await sio_server.emit('update_game', data, room=str(game_id))
+    await sio_server.emit('update_game', {'data': 'foo'}, room=str(game_id))
