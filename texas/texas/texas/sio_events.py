@@ -37,8 +37,6 @@ async def connect(sid, environ, auth=''):
 
     sio_server.save_session(sid, {'username': user.username})
     log.error(f'adding {user.username} to room {active_game.id}')
-    sio_server.enter_room(sid, str(active_game.id))
-    await sio_server.emit('enter_room', {'data': 'foo'})
 
 
 def sio_update_game(game_id):
@@ -52,5 +50,5 @@ def sio_update_game(game_id):
         return
     serializer = GameSerializer(game)
     log.error(f'emitting update_game: {serializer.data}')
-    sio_server.emit('update_game', {'data': 'foobar'}, room=str(game_id))
+    await sio_server.emit('update_game', {'data': 'foobar'}, room=str(game_id))
     # sio_server.emit('update_game', serializer.data)
