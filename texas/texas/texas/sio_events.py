@@ -17,8 +17,14 @@ async def connect(sid, environ, auth=''):
         log.error(f'rejected connection for user because of invalid token. error: {e}')
         return False
 
-    get_active_game = sync_to_async(Player.objects.get)
-    active_game = (await get_active_game(user=token.user)).current_game
+    get_player = sync_to_async(Player.objects.get)
+    player = await get_player(user=token.user)
+
+    def sync_get_active_game(player):
+        return player.current_game
+
+    get_active_game = sync_to_async(sync_get_active_game)
+    active_game = await get_active_game(player)
     if not active_game:
         log.error('rejected connection for user because no active game')
         return False
