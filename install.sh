@@ -43,7 +43,7 @@ server {
     server_name $hostName www.$hostName;
 
     location ~ ^/texas_api/(.*) {
-        proxy_pass https://127.0.0.1:8443;
+        proxy_pass https://127.0.0.1:8443/;
     }
     location / {
         try_files \$uri \$uri/ /index.html;
@@ -93,6 +93,10 @@ ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas
 [Install]
 WantedBy=multi-user.target
 EOF
+
+# change the database owner to daphne
+chown daphne:daphne /usr/lib/texas/texas/db.sqlite3
+chown daphne:daphne /usr/lib/texas/texas
 
 echo "Running migrations..."
 cd texas
