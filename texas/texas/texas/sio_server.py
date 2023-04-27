@@ -1,5 +1,5 @@
 import socketio
+from texas.settings import config
 
 
-# sio_server = socketio.Server(async_mode='threading')
-sio_server = socketio.AsyncServer(async_mode='asgi')
+sio_server = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins=[config['django']['hostname']])
