@@ -42,10 +42,10 @@ server {
 
         server_name $hostName www.$hostName;
 
-        location /texas_api/ {
+        location ~ ^/texas_api/[A-Za-z0-9_.]*$ {
             proxy_pass https://127.0.0.1:8443;
         }
-        location / {
+        location ~ ^/[A-Za-z0-9_.]*$ {
                 try_files \$uri \$uri/ /index.html;
         }
 }
