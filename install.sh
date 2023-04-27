@@ -35,19 +35,19 @@ chown -R nginx:nginx /usr/share/nginx/$hostName/html
 echo "Writing to /etc/nginx/conf.d/$hostName.conf..."
 cat > /etc/nginx/conf.d/$hostName.conf << EOF
 server {
-        listen 80;
+    listen 80;
 
-        root /usr/share/nginx/$hostName/html;
-        index index.html index.htm index.nginx-debian.html;
+    root /usr/share/nginx/$hostName/html;
+    index index.html index.htm index.nginx-debian.html;
 
-        server_name $hostName www.$hostName;
+    server_name $hostName www.$hostName;
 
-        location ~ ^/texas_api/[A-Za-z0-9_.]*$ {
-            proxy_pass https://127.0.0.1:8443;
-        }
-        location ~ ^/[A-Za-z0-9_.]*$ {
-                try_files \$uri \$uri/ /index.html;
-        }
+    location ~ ^/texas_api/?[A-Za-z0-9_./]*$ {
+        proxy_pass https://127.0.0.1:8443;
+    }
+    location ~ ^/[A-Za-z0-9_./]*$ {
+        try_files \$uri \$uri/ /index.html;
+    }
 }
 EOF
 
