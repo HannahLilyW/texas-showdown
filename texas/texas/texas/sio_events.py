@@ -37,7 +37,7 @@ async def connect(sid, environ, auth=''):
 
     sio_server.save_session(sid, {'username': user.username})
 
-    await sio_server.emit('update_game', {'data': 'foo1'})
+    # await sio_server.emit('update_game', {'data': 'foo1'})
 
 
 async def async_sio_update_game(game_id):
