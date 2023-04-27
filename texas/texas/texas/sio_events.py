@@ -36,7 +36,6 @@ async def connect(sid, environ, auth=''):
         return False
 
     sio_server.save_session(sid, {'username': user.username})
-    log.error(f'adding {user.username} to room {active_game.id}')
 
 
 @async_to_sync
@@ -49,6 +48,11 @@ async def sio_update_game(game_id):
         log.error(f'object does not exist: {e}')
         return
     serializer = GameSerializer(game)
-    log.error(f'emitting update_game: {serializer.data}')
-    await sio_server.emit('update_game', {'data': 'foobar'}, room=str(game_id))
-    # sio_server.emit('update_game', serializer.data)
+    
+    def sync_get_data(serializer):
+        return serializer.data
+
+    get_data = sync_to_async(sync_get_data)
+    data = get_data(serializer)
+
+    await sio_server.emit('update_game', data, room=str(game_id))
