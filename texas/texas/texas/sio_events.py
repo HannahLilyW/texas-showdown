@@ -12,7 +12,7 @@ async def connect(sid, environ, auth=''):
         token = Token.objects.get(key=auth['token'])
     except Exception as e:
         # Returning False means the connection was rejected.
-        log.error('rejected connection for user because of invalid token')
+        log.error(f'rejected connection for user because of invalid token. error: {e}')
         return False
 
     active_game = Player.objects.get(user=token.user).current_game
