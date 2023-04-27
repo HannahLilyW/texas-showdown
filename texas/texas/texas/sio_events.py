@@ -4,7 +4,7 @@ from texas.sio_server import sio_server
 from texas.logging import log
 from texas_api.models import Game, Player
 from texas_api.serializers import GameSerializer
-from asgiref.sync import sync_to_async
+from asgiref.sync import sync_to_async, async_to_sync
 
 
 @sio_server.event
@@ -39,7 +39,8 @@ async def connect(sid, environ, auth=''):
     log.error(f'adding {user.username} to room {active_game.id}')
 
 
-def sio_update_game(game_id):
+@async_to_sync
+async def sio_update_game(game_id):
     log.error(f'sio_update_game {game_id}')
     try:
         game = Game.objects.get(id=int(game_id))
