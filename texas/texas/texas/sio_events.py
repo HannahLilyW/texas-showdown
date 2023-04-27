@@ -4,12 +4,14 @@ from texas.sio_server import sio_server
 from texas.logging import log
 from texas_api.models import Game, Player
 from texas_api.serializers import GameSerializer
+from asgiref.sync import sync_to_async
 
 
 @sio_server.event
 async def connect(sid, environ, auth=''):
     try:
-        token = Token.objects.get(key=auth['token'])
+        get_token = sync_to_async(Token.objects.get)
+        token = get_token(key=auth['token'])
     except Exception as e:
         # Returning False means the connection was rejected.
         log.error(f'rejected connection for user because of invalid token. error: {e}')
