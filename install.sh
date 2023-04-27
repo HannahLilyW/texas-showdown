@@ -42,8 +42,11 @@ server {
 
         server_name $hostName www.$hostName;
 
+        location /texas_api/ {
+            proxy_pass https://127.0.0.1:8443;
+        }
         location / {
-                try_files $uri $uri/ =404;
+                try_files \$uri \$uri/ /index.html;
         }
 }
 EOF
@@ -59,7 +62,7 @@ pip install -r requirements.txt
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
-certbot -d $hostName
+certbot --nginx -d $hostName
 
 useradd daphne
 
@@ -98,3 +101,5 @@ python manage.py migrate
 systemctl daemon-reload
 systemctl enable daphne
 systemctl restart daphne
+systemctl enable nginx
+systemctl restart nginx
