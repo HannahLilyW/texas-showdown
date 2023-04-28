@@ -130,8 +130,9 @@ export function startSocket() {
         });
 
         socket.onAny((eventName, ...args) => {
-            console.log(args[0]);
-            currentGame.value = args[0];
+            if (eventName == 'update_game') {
+                currentGame.value = args[0];
+            }
         });
     }
 }

@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
-from texas.sio_events import sio_update_game
+from texas.sio_events import sio_leave_room, sio_update_game
 import json
 import re
 import secrets  # Cryptographically secure randomness
@@ -214,6 +214,7 @@ class GameViewSet(
             card.save()
         player.save()
 
+        sio_leave_room(player.user.id, game_id)
         sio_update_game(game_id)
 
         return Response('ok')
