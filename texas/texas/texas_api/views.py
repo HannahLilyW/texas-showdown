@@ -160,7 +160,6 @@ class GameViewSet(
     
     @action(detail=False, methods=['post'])
     def leave_game(self, request):
-        log.error('here 1')
         player = Player.objects.get(user=request.user)
         game = player.current_game
         if not game:
@@ -215,11 +214,7 @@ class GameViewSet(
             card.save()
         player.save()
 
-        log.error('here 2')
-
         sio_update_game(game_id)
-
-        log.error('here 3')
 
         return Response('ok')
 

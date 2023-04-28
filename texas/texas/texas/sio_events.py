@@ -7,6 +7,9 @@ from texas_api.serializers import GameSerializer
 from asgiref.sync import sync_to_async, async_to_sync
 
 
+userids_to_sids = {}
+
+
 @sio_server.event
 async def connect(sid, environ, auth=''):
     try:
@@ -34,14 +37,20 @@ async def connect(sid, environ, auth=''):
     if not active_game:
         log.error('rejected connection for user because no active game')
         return False
+    
+    global userids_to_sids
+    userids_to_sids[f'user{user.id}'] = sid
 
     sio_server.save_session(sid, {'username': user.username})
+    sio_server.enter_room(sid, f'room{active_game.id}')
 
-    # await sio_server.emit('update_game', {'data': 'foo1'})
+
+async def async_sio_leave_room(user_id, game_id):
+    global userids_to_sids
+    sio_server.leave_room(userids_to_sids[f'user{user_id}'], f'room{game_id}')
 
 
 async def async_sio_update_game(game_id):
-    log.error(f'sio_update_game {game_id}')
     try:
         get_game = sync_to_async(Game.objects.get)
         game = await get_game(id=int(game_id))
@@ -56,7 +65,8 @@ async def async_sio_update_game(game_id):
     get_data = sync_to_async(sync_get_data)
     data = await get_data(serializer)
 
-    await sio_server.emit('update_game', {'data': 'foo'})
+    await sio_server.emit('update_game', serializer.data, room=f'room{game_id}')
 
 
+sio_leave_room = async_to_sync(async_sio_leave_room, force_new_loop=True)
 sio_update_game = async_to_sync(async_sio_update_game, force_new_loop=True)
