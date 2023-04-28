@@ -114,6 +114,9 @@ function getHand() {
     get('players/hand/').then(response => {
         response.json().then(responseJson => {
             hand.value = responseJson.sort((a: number, b: number) => {return a-b});
+            if (hand.value && activeCard.value && !hand.value.includes(activeCard.value)) {
+                activeCard.value = null;
+            }
         })
     })
 }
