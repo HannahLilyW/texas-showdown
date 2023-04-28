@@ -108,11 +108,7 @@ function leaveGame() {
 }
 
 function startGame() {
-    post('games/start_game/', {}).then(response => {
-        response.json().then(responseJson => {
-            currentGame.value = responseJson;
-        })
-    })
+    post('games/start_game/', {}).then(response => {})
 }
 
 function getHand() {
