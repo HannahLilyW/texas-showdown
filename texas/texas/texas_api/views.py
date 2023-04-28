@@ -268,7 +268,8 @@ class GameViewSet(
         player.waiting_for_continue = False
         player.save()
 
-        sio_update_game(game.id)
+        if player.current_game:
+            sio_update_game(player.current_game.id)
 
         return Response('ok')
 
