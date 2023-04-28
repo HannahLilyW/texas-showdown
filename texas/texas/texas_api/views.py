@@ -415,7 +415,7 @@ class CardViewSet(
                 # Figure out the winner(s) of the game
 
                 # Find the lowest score
-                lowest_score = game.player_set.order_by('-score')[0].score
+                lowest_score = game.player_set.order_by('score')[0].score
 
                 # Get all players with the lowest score. These players are the winners.
                 for other_player in game.player_set.filter(score=lowest_score):
