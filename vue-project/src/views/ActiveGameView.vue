@@ -10,7 +10,6 @@ let activeCard: Ref<number|null> = ref(null);
 let error: Ref<string> = ref('');
 
 watch(currentGame, () => {
-    console.log(currentGame)
     getHand();
 })
 
