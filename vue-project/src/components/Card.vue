@@ -45,7 +45,7 @@ const colorsToHex: Record<string, string> = {
 </script>
 
 <template>
-<div class="card">
+<div class="card" v-if="number != null">
     <div class="column-1">
         <div class="meter" :class="{empty: number > props.number}" v-for="number in colorsToNumbers[color]"></div>
         <div class="meter-head" :class="{filled: Number(props.number) == colorsToNumbers[color].slice(-1)[0]}">{{ colorsToNumbers[color].length }}</div>
