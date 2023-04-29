@@ -14,6 +14,60 @@ import json
 import re
 import secrets  # Cryptographically secure randomness
 import math
+from threading import Timer
+
+
+# Timers for each game to track when to end them due to inactivity
+timers = {}
+
+
+def timeout(self, game_id):
+    game = Game.objects.get(id=game_id)
+    if not game.is_finished:
+        # Check if there are any players we are waiting on to click continue.
+        # If there are, all those players lose,
+        # and the remaining ones win.
+        players_waiting_for_continue = []
+        for player in game.player_set.all():
+            if player.waiting_for_continue:
+                players_waiting_for_continue.append(player)
+                game.losers.add(player.user)
+                game.save()
+                TurnHistory.objects.create(
+                    game=game,
+                    turn=game.turn,
+                    hand=game.hand,
+                    player=player,
+                    end_game=True
+                )
+        if len(players_waiting_for_continue):
+            game.is_finished = True
+            game.save()
+            for other_player in game.player_set.all():
+                if other_player not in players_waiting_for_continue:
+                    game.winners.add(other_player.user)
+                    game.save()
+        else:
+            # Else, whoever's turn it currently is is the loser.
+            player = Player.objects.filter(current_game=game, is_turn=True)
+
+            TurnHistory.objects.create(
+                game=game,
+                turn=game.turn,
+                hand=game.hand,
+                player=player,
+                end_game=True
+            )
+            game.is_finished = True
+
+            # This player should lose, and all other players should win.
+            game.losers.add(player.user)
+            game.save()
+            for other_player in game.player_set.all():
+                if other_player != player:
+                    game.winners.add(other_player.user)
+                    game.save()
+        sio_update_game(game.id)
 
 
 class CreateAccountView(views.APIView):
@@ -260,6 +314,10 @@ class GameViewSet(
 
         sio_update_game(game.id)
 
+        global timers
+        timers[f'game{game.id}'] = Timer(120, timeout, [game.id])
+        timers[f'game{game.id}'].start()
+
         return Response('ok')
     
     @action(detail=False, methods=['post'])
@@ -270,6 +328,10 @@ class GameViewSet(
 
         if player.current_game:
             sio_update_game(player.current_game.id)
+
+            global timers
+            timers[f'game{player.current_game.id}'].cancel()
+            timers[f'game{player.current_game.id}'] = Timer(120, timeout, [player.current_game.id])
 
         return Response('ok')
 
@@ -501,4 +563,9 @@ class CardViewSet(
             next_player.save()
 
         sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'].cancel()
+        timers[f'game{game.id}'] = Timer(120, timeout, [game.id])
+
         return Response('ok')
