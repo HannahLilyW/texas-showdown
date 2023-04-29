@@ -22,7 +22,6 @@ timers = {}
 
 
 def timeout(game_id):
-    log.error('timeout')
     game = Game.objects.get(id=game_id)
     if not game.is_finished:
         # Check if there are any players we are waiting on to click continue.
@@ -316,7 +315,7 @@ class GameViewSet(
         sio_update_game(game.id)
 
         global timers
-        timers[f'game{game.id}'] = Timer(30, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -332,7 +331,8 @@ class GameViewSet(
 
             global timers
             timers[f'game{player.current_game.id}'].cancel()
-            timers[f'game{player.current_game.id}'] = Timer(30, timeout, [player.current_game.id])
+            timers[f'game{player.current_game.id}'] = Timer(60, timeout, [player.current_game.id])
+            timers[f'game{player.current_game.id}'].start()
 
         return Response('ok')
 
@@ -567,6 +567,7 @@ class CardViewSet(
 
         global timers
         timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(30, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'].start()
 
         return Response('ok')
