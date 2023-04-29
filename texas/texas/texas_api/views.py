@@ -49,7 +49,7 @@ def timeout(game_id):
                     game.save()
         else:
             # Else, whoever's turn it currently is is the loser.
-            player = Player.objects.filter(current_game=game, is_turn=True)
+            player = Player.objects.filter(current_game=game, is_turn=True).first()
 
             TurnHistory.objects.create(
                 game=game,
