@@ -1,25 +1,6 @@
 # texas-showdown
 An implementation of the game Texas Showdown, created for the class SWE 681: Secure Software Design and Programming.
 
-# Windows development
-
-## Run frontend locally for development
-Tested only on Windows
-```
-cd vue-project
-npm run dev
-```
-
-## Run backend locally for development
-Tested only on Windows
-```
-cd texas
-env\Scripts\activate
-cd texas
-python manage.py migrate
-python manage.py runserver
-```
-
 # Docker development
 Tested on Ubuntu
 ```
@@ -70,9 +51,6 @@ cd /root/texas-showdown/
 git pull
 ./update.sh
 ```
-
-# Where to find backend logs
-Backend error logs are saved at `/var/log/httpd/error_log`
 
 # Authentication
 The site uses the TokenAuthentication scheme provided by Django REST Framework. For more info see https://www.django-rest-framework.org/api-guide/authentication/#tokenauthentication

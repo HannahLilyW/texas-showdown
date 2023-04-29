@@ -16,21 +16,59 @@ else
     dnf -y module install nodejs:16
 fi
 
-dnf -y install httpd
 dnf -y install python39
-dnf -y install python39-mod_wsgi
 dnf -y install epel-release
 dnf -y install certbot
-dnf -y install python3-certbot-apache
-dnf -y install mod_ssl
-
-# This should get the server's IP
-# ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
+dnf -y install nginx
+dnf -y install python3-certbot-nginx
 
 cd /root/texas-showdown/vue-project/
 npm install
 npm run build
-cp -r dist /var/www/html/
+mkdir -p /usr/share/nginx/localhost/html
+cp -r dist/* /usr/share/nginx/localhost/html/
+chown -R nginx:nginx /usr/share/nginx/localhost/html
+
+echo "Writing to /etc/nginx/conf.d/localhost.conf..."
+cat > /etc/nginx/conf.d/localhost.conf << EOF
+server {
+    root /usr/share/nginx/localhost/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name localhost www.localhost;
+
+    location /texas_api/ {
+        proxy_pass https://127.0.0.1:8443/;
+    }
+    location /socket.io/ {
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$host;
+        proxy_pass https://127.0.0.1:8443/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /root/certs/self-signed.crt;
+    ssl_certificate_key /root/certs/self-signed.key;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+server {
+    if ($host = localhost) {
+        return 301 https://\$host\$request_uri;
+    }
+
+    listen 80;
+
+    server_name localhost www.localhost;
+    return 404;
+}
+EOF
 
 cp -r /root/texas-showdown/texas /usr/lib
 
@@ -43,56 +81,7 @@ pip install -r requirements.txt
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
-echo "Writing to /etc/httpd/conf.d/texas.conf..."
-cat > /etc/httpd/conf.d/texas.conf << EOF
-<VirtualHost *:443>
-ServerName localhost
-DocumentRoot "/var/www/html/dist/"
-SSLCertificateFile /root/certs/self-signed.crt
-SSLCertificateKeyFile /root/certs/self-signed.key
-Include /etc/letsencrypt/options-ssl-apache.conf
-</VirtualHost>
-<Directory /var/www/html/dist>
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
-</Directory>
-
-SSLProxyEngine on
-ProxyPass "/socket.io/" "https://localhost/texas_api/socket.io/"
-
-WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
-WSGIPythonHome /usr/lib/texas/env
-WSGIPythonPath /usr/lib/texas/texas
-WSGIPassAuthorization On
-
-<Directory /usr/lib/texas/texas/texas>
-<Files wsgi.py>
-Require all granted
-</Files>
-</Directory>
-EOF
-
-echo "Writing to /etc/letsencrypt/options-ssl-apache.conf..."
-cat > /etc/letsencrypt/options-ssl-apache.conf << EOF
-SSLEngine on
-
-SSLProtocol             all -SSLv2 -SSLv3 -TLSv1 -TLSv1.1
-SSLCipherSuite          ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
-SSLHonorCipherOrder     off
-SSLSessionTickets       off
-
-SSLOptions +StrictRequire
-
-# Add vhost name to log entries:
-LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-agent}i\"" vhost_combined
-LogFormat "%v %h %l %u %t \"%r\" %>s %b" vhost_common
-EOF
+useradd daphne
 
 mkdir -p /root/certs/
 openssl req -x509 -nodes -newkey rsa:2048 -days 3650 -keyout /root/certs/self-signed.key -out /root/certs/self-signed.crt
@@ -109,14 +98,8 @@ echo "Running migrations..."
 cd texas
 python manage.py migrate
 
-# change the database owner to apache
-# and permanently change the selinux file context of the database and the directory it's in so apache is allowed to write to it
-chown apache:apache /usr/lib/texas/texas/db.sqlite3
-chown apache:apache /usr/lib/texas/texas
-# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
-# semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
-# restorecon -RF /usr/lib/texas/texas
+# change the database owner to daphne
+chown daphne:daphne /usr/lib/texas/texas/db.sqlite3
+chown daphne:daphne /usr/lib/texas/texas
 
 systemctl daemon-reload
-systemctl enable httpd
-systemctl restart httpd
