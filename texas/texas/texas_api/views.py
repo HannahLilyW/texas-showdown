@@ -21,7 +21,7 @@ from threading import Timer
 timers = {}
 
 
-def timeout(self, game_id):
+def timeout(game_id):
     game = Game.objects.get(id=game_id)
     if not game.is_finished:
         # Check if there are any players we are waiting on to click continue.
