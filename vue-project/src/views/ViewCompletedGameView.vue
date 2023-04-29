@@ -38,12 +38,12 @@ getCompletedGame();
             <div class="spacer" v-if="(turnhistory.turn % game.num_players) == 0"></div>
             <div class="turnhistory">
                 <div v-if="turnhistory.end_game">{{ turnhistory.player }} left the game</div>
-                <div v-else>
+                <template v-else>
                     <div class="played">{{ turnhistory.player }} played </div>
                     <Card
                         :number="turnhistory.card"
                     ></Card>
-                </div>
+                </template>
             </div>
         </template>
         <div>Winner(s): {{ winners }}</div>
