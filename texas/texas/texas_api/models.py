@@ -9,6 +9,8 @@ class Game(models.Model):
     num_players = models.IntegerField()
     betting = models.BooleanField()
     is_started = models.BooleanField(default=False)
+    is_betting_round = models.BooleanField(default=False)
+    pot = models.IntegerField(default=0)
     is_finished = models.BooleanField(default=False)
     turn = models.IntegerField(default=0)
     hand = models.IntegerField(default=1)
@@ -24,6 +26,7 @@ class Player(models.Model):
     waiting_for_continue = models.BooleanField(default=False)
     tricks = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
+    money = models.IntegerField(default=0)
 
     class Meta:
         ordering = ['position', 'pk']
