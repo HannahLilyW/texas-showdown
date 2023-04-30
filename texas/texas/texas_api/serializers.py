@@ -50,7 +50,8 @@ class PlayerNameListField(serializers.RelatedField):
             'is_turn': value.is_turn,
             'waiting_for_continue': value.waiting_for_continue,
             'tricks': value.tricks,
-            'score': value.score
+            'score': value.score,
+            'bet': value.bet
         }
 
 
