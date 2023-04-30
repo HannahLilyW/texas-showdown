@@ -326,7 +326,7 @@ getCurrentGame();
         <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">
             <template v-if="currentGame.is_betting_round">
                 <form v-if="canOpen || canRaise">
-                    <label for="betAmount">Amount to {{ canOpen ? 'Open With' : 'Raise To' }}:</label>
+                    <label for="betAmount">Amount to {{ canOpen ? 'Open With' : 'Raise To' }}: $</label>
                     <input id="betAmount" type="number" v-model="betAmount" maxlength="32">
                 </form>
                 <div class="button" v-if="canOpen" @click="open()">Open</div>
@@ -401,6 +401,11 @@ getCurrentGame();
 
 .active {
     border: 4px solid var(--color-card-selected);
+}
+
+input {
+    padding: 4px;
+    margin: 4px;
 }
 
 </style>
