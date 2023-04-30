@@ -193,7 +193,15 @@ getCurrentGame();
     </div>
 </div>
 <div v-if="currentGame && currentGame.is_started">
-    <div class="current-game-background">
+    <div class="current-game-betting-round-background" v-if="currentGame.is_betting_round">
+        <div>Player</div>
+        <div>Bet</div>
+        <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
+            <div class="player-username">{{ player.username }}</div>
+            <div class="player-bet">{{ player.bet }}</div>
+        </template>
+    </div>
+    <div class="current-game-background" v-else>
         <div>Player</div>
         <div>Play</div>
         <div>Tricks</div>
@@ -224,6 +232,9 @@ getCurrentGame();
     <div class="game-status">
         <template v-if="currentGame.is_finished">
             Game over! {{ winners }} won!
+        </template>
+        <template v-else-if="currentGame.is_betting_round">
+            Betting Round
         </template>
         <template v-else-if="playersWaitingForContinue.length">
             {{ currentGame.player_set.find(player => player.is_turn)?.username }} took the trick!
@@ -279,6 +290,18 @@ getCurrentGame();
     height: 100%;
     display: grid;
     grid-template-columns: fit-content(200px) min-content min-content min-content;
+    column-gap: 40px;
+    justify-items: center;
+    align-items: center;
+    justify-content: center;
+}
+
+.current-game-betting-round-background {
+    background-color: var(--color-button-shadow);
+    width: 100vw;
+    height: 100%;
+    display: grid;
+    grid-template-columns: fit-content(200px) min-content;
     column-gap: 40px;
     justify-items: center;
     align-items: center;

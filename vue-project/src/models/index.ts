@@ -4,6 +4,8 @@ export type Game = {
     created_by: string,
     num_players: number,
     betting: boolean,
+    is_betting_round: boolean,
+    pot: number,
     is_started: boolean,
     owner: string,
     player_set: Player[],
@@ -26,7 +28,9 @@ export type Player = {
     is_turn: boolean,
     waiting_for_continue: boolean,
     tricks: number,
-    score: number
+    score: number,
+    money: number,
+    bet: number,
 }
 
 export type PlayerStatistic = {

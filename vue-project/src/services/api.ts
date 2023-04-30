@@ -4,7 +4,7 @@ import type { Ref } from 'vue';
 import { io, Socket } from "socket.io-client";
 import type { Game } from '../models';
 
-const isDevelopment = false;
+const isDevelopment = true;
 
 const baseUrl: string = "/texas_api/";
 
