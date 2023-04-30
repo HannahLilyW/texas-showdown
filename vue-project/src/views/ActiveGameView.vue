@@ -234,7 +234,8 @@ getCurrentGame();
             Game over! {{ winners }} won!
         </template>
         <template v-else-if="currentGame.is_betting_round">
-            Betting Round
+            <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
+            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.username }}'s turn</template>
         </template>
         <template v-else-if="playersWaitingForContinue.length">
             {{ currentGame.player_set.find(player => player.is_turn)?.username }} took the trick!
