@@ -263,6 +263,9 @@ class GameViewSet(
         player.waiting_for_continue = False
         player.tricks = 0
         player.score = 0
+        player.money = 0
+        player.bet = 0
+        player.fold = False
         for card in player.card_set.all():
             card.player = None
             card.save()
