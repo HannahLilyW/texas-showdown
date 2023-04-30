@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { get, post, startSocket, stopSocket, currentGame, hand, username } from '../services/api.js';
-import { ref, onBeforeUnmount, computed } from 'vue';
+import { watch, ref, onBeforeUnmount, computed } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
 import Card from '../components/Card.vue';
@@ -8,6 +8,10 @@ import Card from '../components/Card.vue';
 let loading: Ref<boolean> = ref(true);
 let activeCard: Ref<number|null> = ref(null);
 let error: Ref<string> = ref('');
+
+watch(currentGame, () => {
+    getHand();
+})
 
 const recentHistory = computed(() => {
     /**
@@ -103,17 +107,16 @@ function leaveGame() {
 }
 
 function startGame() {
-    post('games/start_game/', {}).then(response => {
-        response.json().then(responseJson => {
-            currentGame.value = responseJson;
-        })
-    })
+    post('games/start_game/', {}).then(response => {})
 }
 
 function getHand() {
     get('players/hand/').then(response => {
         response.json().then(responseJson => {
             hand.value = responseJson.sort((a: number, b: number) => {return a-b});
+            if (hand.value && activeCard.value && !hand.value.includes(activeCard.value)) {
+                activeCard.value = null;
+            }
         })
     })
 }

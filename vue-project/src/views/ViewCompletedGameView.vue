@@ -37,11 +37,9 @@ getCompletedGame();
             <div class="hand" v-if="turnhistory.turn == 0">Hand {{ turnhistory.hand }}</div>
             <div class="spacer" v-if="(turnhistory.turn % game.num_players) == 0"></div>
             <div class="turnhistory">
-                <template v-if="turnhistory.end_game">
-                    <div>{{ turnhistory.player }} left the game</div>
-                </template>
+                <div v-if="turnhistory.end_game">{{ turnhistory.player }} left the game</div>
                 <template v-else>
-                    <div>{{ turnhistory.player }} played </div>
+                    <div class="played">{{ turnhistory.player }} played </div>
                     <Card
                         :number="turnhistory.card"
                     ></Card>
@@ -68,5 +66,9 @@ getCompletedGame();
 
 .spacer {
     height: 4px;
+}
+
+.played {
+    width: 40em;
 }
 </style>

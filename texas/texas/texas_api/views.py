@@ -9,10 +9,65 @@ from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
+from texas.sio_events import sio_leave_room, sio_update_game
 import json
 import re
 import secrets  # Cryptographically secure randomness
 import math
+from threading import Timer
+
+
+# Timers for each game to track when to end them due to inactivity
+timers = {}
+
+
+def timeout(game_id):
+    game = Game.objects.get(id=game_id)
+    if not game.is_finished:
+        # Check if there are any players we are waiting on to click continue.
+        # If there are, all those players lose,
+        # and the remaining ones win.
+        players_waiting_for_continue = []
+        for player in game.player_set.all():
+            if player.waiting_for_continue:
+                players_waiting_for_continue.append(player)
+                game.losers.add(player.user)
+                game.save()
+                TurnHistory.objects.create(
+                    game=game,
+                    turn=game.turn,
+                    hand=game.hand,
+                    player=player,
+                    end_game=True
+                )
+        if len(players_waiting_for_continue):
+            game.is_finished = True
+            game.save()
+            for other_player in game.player_set.all():
+                if other_player not in players_waiting_for_continue:
+                    game.winners.add(other_player.user)
+                    game.save()
+        else:
+            # Else, whoever's turn it currently is is the loser.
+            player = Player.objects.filter(current_game=game, is_turn=True).first()
+
+            TurnHistory.objects.create(
+                game=game,
+                turn=game.turn,
+                hand=game.hand,
+                player=player,
+                end_game=True
+            )
+            game.is_finished = True
+
+            # This player should lose, and all other players should win.
+            game.losers.add(player.user)
+            game.save()
+            for other_player in game.player_set.all():
+                if other_player != player:
+                    game.winners.add(other_player.user)
+                    game.save()
+        sio_update_game(game.id)
 
 
 class CreateAccountView(views.APIView):
@@ -152,6 +207,9 @@ class GameViewSet(
         player.position = len(game.player_set.all())
         player.current_game = game
         player.save()
+
+        sio_update_game(game.id)
+
         return Response('ok')
     
     @action(detail=False, methods=['post'])
@@ -160,6 +218,7 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        game_id = game.id
 
         if not game.is_started:
             if len(game.player_set.all()) == 1:
@@ -208,6 +267,10 @@ class GameViewSet(
             card.player = None
             card.save()
         player.save()
+
+        sio_leave_room(player.user.id, game_id)
+        sio_update_game(game_id)
+
         return Response('ok')
 
     @action(detail=False, methods=['post'])
@@ -248,6 +311,13 @@ class GameViewSet(
 
         game.is_started = True
         game.save()
+
+        sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'].start()
+
         return Response('ok')
     
     @action(detail=False, methods=['post'])
@@ -255,6 +325,15 @@ class GameViewSet(
         player = Player.objects.get(user=request.user)
         player.waiting_for_continue = False
         player.save()
+
+        if player.current_game:
+            sio_update_game(player.current_game.id)
+
+            global timers
+            timers[f'game{player.current_game.id}'].cancel()
+            timers[f'game{player.current_game.id}'] = Timer(60, timeout, [player.current_game.id])
+            timers[f'game{player.current_game.id}'].start()
+
         return Response('ok')
 
 
@@ -399,7 +478,7 @@ class CardViewSet(
                 # Figure out the winner(s) of the game
 
                 # Find the lowest score
-                lowest_score = game.player_set.order_by('-score')[0].score
+                lowest_score = game.player_set.order_by('score')[0].score
 
                 # Get all players with the lowest score. These players are the winners.
                 for other_player in game.player_set.filter(score=lowest_score):
@@ -412,6 +491,7 @@ class CardViewSet(
                     game.save()
 
                 # Don't give players new cards if game is finished.
+                sio_update_game(game.id)
                 return Response('ok')
 
             # Shuffle the deck and give players their cards.
@@ -482,5 +562,12 @@ class CardViewSet(
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
             next_player.is_turn = True
             next_player.save()
+
+        sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'].cancel()
+        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'].start()
 
         return Response('ok')

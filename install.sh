@@ -16,21 +16,48 @@ else
     dnf -y module install nodejs:16
 fi
 
-dnf -y install httpd
 dnf -y install python39
-dnf -y install python39-mod_wsgi
 dnf -y install epel-release
 dnf -y install certbot
-dnf -y install python3-certbot-apache
-dnf -y install mod_ssl
+dnf -y install nginx
+dnf -y install python3-certbot-nginx
 
-# This should get the server's IP
-# ipAddress=$(ip addr show eth0 | grep "inet\b" | awk '{print $2}' | cut -d/ -f1 | head -1)
+echo "Please enter the domain name for the server (example: example.com):"
+read hostName
 
 cd /root/texas-showdown/vue-project/
 npm install
 npm run build
-cp -r dist /var/www/html/
+mkdir -p /usr/share/nginx/$hostName/html
+cp -r dist/* /usr/share/nginx/$hostName/html/
+chown -R nginx:nginx /usr/share/nginx/$hostName/html
+
+echo "Writing to /etc/nginx/conf.d/$hostName.conf..."
+cat > /etc/nginx/conf.d/$hostName.conf << EOF
+server {
+    listen 80;
+
+    root /usr/share/nginx/$hostName/html;
+    index index.html index.htm index.nginx-debian.html;
+
+    server_name $hostName www.$hostName;
+
+    location /texas_api/ {
+        proxy_pass https://127.0.0.1:8443/;
+    }
+    location /socket.io/ {
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header Host \$host;
+        proxy_pass https://127.0.0.1:8443/socket.io/;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade \$http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+    location / {
+        try_files \$uri \$uri/ /index.html;
+    }
+}
+EOF
 
 cp -r /root/texas-showdown/texas /usr/lib
 
@@ -43,38 +70,15 @@ pip install -r requirements.txt
 # generate a secret key for the django server
 djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
-echo "Please enter the domain name for the server (example: example.com):"
-read hostName
+certbot --nginx -d $hostName
 
-echo "Writing to /etc/httpd/conf.d/texas.conf..."
-cat > /etc/httpd/conf.d/texas.conf << EOF
-<Directory /var/www/html/dist>
-<IfModule mod_rewrite.c>
-  RewriteEngine On
-  RewriteBase /
-  RewriteRule ^index\.html$ - [L]
-  RewriteCond %{REQUEST_FILENAME} !-f
-  RewriteCond %{REQUEST_FILENAME} !-d
-  RewriteRule . /index.html [L]
-</IfModule>
-</Directory>
+useradd daphne
 
-SSLProxyEngine on
-ProxyPass "/socket.io/" "https://$hostName/texas_api/socket.io/"
-
-WSGIScriptAlias /texas_api /usr/lib/texas/texas/texas/wsgi.py
-WSGIPythonHome /usr/lib/texas/env
-WSGIPythonPath /usr/lib/texas/texas
-WSGIPassAuthorization On
-
-<Directory /usr/lib/texas/texas/texas>
-<Files wsgi.py>
-Require all granted
-</Files>
-</Directory>
-EOF
-
-certbot --apache -d $hostName
+mkdir /usr/lib/texas/texas/certs
+cp /etc/letsencrypt/live/$hostName/privkey.pem /usr/lib/texas/texas/certs/privkey.pem
+cp /etc/letsencrypt/live/$hostName/cert.pem /usr/lib/texas/texas/certs/cert.pem
+chown daphne /usr/lib/texas/texas/certs/privkey.pem
+chown daphne /usr/lib/texas/texas/certs/cert.pem
 
 echo "Writing to /usr/lib/texas/texas/config.ini..."
 cat > /usr/lib/texas/texas/config.ini << EOF
@@ -84,18 +88,30 @@ is_development = false
 hostname = $hostName
 EOF
 
+echo "Writing to /etc/systemd/system/daphne.service..."
+cat > /etc/systemd/system/daphne.service << EOF
+[Unit]
+Description=Daphne service
+
+[Service]
+User=daphne
+WorkingDirectory=/usr/lib/texas
+ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas && daphne -e ssl:8443:privateKey=/usr/lib/texas/texas/certs/privkey.pem:certKey=/usr/lib/texas/texas/certs/cert.pem texas.asgi:application'
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+# change the database owner to daphne
+chown daphne:daphne /usr/lib/texas/texas/db.sqlite3
+chown daphne:daphne /usr/lib/texas/texas
+
 echo "Running migrations..."
 cd texas
 python manage.py migrate
 
-# change the database owner to apache
-# and permanently change the selinux file context of the database and the directory it's in so apache is allowed to write to it
-chown apache:apache /usr/lib/texas/texas/db.sqlite3
-chown apache:apache /usr/lib/texas/texas
-semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas/db.sqlite3
-semanage fcontext -a -t httpd_sys_rw_content_t /usr/lib/texas/texas
-restorecon -RF /usr/lib/texas/texas
-
 systemctl daemon-reload
-systemctl enable httpd
-systemctl restart httpd
+systemctl enable daphne
+systemctl restart daphne
+systemctl enable nginx
+systemctl restart nginx

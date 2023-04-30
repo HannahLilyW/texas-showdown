@@ -10,9 +10,13 @@ docker-run:
 docker-install:
 	sudo docker exec -it texas bash -c "/root/texas-showdown/devinstall.sh"
 
-# Run the httpd daemon
-docker-httpd:
-	docker exec -it texas httpd
+# Run the daphne daemon
+docker-daphne:
+	docker exec -it texas bash -c "cd /root/texas-showdown/texas && source env/bin/activate && cd texas && daphne -e ssl:8443:privateKey=/root/certs/self-signed.key:certKey=/root/certs/self-signed.crt texas.asgi:application"
+
+# Run the nginx daemon
+docker-nginx:
+	docker exec -it texas nginx
 
 # Start a shell inside the container
 docker-sh:
