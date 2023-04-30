@@ -467,7 +467,7 @@ class GameViewSet(
         # Check if betting round should end
         highest_bet = game.player_set.order_by('-bet').first().bet
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count
-        num_players_not_folded = game.player_set.filter(fold=false).count
+        num_players_not_folded = game.player_set.filter(fold=False).count
         if num_players_with_highest_bet == num_players_not_folded:
             game.is_betting_round = False
             game.save()
@@ -538,7 +538,7 @@ class GameViewSet(
 
         # Check if the betting round should end
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count
-        num_players_not_folded = game.player_set.filter(fold=false).count
+        num_players_not_folded = game.player_set.filter(fold=False).count
         if num_players_with_highest_bet == num_players_not_folded:
             game.is_betting_round = False
             game.save()
