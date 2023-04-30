@@ -28,6 +28,7 @@ class Player(models.Model):
     score = models.IntegerField(default=0)
     money = models.IntegerField(default=0)
     bet = models.IntegerField(default=0)
+    fold = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['position', 'pk']

@@ -31,6 +31,7 @@ export type Player = {
     score: number,
     money: number,
     bet: number,
+    fold: boolean
 }
 
 export type PlayerStatistic = {
