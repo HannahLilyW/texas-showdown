@@ -12,7 +12,8 @@ class Game(models.Model):
     is_betting_round = models.BooleanField(default=False)
     pot = models.IntegerField(default=0)
     is_finished = models.BooleanField(default=False)
-    turn = models.IntegerField(default=0)
+    turn = models.IntegerField(default=0)  # Turn during actual gameplay
+    bet_turn = models.IntegerField(default=0)  # Turn during betting round
     hand = models.IntegerField(default=1)
     winners = models.ManyToManyField(User, blank=True, related_name='winner')
     losers = models.ManyToManyField(User, blank=True, related_name='loser')
@@ -42,7 +43,8 @@ class Card(models.Model):
 
 class TurnHistory(models.Model):
     """
-    Represents a turn that has taken place.
+    Represents a turn that has taken place during actual gameplay,
+    or a game-ending event.
     """
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
     turn = models.IntegerField()
@@ -50,3 +52,21 @@ class TurnHistory(models.Model):
     player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True)
     card = models.ForeignKey(Card, on_delete=models.SET_NULL, null=True)
     end_game = models.BooleanField(default=False)
+
+
+class BetTurnHistory(models.Model):
+    """
+    Represents a turn that has taken place during the betting round.
+    """
+    game = models.ForeignKey(Game, on_delete=models.CASCADE)
+    bet_turn = models.IntegerField()
+    hand = models.IntegerField()
+    player = models.ForeignKey(Player, on_delete=models.SET_NULL, null=True)
+    bet_action = models.CharField(max_length=5, choices=[
+        ('CHECK', 'check'),
+        ('OPEN', 'open'),
+        ('FOLD', 'fold'),
+        ('CALL', 'call'),
+        ('RAISE', 'raise')
+    ], null=True)
+    bet_amount = models.IntegerField(default=0)

@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
-from texas_api.models import Game, Player, Card, TurnHistory
+from texas_api.models import Game, Player, Card, TurnHistory, BetTurnHistory
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
 from texas.sio_events import sio_leave_room, sio_update_game
 import json
@@ -354,6 +354,8 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
         if not game.is_betting_round:
             return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
         if not player.is_turn:
@@ -361,6 +363,16 @@ class GameViewSet(
         for other_player in game.player_set.all():
             if other_player.bet > 0:
                 return Response('You cannot check', status=status.HTTP_400_BAD_REQUEST)
+        
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='CHECK'
+        )
+        game.bet_turn += 1
+        game.save()
 
         # Check if betting round should end
         if (other_player.position + 1) == game.num_players:
@@ -377,6 +389,7 @@ class GameViewSet(
                 71, 72, 73, 74
             ]
             shuffled_deck = []
+
             for i in range(len(deck)):
                 card_num = secrets.choice(deck)
                 deck.remove(card_num)
@@ -412,6 +425,8 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
         if not game.is_betting_round:
             return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
         if not player.is_turn:
@@ -424,6 +439,17 @@ class GameViewSet(
         if (type(unvalidated_bet) is not int) or (unvalidated_bet <= 0) or (unvalidated_bet > player.money):
             return Response('Invalid bet', status=status.HTTP_400_BAD_REQUEST)
         validated_bet = unvalidated_bet
+
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='OPEN',
+            bet_amount=validated_bet
+        )
+        game.bet_turn += 1
+        game.save()
 
         player.money = player.money - validated_bet
         player.bet = validated_bet
@@ -453,6 +479,8 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
         if not game.is_betting_round:
             return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
         if not player.is_turn:
@@ -463,7 +491,17 @@ class GameViewSet(
                 bets = True
         if not bets:
             return Response('You cannot fold', status=status.HTTP_400_BAD_REQUEST)
-        
+
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='FOLD'
+        )
+        game.bet_turn += 1
+        game.save()
+
         player.fold = True
         player.save()
 
@@ -485,6 +523,7 @@ class GameViewSet(
                 71, 72, 73, 74
             ]
             shuffled_deck = []
+
             for i in range(len(deck)):
                 card_num = secrets.choice(deck)
                 deck.remove(card_num)
@@ -520,6 +559,8 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
         if not game.is_betting_round:
             return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
         if not player.is_turn:
@@ -532,6 +573,16 @@ class GameViewSet(
             return Response('You cannot call', status=status.HTTP_400_BAD_REQUEST)
         if player.fold:
             return Response('You have folded', status=status.HTTP_400_BAD_REQUEST)
+
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='CALL'
+        )
+        game.bet_turn += 1
+        game.save()
 
         # Make this player's bet match the current highest bet
         highest_bet = game.player_set.order_by('-bet').first().bet
@@ -556,6 +607,7 @@ class GameViewSet(
                 71, 72, 73, 74
             ]
             shuffled_deck = []
+
             for i in range(len(deck)):
                 card_num = secrets.choice(deck)
                 deck.remove(card_num)
@@ -590,6 +642,8 @@ class GameViewSet(
         game = player.current_game
         if not game:
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
         if not game.is_betting_round:
             return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
         if not player.is_turn:
@@ -610,7 +664,18 @@ class GameViewSet(
         
         highest_bet = game.player_set.order_by('-bet').first().bet
         if validated_bet <= highest_bet:
-            return Response('You must raise to higher than the current highest bet')
+            return Response('You must raise to higher than the current highest bet', status=status.HTTP_400_BAD_REQUEST)
+        
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='RAISE',
+            bet_amount=validated_bet
+        )
+        game.bet_turn += 1
+        game.save()
         
         player.money = (player.money + player.bet) - validated_bet
         player.bet = validated_bet
