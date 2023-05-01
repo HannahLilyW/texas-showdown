@@ -376,6 +376,7 @@ class GameViewSet(
 
         # Check if betting round should end
         if (other_player.position + 1) == game.num_players:
+            log.error('here')
             game.is_betting_round = False
             game.save()
             deck = [
