@@ -338,6 +338,8 @@ class GameViewSet(
     @action(detail=False, methods=['post'])
     def continue_game(self, request):
         player = Player.objects.get(user=request.user)
+        if not player.waiting_for_continue:
+            return Response('No need to click continue now', status=status.HTTP_400_BAD_REQUEST)
         player.waiting_for_continue = False
         player.save()
 
@@ -472,11 +474,6 @@ class GameViewSet(
         next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
         next_player.is_turn = True
         next_player.save()
-
-        log.error(f'banana player: {player.user.username}')
-        log.error(f'banana player.is_turn: {player.is_turn}')
-        log.error(f'banana next_player: {next_player.user.username}')
-        log.error(f'banana next_player.is_turn: {next_player.is_turn}')
 
         sio_update_game(game.id)
 
@@ -766,6 +763,8 @@ class CardViewSet(
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
         if game.is_finished:
             return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_betting_round:
+            return Response('In a betting round', status=status.HTTP_400_BAD_REQUEST)
         if not player.is_turn:
             return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
 
