@@ -596,6 +596,9 @@ class GameViewSet(
         # Check if the betting round should end
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count
         num_players_not_folded = game.player_set.filter(fold=False).count
+        log.error(f'banana highest_bet: {highest_bet}')
+        log.error(f'banana num_players_with_highest_bet: {num_players_with_highest_bet}')
+        log.error(f'num_players_not_folded: {num_players_not_folded}')
         if num_players_with_highest_bet == num_players_not_folded:
             game.is_betting_round = False
             game.save()
