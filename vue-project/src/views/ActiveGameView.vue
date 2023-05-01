@@ -297,7 +297,7 @@ getCurrentGame();
             <div class="player-score">{{ player.score }}</div>
         </template>
     </div>
-    <div class="pot" v-if="currentGame.betting">Pot: {{ currentGame.pot }}</div>
+    <div class="pot" v-if="currentGame.betting">Pot: ${{ currentGame.pot }}</div>
     <div class="game-status">
         <template v-if="currentGame.is_finished">
             Game over! {{ winners }} won!
@@ -331,7 +331,7 @@ getCurrentGame();
             <template v-if="currentGame.is_betting_round">
                 <form v-if="canOpen || canRaise">
                     <label for="betAmount">Amount to {{ canOpen ? 'Open With' : 'Raise To' }}: $</label>
-                    <input id="betAmount" type="number" v-model="betAmount" maxlength="32">
+                    <input id="betAmount" type="number" v-model="betAmount" :min="1" :max="currentGame.player_set.find(player => player.username == username)?.money">
                 </form>
                 <div class="button" v-if="canOpen" @click="open()">Open</div>
                 <div class="button" v-if="canCheck" @click="check()">Check</div>
