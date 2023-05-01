@@ -379,6 +379,13 @@ class GameViewSet(
 
         # Check if betting round should end
         if (player.position + 1) == game.num_players:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
             game.is_betting_round = False
             game.save()
             deck = [
@@ -513,6 +520,13 @@ class GameViewSet(
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
         num_players_not_folded = game.player_set.filter(fold=False).count()
         if num_players_with_highest_bet == num_players_not_folded:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
             game.is_betting_round = False
             game.save()
             deck = [
@@ -597,8 +611,16 @@ class GameViewSet(
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
         num_players_not_folded = game.player_set.filter(fold=False).count()
         if num_players_with_highest_bet == num_players_not_folded:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
             game.is_betting_round = False
             game.save()
+
             deck = [
                 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
                 11, 12, 13, 14, 15, 16, 17, 18, 19, 20,

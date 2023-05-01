@@ -262,7 +262,10 @@ getCurrentGame();
         <div>Player</div>
         <div>Bet</div>
         <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
-            <div class="player-username">{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
+            <div class="player-username">
+                <div>{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
+                <div>${{ player.money }}</div>
+            </div>
             <div class="player-bet">${{ player.bet }}</div>
         </template>
     </div>
@@ -294,6 +297,7 @@ getCurrentGame();
             <div class="player-score">{{ player.score }}</div>
         </template>
     </div>
+    <div class="pot" v-if="currentGame.betting">Pot: {{ currentGame.pot }}</div>
     <div class="game-status">
         <template v-if="currentGame.is_finished">
             Game over! {{ winners }} won!
