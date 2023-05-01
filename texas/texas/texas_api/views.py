@@ -17,6 +17,9 @@ import math
 from threading import Timer
 
 
+TIMEOUT_SECONDS = 600
+
+
 # Timers for each game to track when to end them due to inactivity
 timers = {}
 
@@ -327,7 +330,7 @@ class GameViewSet(
         sio_update_game(game.id)
 
         global timers
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -343,7 +346,7 @@ class GameViewSet(
 
             global timers
             timers[f'game{player.current_game.id}'].cancel()
-            timers[f'game{player.current_game.id}'] = Timer(60, timeout, [player.current_game.id])
+            timers[f'game{player.current_game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [player.current_game.id])
             timers[f'game{player.current_game.id}'].start()
 
         return Response('ok')
@@ -414,7 +417,7 @@ class GameViewSet(
 
         global timers
         timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -468,7 +471,7 @@ class GameViewSet(
 
         global timers
         timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -548,7 +551,7 @@ class GameViewSet(
 
         global timers
         timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -631,7 +634,7 @@ class GameViewSet(
         sio_update_game(game.id)
 
         global timers
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -693,7 +696,7 @@ class GameViewSet(
         sio_update_game(game.id)
 
         global timers
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -929,7 +932,7 @@ class CardViewSet(
 
         global timers
         timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
