@@ -11,6 +11,7 @@ let error: Ref<string> = ref('');
 let betAmount: Ref<number|null> = ref(null);
 
 watch(currentGame, () => {
+    error.value = '';
     getHand();
 })
 
@@ -136,7 +137,7 @@ const winners = computed(() => {
                 ret += `, ${currentGame.value.winners[index]}`;
             }
         }
-        return ret;
+        return ret.length ? ret : 'No one';
     }
     return '';
 })
