@@ -226,6 +226,7 @@ function playActiveCard() {
                 error.value = responseJson;
             } else {
                 error.value = '';
+                activeCard.value = null;
             }
         })
     })
@@ -342,7 +343,7 @@ getCurrentGame();
                 <div class="button" v-if="canCall" @click="call()">Call</div>
                 <div class="button" v-if="canFold" @click="fold()">Fold</div>
             </template>
-            <div class="button" v-if="typeof activeCard == 'number'" @click="playActiveCard()">Play the {{activeCard}}</div>
+            <div class="button" v-else-if="typeof activeCard == 'number'" @click="playActiveCard()">Play the {{activeCard}}</div>
         </template>
         <div class="error" v-if="error">{{ error }}</div>
     </div>

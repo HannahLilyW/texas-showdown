@@ -391,6 +391,13 @@ class GameViewSet(
 
             game.is_betting_round = False
             game.save()
+
+            # The next player is the one with the 0
+            for other_player in game.player_set.all():
+                if other_player.card_set.filter(number=0).count() == 1:
+                    other_player.is_turn = True
+                    other_player.save()
+                    break
         else:
             # The next player is the one with position (current_player.position + 1) % num_players
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
