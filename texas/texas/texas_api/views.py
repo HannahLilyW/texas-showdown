@@ -473,6 +473,11 @@ class GameViewSet(
         next_player.is_turn = True
         next_player.save()
 
+        log.error(f'banana player: {player.user.username}')
+        log.error(f'banana player.is_turn: {player.is_turn}')
+        log.error(f'banana next_player: {next_player.user.username}')
+        log.error(f'banana next_player.is_turn: {next_player.is_turn}')
+
         sio_update_game(game.id)
 
         global timers

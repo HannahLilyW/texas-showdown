@@ -8,7 +8,7 @@ import Card from '../components/Card.vue';
 let loading: Ref<boolean> = ref(true);
 let activeCard: Ref<number|null> = ref(null);
 let error: Ref<string> = ref('');
-let betAmount: Ref<number> = ref(0);
+let betAmount: Ref<number|null> = ref(null);
 
 watch(currentGame, () => {
     getHand();
