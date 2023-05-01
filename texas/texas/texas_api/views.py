@@ -377,6 +377,9 @@ class GameViewSet(
         game.bet_turn += 1
         game.save()
 
+        player.is_turn = False
+        player.save()
+
         # Check if betting round should end
         if (player.position + 1) == game.num_players:
             # Transfer bets into the pot
@@ -411,10 +414,6 @@ class GameViewSet(
                     player_receiving_card.is_turn = True
                     player_receiving_card.save()
         else:
-            # Make it the next player's turn
-            player.is_turn = False
-            player.save()
-
             # The next player is the one with position (current_player.position + 1) % num_players
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
             next_player.is_turn = True
@@ -515,6 +514,9 @@ class GameViewSet(
         player.fold = True
         player.save()
 
+        player.is_turn = False
+        player.save()
+
         # Check if betting round should end
         highest_bet = game.player_set.order_by('-bet').first().bet
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
@@ -552,10 +554,6 @@ class GameViewSet(
                     player_receiving_card.is_turn = True
                     player_receiving_card.save()
         else:
-            # Make it the next player's turn
-            player.is_turn = False
-            player.save()
-
             # The next player is the one with position (current_player.position + 1) % num_players
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
             next_player.is_turn = True
@@ -607,6 +605,9 @@ class GameViewSet(
         player.bet = highest_bet
         player.save()
 
+        player.is_turn = False
+        player.save()
+
         # Check if the betting round should end
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
         num_players_not_folded = game.player_set.filter(fold=False).count()
@@ -644,10 +645,6 @@ class GameViewSet(
                     player_receiving_card.is_turn = True
                     player_receiving_card.save()
         else:
-            # Make it the next player's turn
-            player.is_turn = False
-            player.save()
-
             # The next player is the one with position (current_player.position + 1) % num_players
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
             next_player.is_turn = True
