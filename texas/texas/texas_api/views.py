@@ -295,34 +295,32 @@ class GameViewSet(
         if game.betting:
             game.is_betting_round = True
             game.save()
-            player.is_turn = True
-            player.save()
             for other_player in game.player_set.all():
                 other_player.money = 100
                 other_player.save()
-        else:
-            deck = [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                21, 22, 23, 24, 25, 26, 27, 28, 29,
-                31, 32, 33, 34, 35, 36, 37, 38,
-                41, 42, 43, 44, 45, 46, 47,
-                51, 52, 53, 54, 55, 56,
-                61, 62, 63, 64, 65,
-                71, 72, 73, 74
-            ]
-            shuffled_deck = []
 
-            for i in range(len(deck)):
-                card_num = secrets.choice(deck)
-                deck.remove(card_num)
-                shuffled_deck.append(card_num)
-                player_receiving_card = game.player_set.get(position=i % game.num_players)
-                card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
-                card.save()
-                if (card_num == 0):
-                    player_receiving_card.is_turn = True
-                    player_receiving_card.save()
+        deck = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+            21, 22, 23, 24, 25, 26, 27, 28, 29,
+            31, 32, 33, 34, 35, 36, 37, 38,
+            41, 42, 43, 44, 45, 46, 47,
+            51, 52, 53, 54, 55, 56,
+            61, 62, 63, 64, 65,
+            71, 72, 73, 74
+        ]
+        shuffled_deck = []
+
+        for i in range(len(deck)):
+            card_num = secrets.choice(deck)
+            deck.remove(card_num)
+            shuffled_deck.append(card_num)
+            player_receiving_card = game.player_set.get(position=i % game.num_players)
+            card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
+            card.save()
+            if (card_num == 0):
+                player_receiving_card.is_turn = True
+                player_receiving_card.save()
 
         game.is_started = True
         game.save()
@@ -393,28 +391,6 @@ class GameViewSet(
 
             game.is_betting_round = False
             game.save()
-            deck = [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                21, 22, 23, 24, 25, 26, 27, 28, 29,
-                31, 32, 33, 34, 35, 36, 37, 38,
-                41, 42, 43, 44, 45, 46, 47,
-                51, 52, 53, 54, 55, 56,
-                61, 62, 63, 64, 65,
-                71, 72, 73, 74
-            ]
-            shuffled_deck = []
-
-            for i in range(len(deck)):
-                card_num = secrets.choice(deck)
-                deck.remove(card_num)
-                shuffled_deck.append(card_num)
-                player_receiving_card = game.player_set.get(position=i % game.num_players)
-                card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
-                card.save()
-                if (card_num == 0):
-                    player_receiving_card.is_turn = True
-                    player_receiving_card.save()
         else:
             # The next player is the one with position (current_player.position + 1) % num_players
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
@@ -445,7 +421,7 @@ class GameViewSet(
         for other_player in game.player_set.all():
             if other_player.bet > 0:
                 return Response('You cannot open', status=status.HTTP_400_BAD_REQUEST)
-        
+
         unvalidated_bet = request.data.get('bet')
         if (type(unvalidated_bet) is not int) or (unvalidated_bet <= 0) or (unvalidated_bet > player.money):
             return Response('Invalid bet', status=status.HTTP_400_BAD_REQUEST)
@@ -533,28 +509,6 @@ class GameViewSet(
 
             game.is_betting_round = False
             game.save()
-            deck = [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                21, 22, 23, 24, 25, 26, 27, 28, 29,
-                31, 32, 33, 34, 35, 36, 37, 38,
-                41, 42, 43, 44, 45, 46, 47,
-                51, 52, 53, 54, 55, 56,
-                61, 62, 63, 64, 65,
-                71, 72, 73, 74
-            ]
-            shuffled_deck = []
-
-            for i in range(len(deck)):
-                card_num = secrets.choice(deck)
-                deck.remove(card_num)
-                shuffled_deck.append(card_num)
-                player_receiving_card = game.player_set.get(position=i % game.num_players)
-                card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
-                card.save()
-                if (card_num == 0):
-                    player_receiving_card.is_turn = True
-                    player_receiving_card.save()
         else:
             # The next player is the one with position (current_player.position + 1) % num_players
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
@@ -623,29 +577,6 @@ class GameViewSet(
 
             game.is_betting_round = False
             game.save()
-
-            deck = [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                21, 22, 23, 24, 25, 26, 27, 28, 29,
-                31, 32, 33, 34, 35, 36, 37, 38,
-                41, 42, 43, 44, 45, 46, 47,
-                51, 52, 53, 54, 55, 56,
-                61, 62, 63, 64, 65,
-                71, 72, 73, 74
-            ]
-            shuffled_deck = []
-
-            for i in range(len(deck)):
-                card_num = secrets.choice(deck)
-                deck.remove(card_num)
-                shuffled_deck.append(card_num)
-                player_receiving_card = game.player_set.get(position=i % game.num_players)
-                card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
-                card.save()
-                if (card_num == 0):
-                    player_receiving_card.is_turn = True
-                    player_receiving_card.save()
         else:
             # The next player is the one with position (current_player.position + 1) % num_players
             next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
@@ -882,35 +813,35 @@ class CardViewSet(
                 sio_update_game(game.id)
                 return Response('ok')
 
+            # Shuffle the deck and give players their cards.
+            # The next player is the one who gets the 0.
+            deck = [
+                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+                21, 22, 23, 24, 25, 26, 27, 28, 29,
+                31, 32, 33, 34, 35, 36, 37, 38,
+                41, 42, 43, 44, 45, 46, 47,
+                51, 52, 53, 54, 55, 56,
+                61, 62, 63, 64, 65,
+                71, 72, 73, 74
+            ]
+            shuffled_deck = []
+
+            for i in range(len(deck)):
+                card_num = secrets.choice(deck)
+                deck.remove(card_num)
+                shuffled_deck.append(card_num)
+                player_receiving_card = game.player_set.get(position=i % game.num_players)
+                card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
+                card.save()
+                if (card_num == 0):
+                    player_receiving_card.is_turn = True
+                    player_receiving_card.save()
+            
             # If betting is enabled, start a new betting round.
             if game.betting:
                 game.is_betting_round = True
                 game.save()
-            else:
-                # Shuffle the deck and give players their cards.
-                # The next player is the one who gets the 0.
-                deck = [
-                    0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                    11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                    21, 22, 23, 24, 25, 26, 27, 28, 29,
-                    31, 32, 33, 34, 35, 36, 37, 38,
-                    41, 42, 43, 44, 45, 46, 47,
-                    51, 52, 53, 54, 55, 56,
-                    61, 62, 63, 64, 65,
-                    71, 72, 73, 74
-                ]
-                shuffled_deck = []
-
-                for i in range(len(deck)):
-                    card_num = secrets.choice(deck)
-                    deck.remove(card_num)
-                    shuffled_deck.append(card_num)
-                    player_receiving_card = game.player_set.get(position=i % game.num_players)
-                    card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
-                    card.save()
-                    if (card_num == 0):
-                        player_receiving_card.is_turn = True
-                        player_receiving_card.save()
 
             # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
             for player in game.player_set.all():
