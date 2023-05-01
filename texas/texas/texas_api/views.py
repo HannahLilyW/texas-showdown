@@ -598,7 +598,7 @@ class GameViewSet(
         num_players_not_folded = game.player_set.filter(fold=False).count
         log.error(f'banana highest_bet: {highest_bet}')
         log.error(f'banana num_players_with_highest_bet: {num_players_with_highest_bet}')
-        log.error(f'num_players_not_folded: {num_players_not_folded}')
+        log.error(f'banana num_players_not_folded: {num_players_not_folded}')
         if num_players_with_highest_bet == num_players_not_folded:
             game.is_betting_round = False
             game.save()
