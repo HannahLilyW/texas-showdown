@@ -258,7 +258,7 @@ getCurrentGame();
     </div>
 </div>
 <div v-if="currentGame && currentGame.is_started">
-    <div class="current-game-betting-round-background" v-if="currentGame.is_betting_round">
+    <div class="current-game-betting-round-background" v-if="currentGame.is_betting_round && !playersWaitingForContinue.length">
         <div>Player</div>
         <div>Bet</div>
         <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
@@ -305,10 +305,6 @@ getCurrentGame();
         <template v-if="currentGame.is_finished">
             Game over! {{ winners }} won!
         </template>
-        <template v-else-if="currentGame.is_betting_round">
-            <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
-            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.username }}'s turn</template>
-        </template>
         <template v-else-if="playersWaitingForContinue.length">
             {{ currentGame.player_set.find(player => player.is_turn)?.username }} took the trick!
             <br/>
@@ -318,6 +314,10 @@ getCurrentGame();
             <template v-else>
                 Waiting for {{ playersWaitingForContinue[0] }} to click continue...
             </template>
+        </template>
+        <template v-else-if="currentGame.is_betting_round">
+            <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
+            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.username }}'s turn</template>
         </template>
         <template v-else-if="currentGame.turn == 0">
             <template v-if="!(hand?.includes(0))">Waiting for {{ currentGame.player_set.find(player => player.is_turn)?.username }} to play the 0...</template>
