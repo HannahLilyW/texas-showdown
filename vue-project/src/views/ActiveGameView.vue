@@ -137,7 +137,7 @@ const winners = computed(() => {
                 ret += `, ${currentGame.value.winners[index]}`;
             }
         }
-        return ret.length ? ret : 'No one';
+        return (ret && ret.length) ? ret : 'No one';
     }
     return '';
 })
