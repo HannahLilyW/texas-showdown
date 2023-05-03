@@ -571,11 +571,17 @@ class GameViewSet(
         game.bet_turn += 1
         game.save()
 
-        # Make this player's bet match the current highest bet
+        # Make this player's bet match the current highest bet,
+        # or as close as possible
         highest_bet = game.player_set.order_by('-bet').first().bet
-        player.money = (player.money + player.bet) - highest_bet
-        player.bet = highest_bet
-        player.save()
+        if player.money < highest_bet:
+            player.bet = player.money
+            player.money = 0
+            player.save()
+        else:
+            player.money = (player.money + player.bet) - highest_bet
+            player.bet = highest_bet
+            player.save()
 
         player.is_turn = False
         player.save()
