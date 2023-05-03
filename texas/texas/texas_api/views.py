@@ -806,17 +806,49 @@ class CardViewSet(
         if game.turn == 0:
             # The next turn is the first turn of the hand.
 
+            # If betting is enabled, transfer the pot to the player(s) that took the least tricks in this hand,
+            # if that (those) player(s) did not fold.
+            if game.betting:
+                # Figure out the player that took the least tricks this hand
+                # Find the lowest tricks
+                lowest_tricks = game.player_set.order_by('tricks')[0].tricks
+
+                # Get all players that did not fold with the lowest tricks.
+                # These players are the hand winners.
+                trick_winners = game.player_set.filter(tricks=lowest_tricks, fold=False).all()
+                if len(trick_winners):
+                    for other_player in trick_winners:
+                        other_player.money += math.floor(game.pot / len(trick_winners))
+                        other_player.save()
+                    game.pot = 0
+
             # Transfer the tricks taken this round to each player's score.
-            # Determine if the game is finished (if a player has >= 10 points).
+            # Determine if the game is finished.
             for other_player in game.player_set.all():
                 other_player.score += other_player.tricks
                 other_player.tricks = 0
                 other_player.save()
-                if other_player.score >= 10:
+                if (not game.betting) and other_player.score >= 10:
                     game.is_finished = True
                     game.save()
 
-            if game.is_finished:
+            if game.betting:
+                if game.player_set.filter(money__gt=0).count() == 1:
+                    game.is_finished = True
+                    game.save()
+
+                    game.winners.add(game.player_set.filter(money__gt=0).first().user)
+                    game.save()
+
+                    # The remaining players (the ones with no money) are the losers.
+                    for other_player in game.player_set.filter(money=0):
+                        game.losers.add(other_player.user)
+                        game.save()
+
+                    # Don't give players new cards if game is finished.
+                    sio_update_game(game.id)
+                    return Response('ok')
+            elif game.is_finished:
                 # Figure out the winner(s) of the game
 
                 # Find the lowest score

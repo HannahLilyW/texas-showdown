@@ -330,7 +330,7 @@ getCurrentGame();
             <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.username }}'s turn</template>
         </template>
     </div>
-    <div class="buttons-row">
+    <div class="buttons-row" v-if="!currentGame.is_finished">
         <div class="button" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">Continue</div>
         <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">
             <template v-if="currentGame.is_betting_round">
