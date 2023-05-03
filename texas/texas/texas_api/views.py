@@ -615,6 +615,7 @@ class GameViewSet(
         sio_update_game(game.id)
 
         global timers
+        timers[f'game{game.id}'].cancel()
         timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
@@ -677,6 +678,7 @@ class GameViewSet(
         sio_update_game(game.id)
 
         global timers
+        timers[f'game{game.id}'].cancel()
         timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
