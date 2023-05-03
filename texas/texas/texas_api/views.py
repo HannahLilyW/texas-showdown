@@ -588,8 +588,9 @@ class GameViewSet(
 
         # Check if the betting round should end
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
+        num_players_all_in_below_highest = game.player_set.filter(money=0, bet__lt=highest_bet, fold=False).count()
         num_players_not_folded = game.player_set.filter(fold=False).count()
-        if num_players_with_highest_bet == num_players_not_folded:
+        if num_players_with_highest_bet + num_players_all_in_below_highest == num_players_not_folded:
             # Transfer bets into the pot
             for other_player in game.player_set.all():
                 game.pot += other_player.bet
