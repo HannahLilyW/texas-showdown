@@ -78,7 +78,8 @@ class BetTurnHistoryListField(serializers.RelatedField):
             'hand': value.hand,
             'player': value.player.user.username,
             'bet_action': value.bet_action,
-            'bet_amount': value.bet_amount
+            'bet_amount': value.bet_amount,
+            'player_money': value.player_money
         }
 
 
