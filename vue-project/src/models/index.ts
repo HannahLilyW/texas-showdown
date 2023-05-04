@@ -54,5 +54,6 @@ export type BetTurnHistory = {
     hand: number,
     player: string,
     bet_action: string,
-    bet_amount: number
+    bet_amount: number,
+    player_money: number
 }

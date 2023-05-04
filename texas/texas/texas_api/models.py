@@ -70,3 +70,4 @@ class BetTurnHistory(models.Model):
         ('RAISE', 'raise')
     ], null=True)
     bet_amount = models.IntegerField(default=0)
+    player_money = models.IntegerField(default=0)

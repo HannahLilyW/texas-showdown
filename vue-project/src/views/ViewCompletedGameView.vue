@@ -37,7 +37,7 @@ getCompletedGame();
             <template v-if="turnhistory.turn == 0">
                 <div class="hand">Hand {{ turnhistory.hand }}</div>
                 <div v-for="betturnhistory in game.betturnhistory_set.filter(bth => bth.hand == turnhistory.hand)">
-                    {{ betturnhistory.player }} {{ betturnhistory.bet_action }} {{ betturnhistory.bet_amount }}
+                    {{ betturnhistory.player }} {{ betturnhistory.bet_action.toLowerCase() }}s. Bet: ${{ betturnhistory.bet_amount }}. Remaining money: ${{ betturnhistory.player_money }}.
                 </div>
             </template>
             <div class="spacer" v-if="(turnhistory.turn % game.num_players) == 0"></div>

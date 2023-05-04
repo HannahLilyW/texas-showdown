@@ -372,7 +372,9 @@ class GameViewSet(
             bet_turn=game.bet_turn,
             hand=game.hand,
             player=player,
-            bet_action='CHECK'
+            bet_action='CHECK',
+            bet_amount=0,
+            player_money=player.money
         )
         game.bet_turn += 1
         game.save()
@@ -436,20 +438,21 @@ class GameViewSet(
             return Response('Invalid bet', status=status.HTTP_400_BAD_REQUEST)
         validated_bet = unvalidated_bet
 
+        player.money = player.money - validated_bet
+        player.bet = validated_bet
+        player.save()
+
         BetTurnHistory.objects.create(
             game=game,
             bet_turn=game.bet_turn,
             hand=game.hand,
             player=player,
             bet_action='OPEN',
-            bet_amount=validated_bet
+            bet_amount=validated_bet,
+            player_money=player.money
         )
         game.bet_turn += 1
         game.save()
-
-        player.money = player.money - validated_bet
-        player.bet = validated_bet
-        player.save()
 
         # Make it the next player's turn
         player.is_turn = False
@@ -493,7 +496,9 @@ class GameViewSet(
             bet_turn=game.bet_turn,
             hand=game.hand,
             player=player,
-            bet_action='FOLD'
+            bet_action='FOLD',
+            bet_amount=player.bet,
+            player_money=player.money
         )
         game.bet_turn += 1
         game.save()
@@ -562,16 +567,6 @@ class GameViewSet(
         if player.fold:
             return Response('You have folded', status=status.HTTP_400_BAD_REQUEST)
 
-        BetTurnHistory.objects.create(
-            game=game,
-            bet_turn=game.bet_turn,
-            hand=game.hand,
-            player=player,
-            bet_action='CALL'
-        )
-        game.bet_turn += 1
-        game.save()
-
         # Make this player's bet match the current highest bet,
         # or as close as possible
         highest_bet = game.player_set.order_by('-bet').first().bet
@@ -583,6 +578,18 @@ class GameViewSet(
             player.money = (player.money + player.bet) - highest_bet
             player.bet = highest_bet
             player.save()
+        
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='CALL',
+            bet_amount=player.bet,
+            player_money=player.money
+        )
+        game.bet_turn += 1
+        game.save()
 
         player.is_turn = False
         player.save()
@@ -653,20 +660,21 @@ class GameViewSet(
         if validated_bet <= highest_bet:
             return Response('You must raise to higher than the current highest bet', status=status.HTTP_400_BAD_REQUEST)
         
+        player.money = (player.money + player.bet) - validated_bet
+        player.bet = validated_bet
+        player.save()
+
         BetTurnHistory.objects.create(
             game=game,
             bet_turn=game.bet_turn,
             hand=game.hand,
             player=player,
             bet_action='RAISE',
-            bet_amount=validated_bet
+            bet_amount=validated_bet,
+            player_money = player.money
         )
         game.bet_turn += 1
         game.save()
-        
-        player.money = (player.money + player.bet) - validated_bet
-        player.bet = validated_bet
-        player.save()
 
         player.is_turn = False
         player.save()
