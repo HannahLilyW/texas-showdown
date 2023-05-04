@@ -507,8 +507,9 @@ class GameViewSet(
         # Check if betting round should end
         highest_bet = game.player_set.order_by('-bet').first().bet
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
+        num_players_all_in_below_highest = game.player_set.filter(bet__lt=highest_bet, fold=False, money=0).count()
         num_players_not_folded = game.player_set.filter(fold=False).count()
-        if num_players_with_highest_bet == num_players_not_folded:
+        if (num_players_with_highest_bet + num_players_all_in_below_highest) == num_players_not_folded:
             # Transfer bets into the pot
             for other_player in game.player_set.all():
                 game.pot += other_player.bet
@@ -590,7 +591,7 @@ class GameViewSet(
         num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
         num_players_all_in_below_highest = game.player_set.filter(money=0, bet__lt=highest_bet, fold=False).count()
         num_players_not_folded = game.player_set.filter(fold=False).count()
-        if num_players_with_highest_bet + num_players_all_in_below_highest == num_players_not_folded:
+        if (num_players_with_highest_bet + num_players_all_in_below_highest) == num_players_not_folded:
             # Transfer bets into the pot
             for other_player in game.player_set.all():
                 game.pot += other_player.bet
@@ -667,9 +668,35 @@ class GameViewSet(
         player.bet = validated_bet
         player.save()
 
-        # Make it the next player's turn
         player.is_turn = False
         player.save()
+
+        # Check if the betting round should end
+        num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
+        num_players_all_in_below_highest = game.player_set.filter(money=0, bet__lt=highest_bet, fold=False).count()
+        num_players_not_folded = game.player_set.filter(fold=False).count()
+        if (num_players_with_highest_bet + num_players_all_in_below_highest) == num_players_not_folded:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
+            game.is_betting_round = False
+            game.save()
+
+            # The next player is the one with the 0
+            for other_player in game.player_set.all():
+                if other_player.card_set.filter(number=0).count() == 1:
+                    other_player.is_turn = True
+                    other_player.save()
+                    break
+        else:
+            # The next player is the one with position (current_player.position + 1) % num_players
+            next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+            next_player.is_turn = True
+            next_player.save()
 
         # The next player is the one with position (current_player.position + 1) % num_players
         next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
