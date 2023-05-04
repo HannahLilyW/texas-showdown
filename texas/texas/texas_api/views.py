@@ -17,7 +17,7 @@ import math
 from threading import Timer
 
 
-TIMEOUT_SECONDS = 15
+TIMEOUT_SECONDS = 60
 
 
 # Timers for each game to track when to end them due to inactivity
