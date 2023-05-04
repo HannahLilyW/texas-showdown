@@ -12,6 +12,7 @@ export type Game = {
     turn: number,
     hand: number,
     turnhistory_set: TurnHistory[]
+    betturnhistory_set: BetTurnHistory[]
     is_finished: boolean,
     winners: string[]
 }
@@ -46,4 +47,12 @@ export type TurnHistory = {
     player: string,
     card: number|null,
     end_game: boolean
+}
+
+export type BetTurnHistory = {
+    bet_turn: number,
+    hand: number,
+    player: string,
+    bet_action: string,
+    bet_amount: number
 }

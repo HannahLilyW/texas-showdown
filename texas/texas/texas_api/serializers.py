@@ -71,6 +71,17 @@ class TurnHistoryListField(serializers.RelatedField):
         }
 
 
+class BetTurnHistoryListField(serializers.RelatedField):
+    def to_representation(self, value):
+        return {
+            'bet_turn': value.bet_turn,
+            'hand': value.hand,
+            'player': value.player.user.username,
+            'bet_action': value.bet_action,
+            'bet_amount': value.bet_amount
+        }
+
+
 class UsernameListField(serializers.RelatedField):
     def to_representation(self, value):
         return value.username
@@ -79,6 +90,7 @@ class UsernameListField(serializers.RelatedField):
 class GameSerializer(serializers.ModelSerializer):
     player_set = PlayerNameListField(many=True, read_only=True)
     turnhistory_set = TurnHistoryListField(many=True, read_only=True)
+    betturnhistory_set = BetTurnHistoryListField(many=True, read_only=True)
     winners = UsernameListField(many=True, read_only=True)
     losers = UsernameListField(many=True, read_only=True)
 
