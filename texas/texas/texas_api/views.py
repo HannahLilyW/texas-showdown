@@ -850,6 +850,31 @@ class CardViewSet(
         if game.turn == 0:
             # The next turn is the first turn of the hand.
 
+            first_turn_of_last_trick = 60 - game.num_players
+            turn_histories_in_last_trick = game.turnhistory_set.filter(hand=game.hand, turn__gte=first_turn_of_last_trick)
+
+            # Figure out which color(s) occured the most times
+            color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
+            colors = [black, red, blue, brown, green, yellow, purple, gray]
+            for turn_history in turn_histories_in_last_trick:
+                for index, color in enumerate(colors):
+                    if turn_history.card.number in color:
+                        color_frequencies[index] += 1
+            max_colors = []
+            for index in range(len(color_frequencies)):
+                if color_frequencies[index] == max(color_frequencies):
+                    max_colors += colors[index]
+
+            # For cards played in that (those) color(s), figure out which card had the highest number
+            max_number = 0
+            for turn_history in turn_histories_in_last_trick:
+                if (turn_history.card.number in max_colors) and (turn_history.card.number > max_number):
+                    max_number = turn_history.card.number
+
+            player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
+            player_taking_trick.tricks += 1
+            player_taking_trick.save()
+
             # If betting is enabled, transfer the pot to the player(s) that took the least tricks in this hand,
             # if that (those) player(s) did not fold.
             if game.betting:
