@@ -4,8 +4,6 @@ import type { Ref } from 'vue';
 import { io, Socket } from "socket.io-client";
 import type { Game } from '../models';
 
-const isDevelopment = false;
-
 const baseUrl: string = "/texas_api/";
 
 let socket: Socket|null = null;
@@ -122,19 +120,17 @@ export function startSocket() {
         socket.close();
     }
 
-    if (!isDevelopment) {
-        socket = io({
-            auth: {
-                token: token
-            }
-        });
+    socket = io({
+        auth: {
+            token: token
+        }
+    });
 
-        socket.onAny((eventName, ...args) => {
-            if (eventName == 'update_game') {
-                currentGame.value = args[0];
-            }
-        });
-    }
+    socket.onAny((eventName, ...args) => {
+        if (eventName == 'update_game') {
+            currentGame.value = args[0];
+        }
+    });
 }
 
 export function stopSocket() {

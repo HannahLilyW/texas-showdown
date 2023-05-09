@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
-from texas_api.models import Game, Player, Card, TurnHistory
+from texas_api.models import Game, Player, Card, TurnHistory, BetTurnHistory
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
 from texas.sio_events import sio_leave_room, sio_update_game
 import json
@@ -15,6 +15,9 @@ import re
 import secrets  # Cryptographically secure randomness
 import math
 from threading import Timer
+
+
+TIMEOUT_SECONDS = 60
 
 
 # Timers for each game to track when to end them due to inactivity
@@ -263,6 +266,9 @@ class GameViewSet(
         player.waiting_for_continue = False
         player.tricks = 0
         player.score = 0
+        player.money = 0
+        player.bet = 0
+        player.fold = False
         for card in player.card_set.all():
             card.player = None
             card.save()
@@ -285,7 +291,14 @@ class GameViewSet(
             return Response('Game already started', status=status.HTTP_400_BAD_REQUEST)
         if game.num_players != len(game.player_set.all()):
             return Response('Not enough players to start the game', status=status.HTTP_400_BAD_REQUEST)
-        
+
+        if game.betting:
+            game.is_betting_round = True
+            game.save()
+            for other_player in game.player_set.all():
+                other_player.money = 100
+                other_player.save()
+
         deck = [
             0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
             11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -315,7 +328,7 @@ class GameViewSet(
         sio_update_game(game.id)
 
         global timers
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
@@ -323,6 +336,8 @@ class GameViewSet(
     @action(detail=False, methods=['post'])
     def continue_game(self, request):
         player = Player.objects.get(user=request.user)
+        if not player.waiting_for_continue:
+            return Response('No need to click continue now', status=status.HTTP_400_BAD_REQUEST)
         player.waiting_for_continue = False
         player.save()
 
@@ -331,8 +346,377 @@ class GameViewSet(
 
             global timers
             timers[f'game{player.current_game.id}'].cancel()
-            timers[f'game{player.current_game.id}'] = Timer(60, timeout, [player.current_game.id])
+            timers[f'game{player.current_game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [player.current_game.id])
             timers[f'game{player.current_game.id}'].start()
+
+        return Response('ok')
+
+    @action(detail=False, methods=['post'])
+    def check(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if not game.is_betting_round:
+            return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
+        if not player.is_turn:
+            return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
+        for other_player in game.player_set.all():
+            if other_player.bet > 0:
+                return Response('You cannot check', status=status.HTTP_400_BAD_REQUEST)
+        
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='CHECK',
+            bet_amount=0,
+            player_money=player.money
+        )
+        game.bet_turn += 1
+        game.save()
+
+        player.is_turn = False
+        player.save()
+
+        # Check if betting round should end
+        player_with_0 = None
+        for other_player in game.player_set.all():
+            if other_player.card_set.filter(number=0).count() == 1:
+                player_with_0 = other_player
+                break
+        if ((player.position + 1) % game.num_players) == player_with_0.position:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
+            game.is_betting_round = False
+            game.save()
+
+            # The next player is the one with the 0
+            player_with_0.is_turn = True
+            player_with_0.save()
+        else:
+            # The next player is the one with position (current_player.position + 1) % num_players
+            next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+            next_player.is_turn = True
+            next_player.save()
+
+        sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'].cancel()
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
+        timers[f'game{game.id}'].start()
+
+        return Response('ok')
+
+    @action(detail=False, methods=['post'])
+    def open_betting(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if not game.is_betting_round:
+            return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
+        if not player.is_turn:
+            return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
+        for other_player in game.player_set.all():
+            if other_player.bet > 0:
+                return Response('You cannot open', status=status.HTTP_400_BAD_REQUEST)
+
+        unvalidated_bet = request.data.get('bet')
+        if (type(unvalidated_bet) is not int) or (unvalidated_bet <= 0) or (unvalidated_bet > player.money):
+            return Response('Invalid bet', status=status.HTTP_400_BAD_REQUEST)
+        validated_bet = unvalidated_bet
+
+        player.money = player.money - validated_bet
+        player.bet = validated_bet
+        player.save()
+
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='OPEN',
+            bet_amount=validated_bet,
+            player_money=player.money
+        )
+        game.bet_turn += 1
+        game.save()
+
+        # Make it the next player's turn
+        player.is_turn = False
+        player.save()
+
+        # The next player is the one with position (current_player.position + 1) % num_players
+        next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+        next_player.is_turn = True
+        next_player.save()
+
+        sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'].cancel()
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
+        timers[f'game{game.id}'].start()
+
+        return Response('ok')
+
+    @action(detail=False, methods=['post'])
+    def fold(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if not game.is_betting_round:
+            return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
+        if not player.is_turn:
+            return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
+        bets = False
+        for other_player in game.player_set.all():
+            if other_player.bet > 0:
+                bets = True
+        if not bets:
+            return Response('You cannot fold', status=status.HTTP_400_BAD_REQUEST)
+
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='FOLD',
+            bet_amount=player.bet,
+            player_money=player.money
+        )
+        game.bet_turn += 1
+        game.save()
+
+        player.fold = True
+        player.save()
+
+        player.is_turn = False
+        player.save()
+
+        # Check if betting round should end
+        highest_bet = game.player_set.order_by('-bet').first().bet
+        num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
+        num_players_all_in_below_highest = game.player_set.filter(bet__lt=highest_bet, fold=False, money=0).count()
+        num_players_not_folded = game.player_set.filter(fold=False).count()
+        if (num_players_with_highest_bet + num_players_all_in_below_highest) == num_players_not_folded:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
+            game.is_betting_round = False
+            game.save()
+
+            # The next player is the one with the 0
+            for other_player in game.player_set.all():
+                if other_player.card_set.filter(number=0).count() == 1:
+                    other_player.is_turn = True
+                    other_player.save()
+                    break
+        else:
+            # The next player is the one with position (current_player.position + 1) % num_players
+            next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+            next_player.is_turn = True
+            next_player.save()
+
+        sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'].cancel()
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
+        timers[f'game{game.id}'].start()
+
+        return Response('ok')
+
+    @action(detail=False, methods=['post'])
+    def call(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if not game.is_betting_round:
+            return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
+        if not player.is_turn:
+            return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
+        bets = False
+        for other_player in game.player_set.all():
+            if other_player.bet > 0:
+                bets = True
+        if not bets:
+            return Response('You cannot call', status=status.HTTP_400_BAD_REQUEST)
+        if player.fold:
+            return Response('You have folded', status=status.HTTP_400_BAD_REQUEST)
+
+        # Make this player's bet match the current highest bet,
+        # or as close as possible
+        highest_bet = game.player_set.order_by('-bet').first().bet
+        if player.money < highest_bet:
+            player.bet = player.money
+            player.money = 0
+            player.save()
+        else:
+            player.money = (player.money + player.bet) - highest_bet
+            player.bet = highest_bet
+            player.save()
+        
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='CALL',
+            bet_amount=player.bet,
+            player_money=player.money
+        )
+        game.bet_turn += 1
+        game.save()
+
+        player.is_turn = False
+        player.save()
+
+        # Check if the betting round should end
+        num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
+        num_players_all_in_below_highest = game.player_set.filter(money=0, bet__lt=highest_bet, fold=False).count()
+        num_players_not_folded = game.player_set.filter(fold=False).count()
+        if (num_players_with_highest_bet + num_players_all_in_below_highest) == num_players_not_folded:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
+            game.is_betting_round = False
+            game.save()
+
+            # The next player is the one with the 0
+            for other_player in game.player_set.all():
+                if other_player.card_set.filter(number=0).count() == 1:
+                    other_player.is_turn = True
+                    other_player.save()
+                    break
+        else:
+            # The next player is the one with position (current_player.position + 1) % num_players
+            next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+            next_player.is_turn = True
+            next_player.save()
+
+        sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'].cancel()
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
+        timers[f'game{game.id}'].start()
+
+        return Response('ok')
+
+    @action(detail=False, methods=['post'])
+    def raise_bet(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if not game.is_betting_round:
+            return Response('It is not a betting round', status=status.HTTP_400_BAD_REQUEST)
+        if not player.is_turn:
+            return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
+        bets = False
+        for other_player in game.player_set.all():
+            if other_player.bet > 0:
+                bets = True
+        if not bets:
+            return Response('You cannot raise', status=status.HTTP_400_BAD_REQUEST)
+        if player.fold:
+            return Response('You have folded', status=status.HTTP_400_BAD_REQUEST)
+        
+        unvalidated_bet = request.data.get('bet')
+        if (type(unvalidated_bet) is not int) or (unvalidated_bet <= 0) or (unvalidated_bet > (player.money + player.bet)):
+            return Response('Invalid bet', status=status.HTTP_400_BAD_REQUEST)
+        validated_bet = unvalidated_bet
+        
+        highest_bet = game.player_set.order_by('-bet').first().bet
+        if validated_bet <= highest_bet:
+            return Response('You must raise to higher than the current highest bet', status=status.HTTP_400_BAD_REQUEST)
+        
+        player.money = (player.money + player.bet) - validated_bet
+        player.bet = validated_bet
+        player.save()
+
+        BetTurnHistory.objects.create(
+            game=game,
+            bet_turn=game.bet_turn,
+            hand=game.hand,
+            player=player,
+            bet_action='RAISE',
+            bet_amount=validated_bet,
+            player_money = player.money
+        )
+        game.bet_turn += 1
+        game.save()
+
+        player.is_turn = False
+        player.save()
+
+        # Check if the betting round should end
+        num_players_with_highest_bet = game.player_set.filter(bet=highest_bet, fold=False).count()
+        num_players_all_in_below_highest = game.player_set.filter(money=0, bet__lt=highest_bet, fold=False).count()
+        num_players_not_folded = game.player_set.filter(fold=False).count()
+        if (num_players_with_highest_bet + num_players_all_in_below_highest) == num_players_not_folded:
+            # Transfer bets into the pot
+            for other_player in game.player_set.all():
+                game.pot += other_player.bet
+                game.save()
+                other_player.bet = 0
+                other_player.save()
+
+            game.is_betting_round = False
+            game.save()
+
+            # The next player is the one with the 0
+            for other_player in game.player_set.all():
+                if other_player.card_set.filter(number=0).count() == 1:
+                    other_player.is_turn = True
+                    other_player.save()
+                    break
+        else:
+            # The next player is the one with position (current_player.position + 1) % num_players
+            next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+            next_player.is_turn = True
+            next_player.save()
+
+        # The next player is the one with position (current_player.position + 1) % num_players
+        next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+        next_player.is_turn = True
+        next_player.save()
+
+        sio_update_game(game.id)
+
+        global timers
+        timers[f'game{game.id}'].cancel()
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
+        timers[f'game{game.id}'].start()
 
         return Response('ok')
 
@@ -377,6 +761,8 @@ class CardViewSet(
             return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
         if game.is_finished:
             return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_betting_round:
+            return Response('In a betting round', status=status.HTTP_400_BAD_REQUEST)
         if not player.is_turn:
             return Response('It is not your turn', status=status.HTTP_400_BAD_REQUEST)
 
@@ -464,17 +850,74 @@ class CardViewSet(
         if game.turn == 0:
             # The next turn is the first turn of the hand.
 
+            first_turn_of_last_trick = 60 - game.num_players
+            turn_histories_in_last_trick = game.turnhistory_set.filter(hand=game.hand, turn__gte=first_turn_of_last_trick)
+
+            # Figure out which color(s) occured the most times
+            color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
+            colors = [black, red, blue, brown, green, yellow, purple, gray]
+            for turn_history in turn_histories_in_last_trick:
+                for index, color in enumerate(colors):
+                    if turn_history.card.number in color:
+                        color_frequencies[index] += 1
+            max_colors = []
+            for index in range(len(color_frequencies)):
+                if color_frequencies[index] == max(color_frequencies):
+                    max_colors += colors[index]
+
+            # For cards played in that (those) color(s), figure out which card had the highest number
+            max_number = 0
+            for turn_history in turn_histories_in_last_trick:
+                if (turn_history.card.number in max_colors) and (turn_history.card.number > max_number):
+                    max_number = turn_history.card.number
+
+            player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
+            player_taking_trick.tricks += 1
+            player_taking_trick.save()
+
+            # If betting is enabled, transfer the pot to the player(s) that took the least tricks in this hand,
+            # if that (those) player(s) did not fold.
+            if game.betting:
+                # Figure out the player that took the least tricks this hand
+                # Find the lowest tricks
+                lowest_tricks = game.player_set.order_by('tricks')[0].tricks
+
+                # Get all players that did not fold with the lowest tricks.
+                # These players are the hand winners.
+                trick_winners = game.player_set.filter(tricks=lowest_tricks, fold=False).all()
+                if len(trick_winners):
+                    for other_player in trick_winners:
+                        other_player.money += math.floor(game.pot / len(trick_winners))
+                        other_player.save()
+                    game.pot = 0
+
             # Transfer the tricks taken this round to each player's score.
-            # Determine if the game is finished (if a player has >= 10 points).
+            # Determine if the game is finished.
             for other_player in game.player_set.all():
                 other_player.score += other_player.tricks
                 other_player.tricks = 0
                 other_player.save()
-                if other_player.score >= 10:
+                if (not game.betting) and other_player.score >= 10:
                     game.is_finished = True
                     game.save()
 
-            if game.is_finished:
+            if game.betting:
+                if game.player_set.filter(money__gt=0).count() == 1:
+                    game.is_finished = True
+                    game.save()
+
+                    game.winners.add(game.player_set.filter(money__gt=0).first().user)
+                    game.save()
+
+                    # The remaining players (the ones with no money) are the losers.
+                    for other_player in game.player_set.filter(money=0):
+                        game.losers.add(other_player.user)
+                        game.save()
+
+                    # Don't give players new cards if game is finished.
+                    sio_update_game(game.id)
+                    return Response('ok')
+            elif game.is_finished:
                 # Figure out the winner(s) of the game
 
                 # Find the lowest score
@@ -518,6 +961,11 @@ class CardViewSet(
                 if (card_num == 0):
                     player_receiving_card.is_turn = True
                     player_receiving_card.save()
+            
+            # If betting is enabled, start a new betting round.
+            if game.betting:
+                game.is_betting_round = True
+                game.save()
 
             # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
             for player in game.player_set.all():
@@ -567,7 +1015,7 @@ class CardViewSet(
 
         global timers
         timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(60, timeout, [game.id])
+        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
         timers[f'game{game.id}'].start()
 
         return Response('ok')
