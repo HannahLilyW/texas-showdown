@@ -73,6 +73,7 @@ djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.as
 certbot --nginx -d $hostName
 
 useradd daphne
+usermod --shell /sbin/nologin daphne
 
 mkdir /usr/lib/texas/texas/certs
 cp /etc/letsencrypt/live/$hostName/privkey.pem /usr/lib/texas/texas/certs/privkey.pem
