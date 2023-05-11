@@ -122,11 +122,13 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-# This means that Django will use PBKDF2 to store all passwords but will support checking passwords stored with PBKDF2SHA1, argon2, and bcrypt.
+# This means that Django will use PBKDF2 with a SHA256 hash with 600,000 iterations to store all passwords,
+# but will support checking passwords stored with PBKDF2SHA256 with 390,000 iterations, PBKDF2SHA1, argon2, bcrypt and scrypt.
 # https://docs.djangoproject.com/en/4.1/topics/auth/passwords/#how-django-stores-passwords
 # PBKDF2 is recommended by NIST.
 
 PASSWORD_HASHERS = [
+    'texas.hashers.PBKDF2PasswordHasher600k',
     'django.contrib.auth.hashers.PBKDF2PasswordHasher',
     'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
     'django.contrib.auth.hashers.Argon2PasswordHasher',
