@@ -102,13 +102,16 @@ ExecStart=/bin/bash -c 'cd /usr/lib/texas && source env/bin/activate && cd texas
 WantedBy=multi-user.target
 EOF
 
-# change the database owner to daphne
-chown daphne:daphne /usr/lib/texas/texas/db.sqlite3
-chown daphne:daphne /usr/lib/texas/texas
-
 echo "Running migrations..."
 cd texas
 python manage.py migrate
+
+# change the database and config file owner to daphne
+chmod 600 /usr/lib/texas/texas/db.sqlite3
+chown daphne:daphne /usr/lib/texas/texas/db.sqlite3
+chown daphne:daphne /usr/lib/texas/texas
+chmod 600 /usr/lib/texas/texas/config.ini
+chown daphne:daphne /usr/lib/texas/texas/config.ini
 
 systemctl daemon-reload
 systemctl enable daphne
