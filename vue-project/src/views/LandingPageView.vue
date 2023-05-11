@@ -154,4 +154,8 @@ getCurrentGame();
 </template>
 
 <style scoped>
+p, h1, h2, .rules {
+    margin: 4px;
+    padding: 4px;
+}
 </style>
