@@ -87,12 +87,18 @@ class CreateAccountView(views.APIView):
 
         username = request.data.get('username', None)
         password = request.data.get('password', None)
+        retype_password = request.data.get('retypePassword', None)
 
         # Validation
         if not isinstance(username, str):
             return Response('Username must be a string', status=status.HTTP_400_BAD_REQUEST)
         if not isinstance(password, str):
             return Response('Password must be a string', status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(retype_password, str):
+            return Response('Retyped password must be a string', status=status.HTTP_400_BAD_REQUEST)
+        if password != retype_password:
+            return Response('Passwords are mismatched', status=status.HTTP_400_BAD_REQUEST)
+        # Continuing from here means password and retyped password coming from client are identical, so just have to worry about first field
         if len(username) > 32:
             return Response('Username must be 32 characters or fewer', status=status.HTTP_400_BAD_REQUEST)
         if len(password) > 150:

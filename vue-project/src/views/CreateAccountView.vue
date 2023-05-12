@@ -44,7 +44,8 @@ function createAccount() {
         // Send the data
         postWithoutAuth('create_account/', {
             'username': username.value,
-            'password': password.value
+            'password': password.value,
+            'retypePassword': retypePassword.value
         }).then(response => {
             try {
                 response.json().then(responseJson => {
