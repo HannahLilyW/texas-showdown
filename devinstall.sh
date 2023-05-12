@@ -21,6 +21,7 @@ dnf -y install epel-release
 dnf -y install certbot
 dnf -y install nginx
 dnf -y install python3-certbot-nginx
+dnf -y install git
 
 cd /root/texas-showdown/vue-project/
 npm install
@@ -55,11 +56,9 @@ server {
     listen 443 ssl;
     ssl_certificate /root/certs/self-signed.crt;
     ssl_certificate_key /root/certs/self-signed.key;
-    include /etc/letsencrypt/options-ssl-nginx.conf;
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
 }
 server {
-    if ($host = localhost) {
+    if (\$host = localhost) {
         return 301 https://\$host\$request_uri;
     }
 
@@ -82,6 +81,7 @@ pip install -r requirements.txt
 djangoSecretKey=$(python -c 'import string; import secrets; alphabet = string.ascii_letters + string.digits; print("".join(secrets.choice(alphabet) for i in range(64)))')
 
 useradd daphne
+usermod --shell /sbin/nologin daphne
 
 mkdir -p /root/certs/
 openssl req -x509 -nodes -newkey rsa:2048 -days 3650 -keyout /root/certs/self-signed.key -out /root/certs/self-signed.crt

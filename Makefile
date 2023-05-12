@@ -12,11 +12,11 @@ docker-install:
 
 # Run the daphne daemon
 docker-daphne:
-	docker exec -it texas bash -c "cd /root/texas-showdown/texas && source env/bin/activate && cd texas && daphne -e ssl:8443:privateKey=/root/certs/self-signed.key:certKey=/root/certs/self-signed.crt texas.asgi:application"
+	docker exec -dit texas bash -c "cd /usr/lib/texas && source env/bin/activate && cd texas && daphne -e ssl:8443:privateKey=/root/certs/self-signed.key:certKey=/root/certs/self-signed.crt texas.asgi:application"
 
 # Run the nginx daemon
 docker-nginx:
-	docker exec -it texas nginx
+	docker exec -dit texas nginx
 
 # Start a shell inside the container
 docker-sh:
