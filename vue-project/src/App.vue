@@ -2,6 +2,7 @@
 import router from './router';
 import { RouterView } from 'vue-router'
 import { username, logout } from './services/api.js';
+import SkullIcon from './components/icons/IconSkull.vue';
 
 if (!username.value) {
   // Stop people from accidentally going to a page they need to be logged in for, before logging in
@@ -17,9 +18,9 @@ function goToLanding() {
 <template>
   <header>
     <div class="title-wrapper">
-      <img alt="Flag of Texas" class="logo point" src="@/assets/flag64.png" width="64" height="43" @click="goToLanding()"/>
+      <SkullIcon class="point" @click="goToLanding()"></SkullIcon>
       <div id="title" class="point" @click="goToLanding()">
-        TEXAS SHOWDOWN
+        WESTERN WAGER
       </div>
     </div>
     <div class="user-info" v-if="username">

@@ -1,8 +1,14 @@
 # texas-showdown
-An implementation of the game Texas Showdown, created for the class SWE 681: Secure Software Design and Programming.
+A fun card game
 
-# Docker development
-Tested on Ubuntu
+# Local development on windows
+
+See vue-project/README.md
+
+# Local development on ubuntu
+
+This hasn't been tested in a while.
+
 ```
 # Build the container (Should only need to do this once unless the Dockerfile changes.)
 make docker-build

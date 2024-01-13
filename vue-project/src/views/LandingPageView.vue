@@ -96,7 +96,7 @@ getCurrentGame();
     <div class="rules">
         <h1>Rules</h1>
         <p>
-            Texas Showdown is a trick-taking card game. A trick-taking game is a game which consists of a certain number of rounds, or “tricks”, and each round has a winner who “takes the trick”. Texas Showdown is somewhat unusual among trick-taking games because the goal of the game is to take as few tricks as possible, and the winner of the game is the player that took the fewest tricks.
+            Western Wager is a trick-taking card game. A trick-taking game is a game which consists of a certain number of rounds, or “tricks”, and each round has a winner who “takes the trick”. Western Wager is somewhat unusual among trick-taking games because the goal of the game is to take as few tricks as possible, and the winner of the game is the player that took the fewest tricks.
         </p>
         <h2>Creating the Game</h2>
         <p>
