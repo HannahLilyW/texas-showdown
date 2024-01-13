@@ -851,7 +851,7 @@ class CardViewSet(
             # The next turn is the first turn of the hand.
 
             first_turn_of_last_trick = 60 - game.num_players
-            turn_histories_in_last_trick = game.turnhistory_set.filter(hand=game.hand, turn__gte=first_turn_of_last_trick)
+            turn_histories_in_last_trick = game.turnhistory_set.filter(hand=(game.hand - 1), turn__gte=first_turn_of_last_trick)
 
             # Figure out which color(s) occured the most times
             color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
