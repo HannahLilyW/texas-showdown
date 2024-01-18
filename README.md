@@ -3,7 +3,7 @@ A fun card game
 
 # Local development on windows
 
-See vue-project/README.md
+See vue-project/README.md for local frontend development
 
 # Local development on ubuntu
 

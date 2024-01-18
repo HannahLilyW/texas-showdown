@@ -51,8 +51,8 @@ function createNewGame() {
         <input id="numPlayers6" type="radio" v-model="numPlayers" value="6">
         <label for="numPlayers6">6</label>
     </div>
-    <label class="top-label" for="bettingInput">Betting:</label>
-    <div class="radio-row">
+    <label class="top-label" for="bettingInput" hidden>Betting:</label>
+    <div class="radio-row" hidden>
         <input id="noBetting" type="radio" v-model="betting" value="false" selected>
         <label for="noBetting">Just for Fun</label>
         <input id="betting" type="radio" v-model="betting" value="true">
