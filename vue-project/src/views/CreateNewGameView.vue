@@ -17,7 +17,8 @@ function cancel() {
 function createNewGame() {
     post('games/', {
         'num_players': Number(numPlayers.value),
-        'betting': Boolean(betting.value == 'true')
+        // 'betting': Boolean(betting.value == 'true')
+        'betting': false
     }).then(response => {
         try {
             response.json().then(responseJson => {
@@ -51,13 +52,13 @@ function createNewGame() {
         <input id="numPlayers6" type="radio" v-model="numPlayers" value="6">
         <label for="numPlayers6">6</label>
     </div>
-    <label class="top-label" for="bettingInput" hidden>Betting:</label>
-    <div class="radio-row" hidden>
+    <!-- <label class="top-label" for="bettingInput">Betting:</label>
+    <div class="radio-row">
         <input id="noBetting" type="radio" v-model="betting" value="false" selected>
         <label for="noBetting">Just for Fun</label>
         <input id="betting" type="radio" v-model="betting" value="true">
         <label for="betting">High Stakes</label>
-    </div>
+    </div> -->
 </form>
 <div class="error" v-if="error">{{ error }}</div>
 <div class="buttons-row">
