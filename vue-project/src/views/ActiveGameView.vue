@@ -279,7 +279,7 @@ getCurrentGame();
         <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
             <div class="player-username">
                 <div>{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
-                <div>${{ player.money }}</div>
+                <!-- <div>${{ player.money }}</div> -->
             </div>
             <div class="player-play">
                 <template v-if="playersWaitingForContinue.length">
