@@ -33,11 +33,19 @@ function login() {
             error.value = 'Error logging in';
         }
     })
-};
+}
 
 function cancel() {
     router.push('/');
 }
+
+const passwordElement = ref(null);
+
+const focusPasswordElement = () => {
+  if (passwordElement.value) {
+    passwordElement.value.focus();
+  }
+};
 </script>
 
 <template>
@@ -47,9 +55,9 @@ function cancel() {
 
     <form>
         <label for="username">Username:</label>
-        <input id="username" v-model="username" maxlength="32">
+        <input id="username" v-model="username" maxlength="32" @keyup.enter="focusPasswordElement">
         <label for="password">Password:</label>
-        <input id="password" type="password" v-model="password" maxlength="150">
+        <input id="password" type="password" v-model="password" maxlength="150" ref="passwordElement" @keyup.enter="login">
     </form>
     <div class="error" v-if="error">{{ error }}</div>
     <div class="buttons-row">
