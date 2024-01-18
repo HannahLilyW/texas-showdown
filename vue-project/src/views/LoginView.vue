@@ -39,7 +39,7 @@ function cancel() {
     router.push('/');
 }
 
-const passwordElement = ref(null);
+const passwordElement: Ref<HTMLInputElement|null> = ref(null);
 
 const focusPasswordElement = () => {
   if (passwordElement.value) {
