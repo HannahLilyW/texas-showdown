@@ -266,7 +266,7 @@ getCurrentGame();
         <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
             <div class="player-username">
                 <div>{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
-                <div hidden>${{ player.money }}</div>
+                <!-- <div>${{ player.money }}</div> -->
             </div>
             <div class="player-bet">${{ player.bet }}</div>
         </template>
