@@ -11,10 +11,10 @@ let socket: Socket|null = null;
 let token: string = sessionStorage.getItem("token") || "";
 let tokenCreated: Date|null = sessionStorage.getItem("tokenCreated") ? new Date(sessionStorage.getItem("tokenCreated") || "") : null;
 
-export let username: Ref<string> = ref(sessionStorage.getItem("username") || "");
+export const username: Ref<string> = ref(sessionStorage.getItem("username") || "");
 
-export let currentGame: Ref<Game|null> = ref(null);
-export let hand: Ref<number[]|null> = ref(null);
+export const currentGame: Ref<Game|null> = ref(null);
+export const hand: Ref<number[]|null> = ref(null);
 
 export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {
@@ -104,7 +104,7 @@ export function updateUsername(newUsername: string) {
 }
 
 export function logout() {
-    post('logout/', {}).then(response => {
+    post('logout/', {}).then(() => {
         sessionStorage.removeItem("username");
         sessionStorage.removeItem("token");
         sessionStorage.removeItem("tokenCreated");

@@ -69,7 +69,7 @@ const canCheck = computed(() => {
 })
 
 function check() {
-    post('games/check/', {}).then(response => {})
+    post('games/check/', {}).then(() => {})
 }
 
 const canOpen = computed(() => {
@@ -80,7 +80,7 @@ const canOpen = computed(() => {
 })
 
 function open() {
-    post('games/open_betting/', {'bet': betAmount.value}).then(response => {})
+    post('games/open_betting/', {'bet': betAmount.value}).then(() => {})
 }
 
 const canFold = computed(() => {
@@ -94,7 +94,7 @@ const canFold = computed(() => {
 })
 
 function fold() {
-    post('games/fold/', {}).then(response => {})
+    post('games/fold/', {}).then(() => {})
 }
 
 const canCall = computed(() => {
@@ -108,7 +108,7 @@ const canCall = computed(() => {
 })
 
 function call() {
-    post('games/call/', {}).then(response => {})
+    post('games/call/', {}).then(() => {})
 }
 
 const canRaise = computed(() => {
@@ -122,7 +122,7 @@ const canRaise = computed(() => {
 })
 
 function raise() {
-    post('games/raise_bet/', {'bet': betAmount.value}).then(response => {})
+    post('games/raise_bet/', {'bet': betAmount.value}).then(() => {})
 }
 
 const winners = computed(() => {
@@ -166,14 +166,14 @@ function getCurrentGame() {
 }
 
 function leaveGame() {
-    post('games/leave_game/', {}).then(response => {
+    post('games/leave_game/', {}).then(() => {
         currentGame.value = null;
         router.push('/');
     })
 }
 
 function startGame() {
-    post('games/start_game/', {}).then(response => {})
+    post('games/start_game/', {}).then(() => {})
 }
 
 function getHand() {
@@ -234,7 +234,7 @@ function playActiveCard() {
 }
 
 function continueGame() {
-    post('games/continue_game/', {}).then(response => {})
+    post('games/continue_game/', {}).then(() => {})
 }
 
 onBeforeUnmount(() => stopSocket());
@@ -247,7 +247,7 @@ getCurrentGame();
 <div v-if="currentGame && !currentGame.is_started">
     <h2>{{ currentGame.created_by }}'s game</h2>
     <p>Players:</p>
-    <li v-for="player in currentGame.player_set">{{ player.username }}{{ player.username == currentGame.owner ? ' (Owner)' : ''}}</li>
+    <li v-for="player in currentGame.player_set" :key="player.position">{{ player.username }}</li>
     <div v-if="currentGame.player_set.length < currentGame.num_players">Waiting for {{ currentGame.num_players - currentGame.player_set.length }} more player(s).</div>
     <div v-if="(currentGame.player_set.length  == currentGame.num_players) && (username != currentGame.owner)">
         Waiting for {{ currentGame.owner }} to start the game.
@@ -263,7 +263,7 @@ getCurrentGame();
     <div class="current-game-betting-round-background" v-if="currentGame.is_betting_round && !playersWaitingForContinue.length">
         <div>Player</div>
         <div>Bet</div>
-        <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
+        <template v-for="player in currentGame.player_set" :key="player.position">
             <div class="player-username">
                 <div>{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
                 <!-- <div>${{ player.money }}</div> -->
@@ -276,7 +276,7 @@ getCurrentGame();
         <div>Play</div>
         <div>Tricks</div>
         <div>Score</div>
-        <template class="other-player" v-for="player in currentGame.player_set" :key="player.position">
+        <template v-for="player in currentGame.player_set" :key="player.position">
             <div class="player-username">
                 <div>{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
                 <!-- <div>${{ player.money }}</div> -->
@@ -355,6 +355,7 @@ getCurrentGame();
             :id="'handCard' + cardNumber"
             :number="cardNumber"
             v-for="cardNumber in hand"
+            :key="cardNumber"
             draggable="true"
             @dragstart="dragStart($event, cardNumber)"
             @dragenter="dragEnter($event)"

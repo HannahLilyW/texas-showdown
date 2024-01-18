@@ -77,12 +77,12 @@ getCurrentGame();
             <div class="button" v-if="currentGame" @click="activeGame()">
                 Go to Active Game
             </div>
-            <div class="button" @click="viewCompletedGames()">
+            <!-- <div class="button" @click="viewCompletedGames()">
                 View Completed Games
             </div>
             <div class="button" @click="viewPlayerStatistics()">
                 View Player Statistics
-            </div>
+            </div> -->
         </div>
         <div v-else class="buttons-row">
             <div class="button" @click="createAccount()">

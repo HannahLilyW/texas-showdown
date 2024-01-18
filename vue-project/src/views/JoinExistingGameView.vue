@@ -27,7 +27,7 @@ function getExistingGames() {
 
 function joinGame(game: Game) {
     post('games/join_game/', {'id': game.id}).then(response => {
-        response.json().then(responseJson => {
+        response.json().then(() => {
             if (response.status == 200) {
                 router.push('/active-game');
             }
@@ -43,8 +43,8 @@ getExistingGames();
 <h2>Join Existing Game</h2>
 <template v-if="!loading">
     <div class="buttons-column" v-if="existingGames && existingGames.length">
-        <div class="button" v-for="game in existingGames" @click="joinGame(game)">
-            {{ game.owner }}'s game - {{ game.betting ? 'High Stakes' : 'Just for Fun' }} ({{ game.player_set.length }} out of {{ game.num_players }} players)
+        <div class="button" v-for="game in existingGames" @click="joinGame(game)" :key="game.id">
+            {{ game.player_set.length }} of {{ game.num_players }} players
         </div>
     </div>
     <template v-else>
