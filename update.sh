@@ -5,8 +5,15 @@ then
     exit
 fi
 
-echo "Please enter the domain name for the server (example: example.com):"
-read hostName
+if [[ ! -e "/root/texas-showdown/hostname.txt" ]]
+then
+    echo "Please enter the domain name for the server (example: example.com):"
+    read hostName
+    touch /root/texas-showdown/hostname.txt
+    echo $hostName > /root/texas-showdown/hostname.txt
+else
+    hostName=`cat hostname.txt`
+fi
 
 cd /root/texas-showdown/vue-project/
 npm run build
