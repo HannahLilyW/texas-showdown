@@ -13,6 +13,14 @@ function goToLanding() {
   router.push('/');
 }
 
+function createAccount() {
+    router.push('/create-account');
+}
+
+function logIn() {
+    router.push('/login');
+}
+
 </script>
 
 <template>
@@ -29,6 +37,14 @@ function goToLanding() {
       </div>
       <div class="button" @click="logout()">Log Out</div>
     </div>
+    <div v-else class="buttons-row">
+      <div class="subtle-button" @click="createAccount()">
+        Create Account
+      </div>
+      <div class="subtle-button" @click="logIn()">
+        Log In
+      </div>
+    </div>
   </header>
 
   <div class="container">
@@ -37,12 +53,13 @@ function goToLanding() {
 </template>
 
 <style scoped>
-
 header {
   width: 100%;
   display: flex;
   justify-content: space-between;
   flex-wrap: wrap;
+  background-color: var(--color-background-dark);
+  box-shadow: 0 0 100px 60px rgba(0, 0, 0, 0.5);
 }
 
 .user-info {
@@ -56,9 +73,9 @@ header {
   align-items: center;
   padding: 8px;
 }
+
 #title {
   font-size: 32px;
   padding-left: 8px;
 }
-
 </style>

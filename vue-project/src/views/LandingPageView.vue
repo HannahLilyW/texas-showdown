@@ -33,12 +33,16 @@ function getCurrentGame() {
     }
 }
 
-function createAccount() {
-    router.push('/create-account');
-}
-
-function logIn() {
-    router.push('/login');
+function playNow() {
+    if (username.value) {
+        if (!currentGame.value) {
+            router.push('/join-existing-game');
+        } else {
+            router.push('/active-game');
+        }
+    } else {
+        router.push('/create-account');
+    }
 }
 
 function createNewGame() {
@@ -67,7 +71,10 @@ getCurrentGame();
 
 <template>
     <nav v-if="!loading">
-        <div v-if="username" class="buttons-row">
+        <div class="buttons-row buttons-row-center">
+            <div class="button button-big" @click="playNow()">PLAY</div>
+        </div>
+        <!-- <div v-if="username" class="buttons-row">
             <div class="button" v-if="!currentGame" @click="createNewGame()">
                 Create New Game
             </div>
@@ -77,21 +84,21 @@ getCurrentGame();
             <div class="button" v-if="currentGame" @click="activeGame()">
                 Go to Active Game
             </div>
-            <!-- <div class="button" @click="viewCompletedGames()">
+            <div class="button" @click="viewCompletedGames()">
                 View Completed Games
             </div>
             <div class="button" @click="viewPlayerStatistics()">
                 View Player Statistics
-            </div> -->
-        </div>
-        <div v-else class="buttons-row">
+            </div>
+        </div> -->
+        <!-- <div v-else class="buttons-row">
             <div class="button" @click="createAccount()">
                 Create Account
             </div>
             <div class="button" @click="logIn()">
                 Log In
             </div>
-        </div>
+        </div> -->
     </nav>
     <div class="rules">
         <h1>Rules</h1>
@@ -154,6 +161,11 @@ getCurrentGame();
 </template>
 
 <style scoped>
+
+nav {
+    margin-top: 40px;
+}
+
 p, h1, h2, .rules {
     margin: 4px;
     padding: 4px;
