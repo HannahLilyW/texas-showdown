@@ -25,6 +25,63 @@
   --color-card-gray: #818688;
 
   --color-card-selected: #F8A940;
+
+  --color-skin-1: #321b0f;
+  --color-skin-2: #be9167;
+  --color-skin-3: #ffcd94;
+  --color-skin-4: #ffcab6;
+}
+
+.black {
+  background-color: var(--color-card-black);
+}
+
+.red {
+  background-color: var(--color-card-red);
+}
+
+.blue {
+  background-color: var(--color-card-blue);
+}
+
+.brown {
+  background-color: var(--color-card-brown);
+}
+
+.green {
+  background-color: var(--color-card-green);
+}
+
+.yellow {
+  background-color: var(--color-card-yellow);
+}
+
+.purple {
+  background-color: var(--color-card-purple);
+}
+
+.gray {
+  background-color: var(--color-card-gray);
+}
+
+.white {
+  background-color: var(--color-card-background);
+}
+
+.skin1 {
+  background-color: var(--color-skin-1);
+}
+
+.skin2 {
+  background-color: var(--color-skin-2);
+}
+
+.skin3 {
+  background-color: var(--color-skin-3);
+}
+
+.skin4 {
+  background-color: var(--color-skin-4);
 }
 
 *,
@@ -34,6 +91,16 @@
   margin: 0;
   position: relative;
   font-weight: normal;
+}
+
+::placeholder {
+  color: var(--color-input-text);
+  opacity: 0.5;
+}
+
+svg {
+  height: 32px;
+  width: 32px;
 }
 
 input {

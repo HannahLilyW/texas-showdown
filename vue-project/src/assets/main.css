@@ -5,13 +5,45 @@
   src: url('@/assets/fonts/Rye-Regular.ttf') format('truetype');
 }
 
+@font-face {
+  font-family: 'rosario';
+  src: url('@/assets/fonts/Rosario-Regular.ttf') format('truetype');
+}
+
 * {
-  font-family: rye;
+  font-family: rosario;
   color: var(--color-text);
   text-decoration: none;
 }
 div, a {
   background-color: transparent;
+}
+
+.rye {
+  font-family: rye;
+}
+
+.tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tab {
+  background-color: var(--color-button-shadow);
+  border-radius: 8px 8px 0px 0px;
+  cursor: pointer;
+  margin: 4px;
+  margin-bottom: 0px;
+  padding: 4px 12px;
+}
+
+.tab-active {
+  background-color: var(--color-button);
+}
+
+.tab:hover {
+  background-color: var(--color-button-hover);
 }
 
 .buttons-row {
@@ -41,6 +73,10 @@ div, a {
   padding: 4px 12px;
 }
 
+.button-danger {
+  filter: hue-rotate(330deg) saturate(200%);
+}
+
 .subtle-button {
   border: 0px;
   cursor: pointer;
@@ -60,6 +96,15 @@ div, a {
 
 .button-big {
   font-size: 32px;
+}
+
+.button-small {
+  padding: 4px 8px;
+}
+
+.icon-small {
+  height: 1em;
+  width: 1em;
 }
 
 .button.active {

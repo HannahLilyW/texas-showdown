@@ -19,8 +19,27 @@ class Game(models.Model):
     losers = models.ManyToManyField(User, blank=True, related_name='loser')
 
 
+color_choices = [
+    ('BLACK', 'black'),
+    ('RED', 'red'),
+    ('BLUE', 'blue'),
+    ('BROWN', 'brown'),
+    ('GREEN', 'green'),
+    ('YELLOW', 'yellow'),
+    ('PURPLE', 'purple'),
+    ('GRAY', 'gray'),
+    ('WHITE', 'white'),
+    ('SKIN1', 'skin1'),
+    ('SKIN2', 'skin2'),
+    ('SKIN3', 'skin3'),
+    ('SKIN4', 'skin4'),
+    ('BLANK', 'blank')
+]
+
+
 class Player(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, primary_key=True)
+    is_guest = models.BooleanField(default=False)
     current_game = models.ForeignKey(Game, on_delete=models.SET_NULL, null=True)
     position = models.IntegerField(null=True) # used to determine turn order
     is_turn = models.BooleanField(default=False)
@@ -30,6 +49,11 @@ class Player(models.Model):
     money = models.IntegerField(default=0)
     bet = models.IntegerField(default=0)
     fold = models.BooleanField(default=False)
+
+    background_color = models.CharField(max_length=10, choices=color_choices, default='BLANK')
+    shirt_color = models.CharField(max_length=10, choices=color_choices, default='BLACK')
+    skin_color = models.CharField(max_length=10, choices=color_choices, default='BLACK')
+    hat_color = models.CharField(max_length=10, choices=color_choices, default='BLACK')
 
     class Meta:
         ordering = ['position', 'pk']

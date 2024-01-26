@@ -41,7 +41,7 @@ function playNow() {
             router.push('/active-game');
         }
     } else {
-        router.push('/create-account');
+        router.push('/edit-profile');
     }
 }
 
@@ -72,33 +72,8 @@ getCurrentGame();
 <template>
     <nav v-if="!loading">
         <div class="buttons-row buttons-row-center">
-            <div class="button button-big" @click="playNow()">PLAY</div>
+            <div class="button button-big rye" @click="playNow()">PLAY</div>
         </div>
-        <!-- <div v-if="username" class="buttons-row">
-            <div class="button" v-if="!currentGame" @click="createNewGame()">
-                Create New Game
-            </div>
-            <div class="button" v-if="!currentGame" @click="joinExistingGame()">
-                Join Existing Game
-            </div>
-            <div class="button" v-if="currentGame" @click="activeGame()">
-                Go to Active Game
-            </div>
-            <div class="button" @click="viewCompletedGames()">
-                View Completed Games
-            </div>
-            <div class="button" @click="viewPlayerStatistics()">
-                View Player Statistics
-            </div>
-        </div> -->
-        <!-- <div v-else class="buttons-row">
-            <div class="button" @click="createAccount()">
-                Create Account
-            </div>
-            <div class="button" @click="logIn()">
-                Log In
-            </div>
-        </div> -->
     </nav>
     <div class="rules">
         <h1>Rules</h1>

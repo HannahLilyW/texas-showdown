@@ -49,6 +49,11 @@ const router = createRouter({
             name: 'view-player-statistics',
             component: () => import('../views/ViewPlayerStatisticsView.vue')
         },
+        {
+            path: '/edit-profile',
+            name: 'edit-profile',
+            component: () => import('../views/EditProfileView.vue')
+        }
     ]
 })
 

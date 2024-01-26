@@ -63,7 +63,7 @@ function createNewGame() {
 <div class="error" v-if="error">{{ error }}</div>
 <div class="buttons-row">
     <div class="button" @click="createNewGame()">Create New Game</div>
-    <div class="button" @click="cancel()">Cancel</div>
+    <div class="button button-danger" @click="cancel()">Cancel</div>
 </div>
 </template>
 

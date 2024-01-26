@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import { postWithoutAuth, updateToken, updateUsername } from '../services/api.js';
+import { postWithoutAuth, updateToken, updateUsername, updateOwnProfileInfo } from '../services/api.js';
 import router from '../router';
 
 // Form data
@@ -24,6 +24,7 @@ function login() {
                 if (responseJson['token'] && responseJson['username']) {
                     updateToken(responseJson['token']);
                     updateUsername(responseJson['username']);
+                    updateOwnProfileInfo();
                     router.push('/');
                 } else {
                     error.value = 'Error logging in';
@@ -55,16 +56,16 @@ const focusPasswordElement = () => {
 
     <form>
         <label for="username">Username:</label>
-        <input id="username" v-model="username" maxlength="32" @keyup.enter="focusPasswordElement">
+        <input id="username" v-model="username" maxlength="32" autocomplete="username" @keyup.enter="focusPasswordElement">
         <label for="password">Password:</label>
-        <input id="password" type="password" v-model="password" maxlength="150" ref="passwordElement" @keyup.enter="login">
+        <input id="password" type="password" v-model="password" maxlength="150" autocomplete="current-password" ref="passwordElement" @keyup.enter="login">
     </form>
     <div class="error" v-if="error">{{ error }}</div>
     <div class="buttons-row">
         <button class="button" @click="login()">
             Log In
         </button>
-        <button class="button" @click="cancel()">
+        <button class="button button-danger" @click="cancel()">
             Cancel
         </button>
     </div>
@@ -82,8 +83,21 @@ form {
     grid-template-columns: min-content max-content;
 }
 
+@media (max-width: 330px) {
+    form {
+        display: flex;
+        flex-direction: column;
+    }
+
+    label, input {
+        margin-left: 0px;
+        padding-left: 0px;
+        margin-right: 0px;
+        padding-right: 0px;
+    }
+}
+
 input {
-    width: 100%;
     padding: 4px;
     margin: 4px;
 }

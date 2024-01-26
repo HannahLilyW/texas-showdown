@@ -1,24 +1,26 @@
 <script setup lang="ts">
 import router from './router';
-import { RouterView } from 'vue-router'
-import { username, logout } from './services/api.js';
-import SkullIcon from './components/icons/IconSkull.vue';
+import { RouterView } from 'vue-router';
+import { ref } from 'vue';
+import { username, updateOwnProfileInfo } from './services/api.js';
+import MenuIcon from './components/icons/IconMenu.vue';
+import MenuComponent from './components/MenuComponent.vue';
+
+let menu = ref();
 
 if (!username.value) {
   // Stop people from accidentally going to a page they need to be logged in for, before logging in
   router.push('/');
+} else {
+  updateOwnProfileInfo();
 }
 
 function goToLanding() {
   router.push('/');
 }
 
-function createAccount() {
-    router.push('/create-account');
-}
-
-function logIn() {
-    router.push('/login');
+function showMenu() {
+  menu.value.show();
 }
 
 </script>
@@ -26,30 +28,20 @@ function logIn() {
 <template>
   <header>
     <div class="title-wrapper">
-      <SkullIcon class="point" @click="goToLanding()"></SkullIcon>
-      <div id="title" class="point" @click="goToLanding()">
+      <div id="title" class="point rye" @click="goToLanding()">
         WESTERN WAGER
       </div>
     </div>
-    <div class="user-info" v-if="username">
-      <div>
-        Welcome, {{ username }}
-      </div>
-      <div class="button" @click="logout()">Log Out</div>
-    </div>
-    <div v-else class="buttons-row">
-      <div class="subtle-button" @click="createAccount()">
-        Create Account
-      </div>
-      <div class="subtle-button" @click="logIn()">
-        Log In
-      </div>
+    <div class="buttons-row">
+      <MenuIcon @click="showMenu()" class="point"></MenuIcon>
     </div>
   </header>
 
   <div class="container">
     <RouterView />
   </div>
+
+  <MenuComponent ref="menu"></MenuComponent>
 </template>
 
 <style scoped>
@@ -57,9 +49,14 @@ header {
   width: 100%;
   display: flex;
   justify-content: space-between;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   background-color: var(--color-background-dark);
   box-shadow: 0 0 100px 60px rgba(0, 0, 0, 0.5);
+  padding-right: 8px;
+}
+
+.container {
+  padding: 8px;
 }
 
 .user-info {
@@ -77,5 +74,11 @@ header {
 #title {
   font-size: 32px;
   padding-left: 8px;
+}
+
+@media(max-width: 370px) {
+  #title {
+    font-size: 20px;
+  }
 }
 </style>

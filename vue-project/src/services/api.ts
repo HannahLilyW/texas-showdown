@@ -12,6 +12,12 @@ let token: string = sessionStorage.getItem("token") || "";
 let tokenCreated: Date|null = sessionStorage.getItem("tokenCreated") ? new Date(sessionStorage.getItem("tokenCreated") || "") : null;
 
 export const username: Ref<string> = ref(sessionStorage.getItem("username") || "");
+export const name: Ref<string> = ref('');
+export const is_guest: Ref<boolean> = ref(false);
+export const background_color: Ref<string> = ref('blank');
+export const shirt_color: Ref<string> = ref('black');
+export const skin_color: Ref<string> = ref('black');
+export const hat_color: Ref<string> = ref('black');
 
 export const currentGame: Ref<Game|null> = ref(null);
 export const hand: Ref<number[]|null> = ref(null);
@@ -103,6 +109,23 @@ export function updateUsername(newUsername: string) {
     username.value = newUsername;
 }
 
+export function updateOwnProfileInfo() {
+    get(`players/${username.value}/profile_info/`).then(response => {
+        try {
+          response.json().then(responseJson => {
+            name.value = responseJson['name'];
+            is_guest.value = responseJson['is_guest'];
+            background_color.value = responseJson['background_color'];
+            shirt_color.value = responseJson['shirt_color'];
+            skin_color.value = responseJson['skin_color'];
+            hat_color.value = responseJson['hat_color'];
+          })
+        } catch (e) {
+          console.log(`Error getting profile info: ${e}`)
+        }
+    })
+}
+
 export function logout() {
     post('logout/', {}).then(() => {
         sessionStorage.removeItem("username");
@@ -111,6 +134,12 @@ export function logout() {
         token = "";
         tokenCreated = null;
         username.value = "";
+        name.value = "";
+        is_guest.value = false;
+        background_color.value = 'blank';
+        shirt_color.value = 'black';
+        skin_color.value = 'black';
+        hat_color.value = 'black';
         router.push('/');
     })
 }

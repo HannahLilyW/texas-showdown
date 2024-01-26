@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
-from texas_api.models import Game, Player, Card, TurnHistory, BetTurnHistory
+from texas_api.models import Game, Player, Card, TurnHistory, BetTurnHistory, color_choices
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
 from texas.sio_events import sio_leave_room, sio_update_game
 import json
@@ -87,12 +87,15 @@ class CreateAccountView(views.APIView):
 
         username = request.data.get('username', None)
         password = request.data.get('password', None)
+        is_guest = request.data.get('is_guest', False)
 
         # Validation
         if not isinstance(username, str):
             return Response('Username must be a string', status=status.HTTP_400_BAD_REQUEST)
         if not isinstance(password, str):
             return Response('Password must be a string', status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(is_guest, bool):
+            return Response('is_guest must be a boolean', status=status.HTTP_400_BAD_REQUEST)
         if len(username) > 32:
             return Response('Username must be 32 characters or fewer', status=status.HTTP_400_BAD_REQUEST)
         if len(password) > 150:
@@ -119,7 +122,7 @@ class CreateAccountView(views.APIView):
 
         try:
             user = User.objects.create_user(username=username, password=password)
-            player = Player.objects.create(user=user)
+            player = Player.objects.create(user=user, is_guest=is_guest)
         except Exception as e:
             log.error(f'Error creating account: Unexpected error creating user object: {e}')
             return Response('Error creating account', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
@@ -737,6 +740,102 @@ class PlayerViewSet(
         players = Player.objects.all()
         serializer = PlayerStatisticSerializer(players, many=True)
         return Response(serializer.data)
+
+    @action(detail=False, methods=['post'])
+    def edit_profile(self, request):
+        player = Player.objects.get(user=request.user)
+        name = request.data.get('name', None)
+        background_color = request.data.get('background_color', None)
+        shirt_color = request.data.get('shirt_color', None)
+        skin_color = request.data.get('skin_color', None)
+        hat_color = request.data.get('hat_color', None)
+        
+        # Validation
+        for field in [name, background_color, shirt_color, skin_color, hat_color]:
+            if field == None or field == '' or not isinstance(field, str):
+                return Response('Name, background_color, shirt_color, skin_color, hat_color are required to be non-empty strings', status=status.HTTP_400_BAD_REQUEST)
+        if len(name) > 32:
+            return Response('Name is too long', status=status.HTTP_400_BAD_REQUEST)
+        for field in [background_color, shirt_color, skin_color, hat_color]:
+            if field.upper() not in map(lambda x: x[0], color_choices):
+                return Response(f'Color choice {field} is invalid', status=status.HTTP_400_BAD_REQUEST)
+        
+        request.user.first_name = name
+        request.user.save()
+        player.background_color = background_color.upper()
+        player.shirt_color = shirt_color.upper()
+        player.skin_color = skin_color.upper()
+        player.hat_color = hat_color.upper()
+        player.save()
+
+        return Response({
+            'name': request.user.first_name,
+            'is_guest': player.is_guest,
+            'background_color': player.background_color.lower(),
+            'shirt_color': player.shirt_color.lower(),
+            'skin_color': player.skin_color.lower(),
+            'hat_color': player.hat_color.lower()
+        })
+    
+    @action(detail=False, methods=['post'])
+    def upgrade_account(self, request):
+        username = request.data.get('username', None)
+        password = request.data.get('password', None)
+
+        # Validation
+        if not isinstance(username, str):
+            return Response('Username must be a string', status=status.HTTP_400_BAD_REQUEST)
+        if not isinstance(password, str):
+            return Response('Password must be a string', status=status.HTTP_400_BAD_REQUEST)
+        if len(username) > 32:
+            return Response('Username must be 32 characters or fewer', status=status.HTTP_400_BAD_REQUEST)
+        if len(password) > 150:
+            return Response('Password must be 150 characters or fewer', status=status.HTTP_400_BAD_REQUEST)
+        if len(username) < 1:
+            return Response('Username must be at least 1 character', status=status.HTTP_400_BAD_REQUEST)
+        if len(password) < 8:
+            return Response('Password must be at least 8 characters', status=status.HTTP_400_BAD_REQUEST)
+        if not re.match(r'^[A-Za-z0-9_]+$', username):
+            return Response('Username may only contain letters, digits, and underscores', status=status.HTTP_400_BAD_REQUEST)
+        if not re.match(r'^[A-Za-z0-9_!@#$%^&*()]+$', password):
+            return Response('Password may only contain letters, digits, and the following characters: _ ! @ # $ % ^ & * ( )', status=status.HTTP_400_BAD_REQUEST)
+        if User.objects.filter(username=username).first() is not None:
+            return Response('There is already a user with that username. Please choose another.', status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Run the password through the validators configured in AUTH_PASSWORD_VALIDATORS in settings.py
+            validate_password(password)
+        except ValidationError as e:
+            # If the exception has type ValidationError, we know the error will have safe error messages from the built-in Django password validators.
+            # Pass these back to the client so they know what to change about the password.
+            return Response(f'Invalid password: {e}', status=status.HTTP_400_BAD_REQUEST)
+
+        # Validation complete.
+
+        try:
+            request.user.username = username
+            request.user.save()
+            request.user.set_password(password)
+            request.user.save()
+            player = Player.objects.get(user=request.user)
+            player.is_guest = False
+            player.save()
+        except Exception as e:
+            log.error(f'Error upgrading account: Unexpected error: {e}')
+            return Response('Error upgrading account', status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return Response('ok')
+    
+    @action(detail=True, methods=['get'])
+    def profile_info(self, request, pk=None):
+        user = User.objects.get(username=pk)
+        player = Player.objects.get(user=user)
+        return Response({
+            'name': user.first_name,
+            'is_guest': player.is_guest,
+            'background_color': player.background_color.lower(),
+            'shirt_color': player.shirt_color.lower(),
+            'skin_color': player.skin_color.lower(),
+            'hat_color': player.hat_color.lower()
+        })
 
 
 class CardViewSet(
