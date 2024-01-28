@@ -242,7 +242,14 @@ function fontSize(value: string) {
     }
 }
 
-onBeforeUnmount(() => stopSocket());
+onBeforeUnmount(() => {
+    stopSocket();
+    if (currentGame.value && currentGame.value.is_finished) {
+        post('games/leave_game/', {}).then(() => {
+            currentGame.value = null;
+        })
+    }
+});
 
 getCurrentGame();
 
