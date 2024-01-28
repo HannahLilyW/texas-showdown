@@ -11,10 +11,33 @@ let activeCard: Ref<number|null> = ref(null);
 let error: Ref<string> = ref('');
 let betAmount: Ref<number|null> = ref(null);
 
-watch(currentGame, () => {
+const timeout: Ref<number> = ref(0);
+
+watch(currentGame, (newVal, oldVal) => {
     error.value = '';
+    if (
+        newVal && oldVal 
+        && !newVal.is_started 
+        && !(oldVal.player_set.length  == oldVal.num_players) 
+        && (newVal.player_set.length  == newVal.num_players)
+    ) {
+        // start the timer
+        resetTimer();
+    }
     getHand();
 })
+
+function decrementTimer() {
+    if (timeout.value > 0) {
+        timeout.value -= 1;
+        setTimeout(decrementTimer, 1000)
+    }
+}
+
+function resetTimer() {
+    timeout.value = 30;
+    decrementTimer();
+}
 
 const recentHistory = computed(() => {
     /**
@@ -284,6 +307,9 @@ getCurrentGame();
         <template v-else>
             Autostart in 30 seconds
         </template>
+        <div class="timeout-bar-container">
+            <div class="timeout-bar" v-for="i in timeout" :key="i"></div>
+        </div>
     </div>
     <div class="buttons-row buttons-row-center">
         <div class="button rye"
@@ -394,6 +420,17 @@ getCurrentGame();
 </template>
 
 <style scoped>
+
+.timeout-bar-container {
+    display: flex;
+    justify-content: center;
+}
+
+.timeout-bar {
+    width: 8px;
+    height: 4px;
+    background-color: var(--color-text);
+}
 
 .profiles {
     display: flex;
