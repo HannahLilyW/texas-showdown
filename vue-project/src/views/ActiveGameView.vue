@@ -321,7 +321,7 @@ getCurrentGame();
             Game over! {{ winners }} won!
         </template>
         <template v-else-if="playersWaitingForContinue.length">
-            {{ currentGame.player_set.find(player => player.is_turn)?.username }} took the trick!
+            {{ currentGame.player_set.find(player => player.is_turn)?.name }} took the trick!
             <br/>
             <template v-if="playersWaitingForContinue.length > 1">
                 Waiting for {{ playersWaitingForContinue.length }} players to click continue...
@@ -332,15 +332,15 @@ getCurrentGame();
         </template>
         <template v-else-if="currentGame.is_betting_round">
             <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
-            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.username }}'s turn</template>
+            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.name }}'s turn</template>
         </template>
         <template v-else-if="currentGame.turn == 0">
-            <template v-if="!(hand?.includes(0))">Waiting for {{ currentGame.player_set.find(player => player.is_turn)?.username }} to play the 0...</template>
+            <template v-if="!(hand?.includes(0))">Waiting for {{ currentGame.player_set.find(player => player.is_turn)?.name }} to play the 0...</template>
             <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn! You must play the 0</template>
         </template>
         <template v-else>
             <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
-            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.username }}'s turn</template>
+            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.name }}'s turn</template>
         </template>
     </div>
     <div class="buttons-row" v-if="!currentGame.is_finished">
