@@ -324,7 +324,7 @@ getCurrentGame();
         </template>
     </div>
     <div class="pot" v-if="currentGame.betting">Pot: ${{ currentGame.pot }}</div>
-    <div class="game-status">
+    <div class="game-status center">
         <template v-if="currentGame.is_finished">
             Game over! {{ winners }} won!
         </template>
@@ -351,8 +351,8 @@ getCurrentGame();
             <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.name }}'s turn</template>
         </template>
     </div>
-    <div class="buttons-row" v-if="!currentGame.is_finished">
-        <div class="button" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">Continue</div>
+    <div class="buttons-row buttons-row-center" v-if="!currentGame.is_finished">
+        <div class="button rye" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">CONTINUE</div>
         <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">
             <template v-if="currentGame.is_betting_round">
                 <form v-if="canOpen || canRaise">
@@ -365,9 +365,9 @@ getCurrentGame();
                 <div class="button" v-if="canCall" @click="call()">Call</div>
                 <div class="button" v-if="canFold" @click="fold()">Fold</div>
             </template>
-            <div class="button" v-else-if="typeof activeCard == 'number'" @click="playActiveCard()">Play the {{activeCard}}</div>
+            <div class="button rye" v-else-if="typeof activeCard == 'number'" @click="playActiveCard()">PLAY</div>
         </template>
-        <div class="error" v-if="error">{{ error }}</div>
+        <div class="error center red-text" v-if="error">{{ error }}</div>
     </div>
     <div class="hand" v-if="hand">
         <CardComponent
