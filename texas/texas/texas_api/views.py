@@ -185,8 +185,9 @@ class GameViewSet(
             return GameSerializer
     
     def create(self, request, *args, **kwargs):
-        super().create(request, *args, **kwargs)
+        response = super().create(request, *args, **kwargs)
         sio_update_existing_games()
+        return response
 
     @action(detail=False, methods=['get'])
     def get_current_game(self, request):
