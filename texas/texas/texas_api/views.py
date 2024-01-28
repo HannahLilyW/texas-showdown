@@ -80,6 +80,12 @@ def timeout(game_id):
         sio_update_game(game.id)
 
 
+def autostart_game(game_id):
+    game = Game.objects.get(id=game_id)
+    if not game.is_started and not game.is_finished and len(game.player_set.all()) == game.num_players:
+        init_game(game)
+
+
 def leave_game_timeout(game_id):
     game = Game.objects.get(id=game_id)
     if game.is_finished:
@@ -100,6 +106,40 @@ def leave_game_timeout(game_id):
 
             sio_leave_room(player.user.id, game_id)
         sio_update_game(game_id)
+
+
+def init_game(game):
+    deck = [
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+        21, 22, 23, 24, 25, 26, 27, 28, 29,
+        31, 32, 33, 34, 35, 36, 37, 38,
+        41, 42, 43, 44, 45, 46, 47,
+        51, 52, 53, 54, 55, 56,
+        61, 62, 63, 64, 65,
+        71, 72, 73, 74
+    ]
+    shuffled_deck = []
+
+    for i in range(len(deck)):
+        card_num = secrets.choice(deck)
+        deck.remove(card_num)
+        shuffled_deck.append(card_num)
+        player_receiving_card = game.player_set.get(position=i % game.num_players)
+        card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
+        card.save()
+        if (card_num == 0):
+            player_receiving_card.is_turn = True
+            player_receiving_card.save()
+
+    game.is_started = True
+    game.save()
+
+    sio_update_game(game.id)
+
+    global timers
+    timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
+    timers[f'game{game.id}'].start()
 
 
 class CreateAccountView(views.APIView):
@@ -251,8 +291,13 @@ class GameViewSet(
         sio_update_game(game.id)
         sio_update_existing_games()
 
+        if len(game.player_set.all()) == game.num_players:
+            global timers
+            timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, autostart_game, [game.id])
+            timers[f'game{game.id}'].start()
+
         return Response('ok')
-    
+
     @action(detail=False, methods=['post'])
     def leave_game(self, request):
         player = Player.objects.get(user=request.user)
@@ -340,37 +385,7 @@ class GameViewSet(
                 other_player.money = 100
                 other_player.save()
 
-        deck = [
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-            11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-            21, 22, 23, 24, 25, 26, 27, 28, 29,
-            31, 32, 33, 34, 35, 36, 37, 38,
-            41, 42, 43, 44, 45, 46, 47,
-            51, 52, 53, 54, 55, 56,
-            61, 62, 63, 64, 65,
-            71, 72, 73, 74
-        ]
-        shuffled_deck = []
-
-        for i in range(len(deck)):
-            card_num = secrets.choice(deck)
-            deck.remove(card_num)
-            shuffled_deck.append(card_num)
-            player_receiving_card = game.player_set.get(position=i % game.num_players)
-            card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
-            card.save()
-            if (card_num == 0):
-                player_receiving_card.is_turn = True
-                player_receiving_card.save()
-
-        game.is_started = True
-        game.save()
-
-        sio_update_game(game.id)
-
-        global timers
-        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-        timers[f'game{game.id}'].start()
+        init_game(game)
 
         return Response('ok')
     

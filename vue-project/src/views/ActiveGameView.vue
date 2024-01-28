@@ -277,8 +277,13 @@ getCurrentGame();
             </div>
         </div>
     </div>
-    <div class="center" v-if="(currentGame.player_set.length  == currentGame.num_players) && (username != currentGame.owner)">
-        Waiting for {{ currentGame.owner_name }} to start the game.
+    <div class="center" v-if="(currentGame.player_set.length  == currentGame.num_players)">
+        <template v-if="username != currentGame.owner">
+            Waiting for {{ currentGame.owner_name }} to start the game. (Autostart in 30 seconds)
+        </template>
+        <template v-else>
+            Autostart in 30 seconds
+        </template>
     </div>
     <div class="buttons-row buttons-row-center">
         <div class="button rye"
