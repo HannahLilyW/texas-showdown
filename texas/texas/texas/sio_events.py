@@ -1,4 +1,5 @@
 from django.core.exceptions import ObjectDoesNotExist
+from django.db.models import F, Count
 from rest_framework.authtoken.models import Token
 from texas.sio_server import sio_server
 from texas.logging import log
@@ -34,15 +35,16 @@ async def connect(sid, environ, auth=''):
 
     get_active_game = sync_to_async(sync_get_active_game)
     active_game = await get_active_game(player)
-    if not active_game:
-        log.error('rejected connection for user because no active game')
-        return False
-    
+
     global userids_to_sids
     userids_to_sids[f'user{user.id}'] = sid
 
     sio_server.save_session(sid, {'username': user.username})
-    sio_server.enter_room(sid, f'room{active_game.id}')
+
+    if active_game:
+        sio_server.enter_room(sid, f'room{active_game.id}')
+    else:
+        sio_server.enter_room(sid, 'join_existing_game')
 
 
 async def async_sio_leave_room(user_id, game_id):
@@ -71,5 +73,21 @@ async def async_sio_update_game(game_id):
     await sio_server.emit('update_game', serializer.data, room=f'room{game_id}')
 
 
+async def async_sio_update_existing_games():
+    def sync_get_existing_games():
+        games = Game.objects.annotate(Count('player')).filter(
+            num_players__gt=F('player__count'),
+            is_started=False
+        )
+        serializer = GameSerializer(games, many=True)
+        return serializer.data
+    
+    get_existing_games = sync_to_async(sync_get_existing_games)
+    existing_games = await get_existing_games()
+
+    await sio_server.emit('update_existing_games', existing_games, room='join_existing_game')
+
+
 sio_leave_room = async_to_sync(async_sio_leave_room, force_new_loop=True)
 sio_update_game = async_to_sync(async_sio_update_game, force_new_loop=True)
+sio_update_existing_games = async_to_sync(async_sio_update_existing_games, force_new_loop=True)

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { get, post } from '../services/api.js';
-import { ref } from 'vue';
+import { get, post, startSocket, stopSocket, existingGames } from '../services/api.js';
+import { ref, onBeforeUnmount } from 'vue';
 import type { Ref } from 'vue';
 import type { Game } from '../models';
 import router from '../router';
 
-let existingGames: Ref<Game[]|null> = ref(null);
 let loading: Ref<boolean> = ref(true);
 
 function createNewGame() {
@@ -18,6 +17,7 @@ function getExistingGames() {
             if (response.status == 200) {
                 existingGames.value = responseJson;
                 loading.value = false;
+                startSocket();
             } else {
                 console.log(`unexpected response. status: ${response.status} response: ${responseJson}`)
             }
@@ -37,10 +37,13 @@ function joinGame(game: Game) {
 
 getExistingGames();
 
+onBeforeUnmount(() => {
+    stopSocket();
+});
+
 </script>
 
 <template>
-<!-- <h2 class="rye center">JOIN A GAME</h2> -->
 <div class="buttons-row buttons-row-center">
     <div class="button rye" @click=createNewGame()>CREATE GAME</div>
     <div class="button rye">JOIN PRIVATE GAME</div>

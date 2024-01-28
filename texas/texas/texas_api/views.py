@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory, BetTurnHistory, color_choices
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer, AdminGameSerializer
-from texas.sio_events import sio_leave_room, sio_update_game
+from texas.sio_events import sio_leave_room, sio_update_game, sio_update_existing_games
 import json
 import re
 import secrets  # Cryptographically secure randomness
@@ -183,6 +183,10 @@ class GameViewSet(
             return CreateGameSerializer
         else:
             return GameSerializer
+    
+    def create(self, request, *args, **kwargs):
+        super().create(request, *args, **kwargs)
+        sio_update_existing_games()
 
     @action(detail=False, methods=['get'])
     def get_current_game(self, request):
@@ -244,6 +248,7 @@ class GameViewSet(
         player.save()
 
         sio_update_game(game.id)
+        sio_update_existing_games()
 
         return Response('ok')
     
@@ -271,6 +276,7 @@ class GameViewSet(
                 for other_player in other_players:
                     other_player.position -= 1
                     other_player.save()
+            sio_update_existing_games()
         elif not game.is_finished:
             # The player is ending the game by leaving.
             # Add a special TurnHistory to show this in the game log.

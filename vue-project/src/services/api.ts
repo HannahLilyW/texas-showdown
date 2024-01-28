@@ -19,6 +19,7 @@ export const shirt_color: Ref<string> = ref('black');
 export const skin_color: Ref<string> = ref('black');
 export const hat_color: Ref<string> = ref('black');
 
+export const existingGames: Ref<Game[]|null> = ref(null);
 export const currentGame: Ref<Game|null> = ref(null);
 export const hand: Ref<number[]|null> = ref(null);
 
@@ -156,6 +157,10 @@ export function startSocket() {
     socket.onAny((eventName, ...args) => {
         if (eventName == 'update_game') {
             currentGame.value = args[0];
+        }
+
+        if (eventName == 'update_existing_games') {
+            existingGames.value = args[0];
         }
     });
 }
