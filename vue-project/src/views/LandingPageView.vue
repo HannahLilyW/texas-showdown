@@ -49,6 +49,7 @@ function playNow() {
     getCurrentGame(() => {
         if (username.value) {
             if (!currentGame.value) {
+                console.log('here')
                 router.push('/join-existing-game');
             } else {
                 router.push('/active-game');
@@ -57,26 +58,6 @@ function playNow() {
             router.push('/edit-profile');
         }
     })
-}
-
-function createNewGame() {
-    router.push('/create-new-game');
-}
-
-function activeGame() {
-    router.push('/active-game')
-}
-
-function joinExistingGame() {
-    router.push('/join-existing-game');
-}
-
-function viewCompletedGames() {
-    router.push('/view-completed-games');
-}
-
-function viewPlayerStatistics() {
-    router.push('/view-player-statistics');
 }
 
 getCurrentGame();
