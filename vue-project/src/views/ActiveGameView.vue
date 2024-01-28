@@ -423,7 +423,7 @@ getCurrentGame();
     /* width: 100vw; */
     height: 100%;
     display: grid;
-    grid-template-columns: fit-content(200px) min-content;
+    grid-template-columns: fit-content(200px) 100px;
     column-gap: 40px;
     row-gap: 20px;
     justify-items: center;

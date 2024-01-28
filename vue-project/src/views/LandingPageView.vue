@@ -8,11 +8,14 @@ import type { Game } from '../models';
 let currentGame: Ref<Game|null> = ref(null);
 let loading: Ref<boolean> = ref(true);
 
-function getCurrentGame() {
+function getCurrentGame(callback?: Function) {
     if (username.value) {
         get('games/get_current_game/').then(response => {
             if (response.status == 204) {
                 loading.value = false;
+                if (callback) {
+                    callback();
+                }
                 return;
             }
             try {
@@ -23,26 +26,37 @@ function getCurrentGame() {
                     } else {
                         console.log(`unexpected response. status: ${response.status} response: ${responseJson}`)
                     }
+                    if (callback) {
+                        callback();
+                    }
                 })
             } catch (e) {
                 console.log(`error getting current game: ${e}`)
+                if (callback) {
+                    callback();
+                }
             }
         })
     } else {
         loading.value = false;
+        if (callback) {
+            callback();
+        }
     }
 }
 
 function playNow() {
-    if (username.value) {
-        if (!currentGame.value) {
-            router.push('/join-existing-game');
+    getCurrentGame(() => {
+        if (username.value) {
+            if (!currentGame.value) {
+                router.push('/join-existing-game');
+            } else {
+                router.push('/active-game');
+            }
         } else {
-            router.push('/active-game');
+            router.push('/edit-profile');
         }
-    } else {
-        router.push('/edit-profile');
-    }
+    })
 }
 
 function createNewGame() {
