@@ -276,7 +276,6 @@ class GameViewSet(
                 for other_player in other_players:
                     other_player.position -= 1
                     other_player.save()
-            sio_update_existing_games()
         elif not game.is_finished:
             # The player is ending the game by leaving.
             # Add a special TurnHistory to show this in the game log.
@@ -311,6 +310,9 @@ class GameViewSet(
             card.player = None
             card.save()
         player.save()
+
+        if not game.is_started:
+            sio_update_existing_games()
 
         sio_leave_room(player.user.id, game_id)
         sio_update_game(game_id)
