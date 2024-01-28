@@ -17,11 +17,19 @@ import math
 from threading import Timer
 
 
-TIMEOUT_SECONDS = 60
+TIMEOUT_SECONDS = 30
 
 
 # Timers for each game to track when to end them due to inactivity
 timers = {}
+
+
+def finish_game(game):
+    game.is_finished = True
+    game.save()
+    global timers
+    timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, leave_game_timeout, [game.id])
+    timers[f'game{game.id}'].start()
 
 
 def timeout(game_id):
@@ -44,8 +52,7 @@ def timeout(game_id):
                     end_game=True
                 )
         if len(players_waiting_for_continue):
-            game.is_finished = True
-            game.save()
+            finish_game(game)
             for other_player in game.player_set.all():
                 if other_player not in players_waiting_for_continue:
                     game.winners.add(other_player.user)
@@ -61,7 +68,7 @@ def timeout(game_id):
                 player=player,
                 end_game=True
             )
-            game.is_finished = True
+            finish_game(game)
 
             # This player should lose, and all other players should win.
             game.losers.add(player.user)
@@ -71,6 +78,28 @@ def timeout(game_id):
                     game.winners.add(other_player.user)
                     game.save()
         sio_update_game(game.id)
+
+
+def leave_game_timeout(game_id):
+    game = Game.objects.get(id=game_id)
+    if game.is_finished:
+        for player in game.player_set.all():
+            player.current_game = None
+            player.position = None
+            player.is_turn = False
+            player.waiting_for_continue = False
+            player.tricks = 0
+            player.score = 0
+            player.money = 0
+            player.bet = 0
+            player.fold = False
+            for card in player.card_set.all():
+                card.player = None
+                card.save()
+            player.save()
+
+            sio_leave_room(player.user.id, game_id)
+        sio_update_game(game_id)
 
 
 class CreateAccountView(views.APIView):
@@ -252,7 +281,7 @@ class GameViewSet(
                 player=player,
                 end_game=True
             )
-            game.is_finished = True
+            finish_game(game)
 
             # This player should lose, and all other players should win.
             game.losers.add(player.user)
@@ -997,13 +1026,11 @@ class CardViewSet(
                 other_player.tricks = 0
                 other_player.save()
                 if (not game.betting) and other_player.score >= 10:
-                    game.is_finished = True
-                    game.save()
+                    finish_game(game)
 
             if game.betting:
                 if game.player_set.filter(money__gt=0).count() == 1:
-                    game.is_finished = True
-                    game.save()
+                    finish_game(game)
 
                     game.winners.add(game.player_set.filter(money__gt=0).first().user)
                     game.save()
