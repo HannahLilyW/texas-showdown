@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { ref } from 'vue'
-import type { Ref } from 'vue'
-import router from '../router'
-import { post } from '../services/api.js'
+import { ref } from 'vue';
+import type { Ref } from 'vue';
+import router from '../router';
+import { post } from '../services/api.js';
+import InfoComponent from '../components/InfoComponent.vue';
 
 // Form data
 let numPlayers: Ref<string> = ref("3");
 let betting: Ref<string> = ref("false");
+let publicInput: Ref<string> = ref("public");
 
 let error: Ref<string> = ref("");
 
@@ -38,52 +40,55 @@ function createNewGame() {
 </script>
 
 <template>
-<h2>Create New Game</h2>
-
+<h2 class="center rye">NEW GAME</h2>
+<br/>
 <form>
-    <div class="top-label">Number of Players:</div>
-    <div class="radio-row">
+    <div class="center rye">PLAYERS</div>
+    <div class="radio-row radio-row-center">
         <input id="numPlayers3" type="radio" v-model="numPlayers" value="3" selected>
-        <label for="numPlayers3">3</label>
+        <label for="numPlayers3" class="rye">3</label>
         <input id="numPlayers4" type="radio" v-model="numPlayers" value="4">
-        <label for="numPlayers4">4</label>
+        <label for="numPlayers4" class="rye">4</label>
         <input id="numPlayers5" type="radio" v-model="numPlayers" value="5">
-        <label for="numPlayers5">5</label>
+        <label for="numPlayers5" class="rye">5</label>
         <input id="numPlayers6" type="radio" v-model="numPlayers" value="6">
-        <label for="numPlayers6">6</label>
+        <label for="numPlayers6" class="rye">6</label>
     </div>
-    <!-- <label class="top-label" for="bettingInput">Betting:</label>
-    <div class="radio-row">
-        <input id="noBetting" type="radio" v-model="betting" value="false" selected>
-        <label for="noBetting">Just for Fun</label>
-        <input id="betting" type="radio" v-model="betting" value="true">
-        <label for="betting">High Stakes</label>
-    </div> -->
+    <br/>
+    <div class="center buttons-row">
+        <div class="rye">ACCESS</div>
+        <InfoComponent>
+            <p>Anyone can join public games.</p>
+            <br>
+            <p>Only players with the room code can join private games.</p>
+        </InfoComponent>
+    </div>
+    <div class="radio-row radio-row-center">
+        <input id="public" type="radio" v-model="publicInput" value="public" selected>
+        <label for="public" class="rye">PUBLIC</label>
+        <input id="private" type="radio" v-model="publicInput" value="private">
+        <label for="private" class="rye">PRIVATE</label>
+    </div>
 </form>
-<div class="error" v-if="error">{{ error }}</div>
-<div class="buttons-row">
-    <div class="button" @click="createNewGame()">Create New Game</div>
-    <div class="button button-danger" @click="cancel()">Cancel</div>
+<br/>
+<div class="error red-text center" v-if="error">{{ error }}</div>
+<div class="buttons-row buttons-row-center">
+    <div class="button rye" @click="createNewGame()">START GAME</div>
 </div>
 </template>
 
 <style scoped>
-.top-label {
-    padding: 4px;
-    margin: 4px;
-    white-space: nowrap;
-    justify-self: end;
-}
-form {
-    display: grid;
-    grid-template-columns: min-content max-content;
-    justify-items: start;
-    align-items: center;
-}
+
 input {
     width: auto;
     padding: 4px;
     margin: 4px;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 </style>

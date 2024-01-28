@@ -70,7 +70,7 @@ getCurrentGame();
 </script>
 
 <template>
-    <nav v-if="!loading">
+    <nav>
         <div class="buttons-row buttons-row-center">
             <div class="button button-big rye" @click="playNow()">PLAY</div>
         </div>

@@ -8,6 +8,7 @@ export type Game = {
     pot: number,
     is_started: boolean,
     owner: string,
+    owner_name: string,
     player_set: Player[],
     turn: number,
     hand: number,
@@ -25,6 +26,11 @@ export type GameMetadata = {
 
 export type Player = {
     username: string,
+    name?: string,
+    background_color?: string,
+    shirt_color?: string,
+    skin_color?: string,
+    hat_color?: string,
     position: number,
     is_turn: boolean,
     waiting_for_continue: boolean,

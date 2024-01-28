@@ -46,6 +46,11 @@ class PlayerNameListField(serializers.RelatedField):
     def to_representation(self, value):
         return {
             'username': value.user.username,
+            'name': value.user.first_name,
+            'background_color': value.background_color.lower(),
+            'shirt_color': value.shirt_color.lower(),
+            'skin_color': value.skin_color.lower(),
+            'hat_color': value.hat_color.lower(),
             'position': value.position,
             'is_turn': value.is_turn,
             'waiting_for_continue': value.waiting_for_continue,
@@ -103,7 +108,9 @@ class GameSerializer(serializers.ModelSerializer):
         # Return usernames rather than user ids
         ret = super().to_representation(instance)
         ret['created_by'] = User.objects.get(id=ret['created_by']).username
-        ret['owner'] = User.objects.get(id=ret['owner']).username
+        owner = User.objects.get(id=ret['owner'])
+        ret['owner'] = owner.username
+        ret['owner_name'] = owner.first_name
         return ret
 
 
@@ -136,3 +143,9 @@ class PlayerStatisticSerializer(serializers.ModelSerializer):
 
     def get_losses(self, obj):
         return obj.user.loser.count()
+
+
+class AdminGameSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Game
+        fields = '__all__'

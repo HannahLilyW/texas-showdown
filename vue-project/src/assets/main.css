@@ -46,6 +46,10 @@ div, a {
   background-color: var(--color-button-hover);
 }
 
+.center {
+  text-align: center;
+}
+
 .buttons-row {
   display: flex;
   align-items: center;
@@ -141,6 +145,11 @@ div, a {
   flex-wrap: no-wrap;
   align-items: center;
 }
+
+.radio-row-center {
+  justify-content: center;
+}
+
 .radio-row input {
   display: none;
 }
@@ -165,3 +174,36 @@ div, a {
   background-color: var(--color-button-hover);
 }
 
+input {
+  border-radius: 8px;
+  border: 0px solid #00000000;
+}
+
+.username {
+  font-size: 0.8em;
+  opacity: 0.5;
+  max-width: 180px;
+  word-wrap: break-word;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.smallfont {
+  font-size: 0.7em;
+}
+
+.tinyfont {
+  font-size: 0.6em;
+}
+
+.microfont {
+  font-size: 0.5em;
+}
+
+.name {
+  white-space: nowrap;
+  max-width: 136px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}

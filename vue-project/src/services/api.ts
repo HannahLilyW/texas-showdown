@@ -38,8 +38,7 @@ export async function postWithoutAuth(url: string, data: Record<string, any>) {
 }
 
 export async function post(url: string, data: Record<string, any>) {
-    // Prompt for login 1 hour before the token actually expires to prevent any weirdness
-    if (!token.length || !username.value.length || !tokenCreated || tokenCreated.setHours(tokenCreated.getHours() + 11) < Date.now()) {
+    if (!token.length || !username.value.length || !tokenCreated) {
         router.push('/login');
     }
     const response = await fetch(`${baseUrl}${url}`, {
@@ -68,8 +67,7 @@ export async function post(url: string, data: Record<string, any>) {
 }
 
 export async function get(url: string) {
-    // Prompt for login 1 hour before the token actually expires to prevent any weirdness
-    if (!token.length || !username.value.length || !tokenCreated || tokenCreated.setHours(tokenCreated.getHours() + 11) < Date.now()) {
+    if (!token.length || !username.value.length || !tokenCreated) {
         router.push('/login');
     }
     const response = await fetch(`${baseUrl}${url}`, {

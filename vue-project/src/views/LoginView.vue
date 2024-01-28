@@ -36,10 +36,6 @@ function login() {
     })
 }
 
-function cancel() {
-    router.push('/');
-}
-
 const passwordElement: Ref<HTMLInputElement|null> = ref(null);
 
 const focusPasswordElement = () => {
@@ -50,23 +46,22 @@ const focusPasswordElement = () => {
 </script>
 
 <template>
-    <h2>
-        Log In
-    </h2>
+    <div class="center">
+        <h2 class="rye">
+            LOG IN
+        </h2>
+    </div>
 
     <form>
-        <label for="username">Username:</label>
+        <label for="username" class="rye">USERNAME</label>
         <input id="username" v-model="username" maxlength="32" autocomplete="username" @keyup.enter="focusPasswordElement">
-        <label for="password">Password:</label>
+        <label for="password" class="rye">PASSWORD</label>
         <input id="password" type="password" v-model="password" maxlength="150" autocomplete="current-password" ref="passwordElement" @keyup.enter="login">
     </form>
     <div class="error" v-if="error">{{ error }}</div>
-    <div class="buttons-row">
-        <button class="button" @click="login()">
-            Log In
-        </button>
-        <button class="button button-danger" @click="cancel()">
-            Cancel
+    <div class="buttons-row buttons-row-center">
+        <button class="button rye" @click="login()">
+            LOG IN
         </button>
     </div>
 </template>
@@ -81,6 +76,7 @@ label {
 form {
     display: grid;
     grid-template-columns: min-content max-content;
+    justify-content: center;
 }
 
 @media (max-width: 330px) {
@@ -89,11 +85,8 @@ form {
         flex-direction: column;
     }
 
-    label, input {
-        margin-left: 0px;
-        padding-left: 0px;
-        margin-right: 0px;
-        padding-right: 0px;
+    label {
+        text-align: center;
     }
 }
 

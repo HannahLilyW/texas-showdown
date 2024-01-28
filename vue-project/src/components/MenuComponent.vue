@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
-import { username, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest } from '../services/api.js';
+import { username, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, post } from '../services/api.js';
 import ProfilePicComponent from './ProfilePicComponent.vue';
 
 let showMenu: Ref<boolean> = ref(false);
@@ -27,8 +27,15 @@ function editProfile() {
     router.push('/edit-profile');
 }
 
+function quitCurrentGame() {
+    post('games/leave_game/', {}).then(() => {
+        currentGame.value = null;
+        router.push('/');
+    })
+}
+
 function fontSize(value: string) {
-    if (value.length <= 20) {
+    if (value.length <= 19) {
         return '';
     } else if (value.length <= 29) {
         return 'smallfont';
@@ -53,18 +60,19 @@ defineExpose({
                     :skin_color="skin_color"
                     :hat_color="hat_color"
                 ></ProfilePicComponent>
-                <div class="name" :class="fontSize(name)">{{ name }}</div>
-                <div class="username" :class="fontSize(username)">{{ username }}</div>
+                <pre class="name" :class="fontSize(name)">{{ name }}</pre>
+                <pre class="username" :class="fontSize(username)">{{ username }}</pre>
             </div>
-            <div class="button" v-if="username && !is_guest" @click="logout()">
-                Log Out
+            <div class="button rye" v-if="username && !is_guest" @click="logout()">
+                LOG OUT
             </div>
-            <div class="button" v-if="!username || (username && is_guest)" @click="logIn()">
-                Log In
+            <div class="button rye" v-if="!username || (username && is_guest)" @click="logIn()">
+                LOG IN
             </div>
-            <div class="button" v-if="!username || (username && is_guest)" @click="createAccount()">
-                Create Account
+            <div class="button rye" v-if="!username || (username && is_guest)" @click="createAccount()">
+                CREATE ACCOUNT
             </div>
+            <div class="button button-danger rye" v-if="currentGame" @click="quitCurrentGame()">QUIT CURRENT GAME</div>
         </div>
     </div>
 </template>
@@ -86,7 +94,7 @@ defineExpose({
     top: 0;
     background: rgba(0, 0, 0, 0.3);
     cursor: auto;
-    z-index: 1;
+    z-index: 3;
 }
 
 .sidebar {
@@ -102,35 +110,6 @@ defineExpose({
     flex-direction: column;
     gap: 4px;
     align-items: stretch;
-}
-
-.username {
-    font-size: 0.8em;
-    opacity: 0.5;
-    max-width: 180px;
-    word-wrap: break-word;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.smallfont {
-    font-size: 0.7em;
-}
-
-.tinyfont {
-    font-size: 0.6em;
-}
-
-.microfont {
-    font-size: 0.5em;
-}
-
-.name {
-    max-width: 136px;
-    word-wrap: break-word;
-    overflow: hidden;
-    text-overflow: ellipsis;
 }
 
 #profile {

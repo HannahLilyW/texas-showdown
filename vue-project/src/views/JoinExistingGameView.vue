@@ -40,23 +40,31 @@ getExistingGames();
 </script>
 
 <template>
-<h2>Join Existing Game</h2>
+<!-- <h2 class="rye center">JOIN A GAME</h2> -->
+<div class="buttons-row buttons-row-center">
+    <div class="button rye" @click=createNewGame()>CREATE GAME</div>
+    <div class="button rye">JOIN PRIVATE GAME</div>
+</div>
+<h2 class="rye center">PUBLIC GAMES</h2>
 <template v-if="!loading">
     <div class="buttons-column" v-if="existingGames && existingGames.length">
         <div class="button" v-for="game in existingGames" @click="joinGame(game)" :key="game.id">
-            {{ game.player_set.length }} of {{ game.num_players }} players
+            <div>
+                <div>{{ game.owner_name }}'s game</div>
+                <div class="subtitle">{{ game.player_set.length }} of {{ game.num_players }} players</div>
+            </div>
         </div>
     </div>
     <template v-else>
-        <div class="buttons-row">
-            <p>No existing games to join.</p>
-            <div class="button" @click=createNewGame()>Create New Game</div>
-        </div>
+        <p class="center">No public games to join. Create a new one!</p>
     </template>
 </template>
 
 </template>
 
 <style scoped>
-
+.subtitle {
+    font-size: 0.8em;
+    opacity: 0.5;
+}
 </style>

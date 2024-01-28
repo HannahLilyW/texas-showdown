@@ -47,11 +47,11 @@ const colorsToHex: Record<string, string> = {
 <template>
 <div class="card" v-if="number != null">
     <div class="column-1">
-        <div class="meter" :class="{empty: number > props.number}" v-for="number in colorsToNumbers[color]"></div>
-        <div class="meter-head" :class="{filled: Number(props.number) == colorsToNumbers[color].slice(-1)[0]}">{{ colorsToNumbers[color].length }}</div>
+        <div class="meter" :class="{empty: number > props.number}" v-for="number in colorsToNumbers[color]" :key="number"></div>
+        <div class="meter-head rye" :class="{filled: Number(props.number) == colorsToNumbers[color].slice(-1)[0]}">{{ colorsToNumbers[color].length }}</div>
     </div>
     <div class="column-2">
-        <div class="number">{{ props.number }}</div>
+        <div class="number rye">{{ props.number }}</div>
         <div class="icon">
             <PistolIcon v-if="color == 'black'"></PistolIcon>
             <BootIcon v-if="color == 'red'"></BootIcon>

@@ -8,7 +8,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory, BetTurnHistory, color_choices
-from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer
+from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer, AdminGameSerializer
 from texas.sio_events import sio_leave_room, sio_update_game
 import json
 import re
@@ -1118,3 +1118,9 @@ class CardViewSet(
         timers[f'game{game.id}'].start()
 
         return Response('ok')
+
+
+class AdminGameViewSet(viewsets.ModelViewSet):
+    queryset = Game.objects.all()
+    serializer_class = AdminGameSerializer
+    permission_classes = [permissions.IsAdminUser]

@@ -3,7 +3,7 @@ import { get } from '../services/api.js';
 import type { Game } from '../models';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import Card from '../components/Card.vue';
+import CardComponent from '../components/CardComponent.vue';
 
 const props = defineProps(['id']);
 
@@ -45,9 +45,9 @@ getCompletedGame();
                 <div v-if="turnhistory.end_game">{{ turnhistory.player }} left the game</div>
                 <template v-else>
                     <div class="played">{{ turnhistory.player }} played </div>
-                    <Card
+                    <CardComponent
                         :number="turnhistory.card"
-                    ></Card>
+                    ></CardComponent>
                 </template>
             </div>
         </template>

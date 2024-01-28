@@ -47,7 +47,10 @@ async def connect(sid, environ, auth=''):
 
 async def async_sio_leave_room(user_id, game_id):
     global userids_to_sids
-    sio_server.leave_room(userids_to_sids[f'user{user_id}'], f'room{game_id}')
+    try:
+        sio_server.leave_room(userids_to_sids[f'user{user_id}'], f'room{game_id}')
+    except Exception as e:
+        log.error(f'error leaving socketio room: {repr(e)}')
 
 
 async def async_sio_update_game(game_id):

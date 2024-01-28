@@ -245,8 +245,7 @@ onMounted(() => {
         </div>
     </div>
     <div class="buttons-row">
-        <div class="button" @click="save()" :class="{disabled: invalid}">Save</div>
-        <div class="button button-danger" @click="cancel()">Cancel</div>
+        <div class="button rye" @click="save()" :class="{disabled: invalid}">SAVE</div>
     </div>
     <div class="error" v-if="error">{{ error }}</div>
 </div>

@@ -3,7 +3,8 @@ import { get, post, startSocket, stopSocket, currentGame, hand, username } from 
 import { watch, ref, onBeforeUnmount, computed } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
-import Card from '../components/Card.vue';
+import CardComponent from '../components/CardComponent.vue';
+import ProfilePicComponent from '../components/ProfilePicComponent.vue';
 
 let loading: Ref<boolean> = ref(true);
 let activeCard: Ref<number|null> = ref(null);
@@ -165,13 +166,6 @@ function getCurrentGame() {
     })
 }
 
-function leaveGame() {
-    post('games/leave_game/', {}).then(() => {
-        currentGame.value = null;
-        router.push('/');
-    })
-}
-
 function startGame() {
     post('games/start_game/', {}).then(() => {})
 }
@@ -237,6 +231,16 @@ function continueGame() {
     post('games/continue_game/', {}).then(() => {})
 }
 
+function fontSize(value: string) {
+    if (value.length <= 19) {
+        return '';
+    } else if (value.length <= 29) {
+        return 'smallfont';
+    } else {
+        return 'tinyfont';
+    }
+}
+
 onBeforeUnmount(() => stopSocket());
 
 getCurrentGame();
@@ -245,61 +249,70 @@ getCurrentGame();
 
 <template>
 <div v-if="currentGame && !currentGame.is_started">
-    <h2>{{ currentGame.created_by }}'s game</h2>
-    <p>Players:</p>
-    <li v-for="player in currentGame.player_set" :key="player.position">{{ player.username }}</li>
-    <div v-if="currentGame.player_set.length < currentGame.num_players">Waiting for {{ currentGame.num_players - currentGame.player_set.length }} more player(s).</div>
-    <div v-if="(currentGame.player_set.length  == currentGame.num_players) && (username != currentGame.owner)">
-        Waiting for {{ currentGame.owner }} to start the game.
+    <h2 class="center rye">WAITING FOR PLAYERS</h2>
+    <div class="profiles">
+        <div v-for="slot in currentGame.num_players" :key="slot">
+            <div class="profile-pic-container" v-if="slot <= currentGame.player_set.length">
+                <ProfilePicComponent
+                    :background_color="currentGame.player_set[slot-1].background_color"
+                    :shirt_color="currentGame.player_set[slot-1].shirt_color"
+                    :skin_color="currentGame.player_set[slot-1].skin_color"
+                    :hat_color="currentGame.player_set[slot-1].hat_color"
+                ></ProfilePicComponent>
+                <pre class="name" :class="fontSize(currentGame.player_set[slot-1].name || '')">{{ currentGame.player_set[slot-1].name }}</pre>
+            </div>
+            <div class="profile-pic-container" v-else>
+                <div class="empty-slot">
+                    <div class="empty-slot-inner">?</div>
+                </div>
+                <div class="name-placeholder"></div>
+            </div>
+        </div>
     </div>
-    <div class="buttons-row">
-        <div class="button"
+    <div class="center" v-if="(currentGame.player_set.length  == currentGame.num_players) && (username != currentGame.owner)">
+        Waiting for {{ currentGame.owner_name }} to start the game.
+    </div>
+    <div class="buttons-row buttons-row-center">
+        <div class="button rye"
             v-if="username == currentGame.owner && (currentGame.num_players == currentGame.player_set.length)"
-            @click="startGame()">Start Game</div>
-        <div class="button" @click="leaveGame()">Leave Game</div>
+            @click="startGame()">START GAME</div>
     </div>
 </div>
 <div v-if="currentGame && currentGame.is_started">
-    <div class="current-game-betting-round-background" v-if="currentGame.is_betting_round && !playersWaitingForContinue.length">
-        <div>Player</div>
-        <div>Bet</div>
+    <div class="current-game-background">
         <template v-for="player in currentGame.player_set" :key="player.position">
-            <div class="player-username">
-                <div>{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
-                <!-- <div>${{ player.money }}</div> -->
-            </div>
-            <div class="player-bet">${{ player.bet }}</div>
-        </template>
-    </div>
-    <div class="current-game-background" v-else>
-        <div>Player</div>
-        <div>Play</div>
-        <div>Tricks</div>
-        <div>Score</div>
-        <template v-for="player in currentGame.player_set" :key="player.position">
-            <div class="player-username">
-                <div>{{ player.username }}{{ player.fold ? ' (Folded)' : ''}}</div>
-                <!-- <div>${{ player.money }}</div> -->
+            <div class="profile-pic-container">
+                <ProfilePicComponent
+                    :background_color="player.background_color"
+                    :shirt_color="player.shirt_color"
+                    :skin_color="player.skin_color"
+                    :hat_color="player.hat_color"
+                    :small="true"
+                ></ProfilePicComponent>
+                <div>
+                    <pre class="name" :class="fontSize(player.name || '')">
+                        {{ player.name }}
+                    </pre>
+                </div>
+                <div class="score yellow-text rye">{{ player.tricks + player.score }} TRICK{{ player.tricks + player.score == 1 ? '' : 'S' }}</div>
             </div>
             <div class="player-play">
                 <template v-if="playersWaitingForContinue.length">
-                    <Card
+                    <CardComponent
                         v-if="lastTrickHistory.find(history => history.player == player.username)"
                         :number="lastTrickHistory.find(history => history.player == player.username)?.card"
                         :class="{active: player.is_turn}"
                     >
-                    </Card>
+                    </CardComponent>
                 </template>
                 <template v-else>
-                    <Card 
+                    <CardComponent
                         v-if="recentHistory.find(history => history.player == player.username)"
                         :number="recentHistory.find(history => history.player == player.username)?.card"
                     >
-                    </Card>
+                    </CardComponent>
                 </template>
             </div>
-            <div class="player-tricks">{{ player.tricks }}</div>
-            <div class="player-score">{{ player.score }}</div>
         </template>
     </div>
     <div class="pot" v-if="currentGame.betting">Pot: ${{ currentGame.pot }}</div>
@@ -349,7 +362,7 @@ getCurrentGame();
         <div class="error" v-if="error">{{ error }}</div>
     </div>
     <div class="hand" v-if="hand">
-        <Card
+        <CardComponent
             class="hand-card"
             :class="{active: cardNumber == activeCard}"
             :id="'handCard' + cardNumber"
@@ -362,25 +375,56 @@ getCurrentGame();
             @dragover="dragOver($event)"
             @drop="drop($event, cardNumber)"
             @click="activate(cardNumber)"
-        ></Card>
-    </div>
-    <div class="buttons-row">
-        <div class="button" @click="leaveGame()">Leave Game</div>
+        ></CardComponent>
     </div>
 </div>
 </template>
 
 <style scoped>
+
+.profiles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+}
+
+.profile-pic-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.empty-slot {
+    height: 100px;
+    width: 100px;
+    border: 2px dashed var(--color-text);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-slot-inner {
+    font-size: 50px;
+    text-align: center;
+    font-family: rye;
+}
 .current-game-background {
-    background-color: var(--color-button-shadow);
-    width: 100vw;
+    /* background-color: var(--color-button-shadow); */
+    /* width: 100vw; */
     height: 100%;
     display: grid;
-    grid-template-columns: fit-content(200px) min-content min-content min-content;
+    grid-template-columns: fit-content(200px) min-content;
     column-gap: 40px;
+    row-gap: 20px;
     justify-items: center;
     align-items: center;
     justify-content: center;
+}
+
+.name-placeholder {
+    height: 1em;
 }
 
 .current-game-betting-round-background {
@@ -403,6 +447,7 @@ getCurrentGame();
     display: flex;
     gap: 4px;
     flex-wrap: wrap;
+    justify-content: center;
 }
 
 .hand-card {

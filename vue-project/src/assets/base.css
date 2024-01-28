@@ -40,6 +40,10 @@
   background-color: var(--color-card-red);
 }
 
+.red-text {
+  color: var(--color-card-red);
+}
+
 .blue {
   background-color: var(--color-card-blue);
 }
@@ -54,6 +58,10 @@
 
 .yellow {
   background-color: var(--color-card-yellow);
+}
+
+.yellow-text {
+  color: var(--color-card-yellow);
 }
 
 .purple {
@@ -89,7 +97,6 @@
 *::after {
   box-sizing: border-box;
   margin: 0;
-  position: relative;
   font-weight: normal;
 }
 
