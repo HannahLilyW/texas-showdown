@@ -49,7 +49,6 @@ function playNow() {
     getCurrentGame(() => {
         if (username.value) {
             if (!currentGame.value) {
-                console.log('here')
                 router.push('/join-existing-game');
             } else {
                 router.push('/active-game');

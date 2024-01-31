@@ -2,6 +2,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db.models import F, Count
+import django.utils.timezone
 from rest_framework import views, viewsets, mixins, permissions, status
 from rest_framework.response import Response
 from rest_framework.authtoken.models import Token
@@ -27,9 +28,7 @@ timers = {}
 def finish_game(game):
     game.is_finished = True
     game.save()
-    global timers
-    timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, leave_game_timeout, [game.id])
-    timers[f'game{game.id}'].start()
+    reset_timer(game, leave_game_timeout)
 
 
 def timeout(game_id):
@@ -78,6 +77,20 @@ def timeout(game_id):
                     game.winners.add(other_player.user)
                     game.save()
         sio_update_game(game.id)
+
+
+def reset_timer(game, timeout_function):
+    game.last_timer_reset = django.utils.timezone.now()
+    game.save()
+
+    global timers
+    try:
+        timers[f'game{game.id}'].cancel()
+    except Exception as e:
+        pass
+    timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout_function, [game.id])
+    timers[f'game{game.id}'].start()
+    sio_update_game(game.id)
 
 
 def autostart_game(game_id):
@@ -135,11 +148,7 @@ def init_game(game):
     game.is_started = True
     game.save()
 
-    sio_update_game(game.id)
-
-    global timers
-    timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-    timers[f'game{game.id}'].start()
+    reset_timer(game, timeout)
 
 
 class CreateAccountView(views.APIView):
@@ -292,9 +301,7 @@ class GameViewSet(
         sio_update_existing_games()
 
         if len(game.player_set.all()) == game.num_players:
-            global timers
-            timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, autostart_game, [game.id])
-            timers[f'game{game.id}'].start()
+            reset_timer(game, autostart_game)
 
         return Response('ok')
 
@@ -398,12 +405,7 @@ class GameViewSet(
         player.save()
 
         if player.current_game:
-            sio_update_game(player.current_game.id)
-
-            global timers
-            timers[f'game{player.current_game.id}'].cancel()
-            timers[f'game{player.current_game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [player.current_game.id])
-            timers[f'game{player.current_game.id}'].start()
+            reset_timer(player.current_game, timeout)
 
         return Response('ok')
 
@@ -464,12 +466,7 @@ class GameViewSet(
             next_player.is_turn = True
             next_player.save()
 
-        sio_update_game(game.id)
-
-        global timers
-        timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-        timers[f'game{game.id}'].start()
+        reset_timer(game, timeout)
 
         return Response('ok')
 
@@ -519,12 +516,7 @@ class GameViewSet(
         next_player.is_turn = True
         next_player.save()
 
-        sio_update_game(game.id)
-
-        global timers
-        timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-        timers[f'game{game.id}'].start()
+        reset_timer(game, timeout)
 
         return Response('ok')
 
@@ -593,12 +585,7 @@ class GameViewSet(
             next_player.is_turn = True
             next_player.save()
 
-        sio_update_game(game.id)
-
-        global timers
-        timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-        timers[f'game{game.id}'].start()
+        reset_timer(game, timeout)
 
         return Response('ok')
 
@@ -677,12 +664,7 @@ class GameViewSet(
             next_player.is_turn = True
             next_player.save()
 
-        sio_update_game(game.id)
-
-        global timers
-        timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-        timers[f'game{game.id}'].start()
+        reset_timer(game, timeout)
 
         return Response('ok')
 
@@ -767,12 +749,7 @@ class GameViewSet(
         next_player.is_turn = True
         next_player.save()
 
-        sio_update_game(game.id)
-
-        global timers
-        timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-        timers[f'game{game.id}'].start()
+        reset_timer(game, timeout)
 
         return Response('ok')
 
@@ -1161,12 +1138,7 @@ class CardViewSet(
             next_player.is_turn = True
             next_player.save()
 
-        sio_update_game(game.id)
-
-        global timers
-        timers[f'game{game.id}'].cancel()
-        timers[f'game{game.id}'] = Timer(TIMEOUT_SECONDS, timeout, [game.id])
-        timers[f'game{game.id}'].start()
+        reset_timer(game, timeout)
 
         return Response('ok')
 

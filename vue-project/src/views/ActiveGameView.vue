@@ -13,16 +13,16 @@ let betAmount: Ref<number|null> = ref(null);
 
 const timeout: Ref<number> = ref(0);
 
-watch(currentGame, (newVal, oldVal) => {
+watch(currentGame, (newVal) => {
     error.value = '';
     if (
-        newVal && oldVal 
-        && !newVal.is_started 
-        && !(oldVal.player_set.length  == oldVal.num_players) 
+        newVal 
+        && !newVal.is_started
         && (newVal.player_set.length  == newVal.num_players)
     ) {
         // start the timer
-        resetTimer();
+        const secondsSinceServerTimeReset = Math.floor((new Date().getTime() - new Date(newVal.last_timer_reset).getTime()) / 1000);
+        resetTimer(30 - secondsSinceServerTimeReset);
     }
     getHand();
 })
@@ -34,9 +34,11 @@ function decrementTimer() {
     }
 }
 
-function resetTimer() {
-    timeout.value = 30;
-    decrementTimer();
+function resetTimer(seconds: number) {
+    if (seconds > 0) {
+        timeout.value = seconds;
+        decrementTimer();
+    }
 }
 
 const recentHistory = computed(() => {
