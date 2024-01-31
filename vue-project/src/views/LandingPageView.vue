@@ -1,11 +1,9 @@
 <script setup lang="ts">
 import router from '../router';
-import { username, get } from '../services/api.js';
+import { username, currentGame, get } from '../services/api.js';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
-import type { Game } from '../models';
 
-let currentGame: Ref<Game|null> = ref(null);
 let loading: Ref<boolean> = ref(true);
 
 function getCurrentGame(callback?: Function) {

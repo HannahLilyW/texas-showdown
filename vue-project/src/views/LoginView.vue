@@ -18,7 +18,7 @@ function login() {
         try {
             response.json().then(responseJson => {
                 if (response.status != 200) {
-                    error.value = 'Error logging in';
+                    error.value = 'Wrong username or password';
                     return;
                 }
                 if (responseJson['token'] && responseJson['username']) {
@@ -58,7 +58,7 @@ const focusPasswordElement = () => {
         <label for="password" class="rye">PASSWORD</label>
         <input id="password" type="password" v-model="password" maxlength="150" autocomplete="current-password" ref="passwordElement" @keyup.enter="login">
     </form>
-    <div class="error" v-if="error">{{ error }}</div>
+    <div class="error center red-text" v-if="error">{{ error }}</div>
     <div class="buttons-row buttons-row-center">
         <button class="button rye" @click="login()">
             LOG IN

@@ -34,6 +34,18 @@ function quitCurrentGame() {
     })
 }
 
+function play() {
+    if (username.value) {
+        if (!currentGame.value) {
+            router.push('/join-existing-game');
+        } else {
+            router.push('/active-game');
+        }
+    } else {
+        router.push('/edit-profile');
+    }
+}
+
 function fontSize(value: string) {
     if (value.length <= 19) {
         return '';
@@ -62,6 +74,9 @@ defineExpose({
                 ></ProfilePicComponent>
                 <pre class="name" :class="fontSize(name)">{{ name }}</pre>
                 <pre class="username" :class="fontSize(username)">{{ username }}</pre>
+            </div>
+            <div class="button rye" @click="play()">
+                PLAY
             </div>
             <div class="button rye" v-if="username && !is_guest" @click="logout()">
                 LOG OUT
