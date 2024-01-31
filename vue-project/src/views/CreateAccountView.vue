@@ -123,7 +123,7 @@ const focusRetypePasswordElement = () => {
         <h2 class="rye">
             CREATE ACCOUNT
         </h2>
-        <p>Create an account to sync across devices!</p>
+        <p>Create an account to save your progress and sync across devices!</p>
     </div>
 
     <form>

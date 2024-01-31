@@ -4,14 +4,43 @@ import type { Ref } from 'vue';
 import { io, Socket } from "socket.io-client";
 import type { Game } from '../models';
 
+
+function setCookie(key: string, value: string) {
+    const expiryDate = new Date();
+    expiryDate.setDate(new Date().getDate() + 60);
+    document.cookie = `${key}=${value}; expires=${expiryDate.toUTCString()}; path=/; SameSite=Lax; Secure`;
+}
+
+function deleteCookie(key: string) {
+    const expiryDate = new Date();
+    expiryDate.setDate(new Date().getDate() - 60);
+    document.cookie = `${key}=; expires=${expiryDate.toUTCString()}; path=/`;
+}
+
+function getCookie(key: string) {
+    const name = key + "=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(';');
+    for (let i = 0; i < ca.length; i++) {
+        let c = ca[i];
+        while (c.charAt(0) == ' ') {
+            c = c.substring(1);
+        }
+        if (c.indexOf(name) == 0) {
+            return c.substring(name.length, c.length);
+        }
+    }
+    return "";
+}
+
 const baseUrl: string = "/texas_api/";
 
-let socket: Socket|null = null;
+let socket: Socket | null = null;
 
-let token: string = sessionStorage.getItem("token") || "";
-let tokenCreated: Date|null = sessionStorage.getItem("tokenCreated") ? new Date(sessionStorage.getItem("tokenCreated") || "") : null;
+let token: string = getCookie("token") || "";
+let tokenCreated: Date | null = getCookie("tokenCreated") ? new Date(getCookie("tokenCreated") || "") : null;
 
-export const username: Ref<string> = ref(sessionStorage.getItem("username") || "");
+export const username: Ref<string> = ref(getCookie("username") || "");
 export const name: Ref<string> = ref('');
 export const is_guest: Ref<boolean> = ref(false);
 export const background_color: Ref<string> = ref('blank');
@@ -19,9 +48,9 @@ export const shirt_color: Ref<string> = ref('black');
 export const skin_color: Ref<string> = ref('black');
 export const hat_color: Ref<string> = ref('black');
 
-export const existingGames: Ref<Game[]|null> = ref(null);
-export const currentGame: Ref<Game|null> = ref(null);
-export const hand: Ref<number[]|null> = ref(null);
+export const existingGames: Ref<Game[] | null> = ref(null);
+export const currentGame: Ref<Game | null> = ref(null);
+export const hand: Ref<number[] | null> = ref(null);
 
 export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {
@@ -56,9 +85,9 @@ export async function post(url: string, data: Record<string, any>) {
     });
     if (response.status == 401) {
         // Authentication failure. Prompt for login again.
-        sessionStorage.removeItem("username");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("tokenCreated");
+        deleteCookie("username");
+        deleteCookie("token");
+        deleteCookie("tokenCreated");
         token = "";
         tokenCreated = null;
         username.value = "";
@@ -84,9 +113,9 @@ export async function get(url: string) {
     });
     if (response.status == 401) {
         // Authentication failure. Prompt for login again.
-        sessionStorage.removeItem("username");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("tokenCreated");
+        deleteCookie("username");
+        deleteCookie("token");
+        deleteCookie("tokenCreated");
         token = "";
         tokenCreated = null;
         username.value = "";
@@ -96,40 +125,40 @@ export async function get(url: string) {
 }
 
 export function updateToken(newToken: string) {
-    sessionStorage.setItem("token", newToken);
+    setCookie("token", newToken);
     const now = Date.now();
     tokenCreated = new Date(now);
-    sessionStorage.setItem("tokenCreated", now.toString());
+    setCookie("tokenCreated", now.toString());
     token = newToken;
 }
 
 export function updateUsername(newUsername: string) {
-    sessionStorage.setItem("username", newUsername);
+    setCookie("username", newUsername);
     username.value = newUsername;
 }
 
 export function updateOwnProfileInfo() {
     get(`players/${username.value}/profile_info/`).then(response => {
         try {
-          response.json().then(responseJson => {
-            name.value = responseJson['name'];
-            is_guest.value = responseJson['is_guest'];
-            background_color.value = responseJson['background_color'];
-            shirt_color.value = responseJson['shirt_color'];
-            skin_color.value = responseJson['skin_color'];
-            hat_color.value = responseJson['hat_color'];
-          })
+            response.json().then(responseJson => {
+                name.value = responseJson['name'];
+                is_guest.value = responseJson['is_guest'];
+                background_color.value = responseJson['background_color'];
+                shirt_color.value = responseJson['shirt_color'];
+                skin_color.value = responseJson['skin_color'];
+                hat_color.value = responseJson['hat_color'];
+            })
         } catch (e) {
-          console.log(`Error getting profile info: ${e}`)
+            console.log(`Error getting profile info: ${e}`)
         }
     })
 }
 
 export function logout() {
     post('logout/', {}).then(() => {
-        sessionStorage.removeItem("username");
-        sessionStorage.removeItem("token");
-        sessionStorage.removeItem("tokenCreated");
+        deleteCookie("username");
+        deleteCookie("token");
+        deleteCookie("tokenCreated");
         token = "";
         tokenCreated = null;
         username.value = "";

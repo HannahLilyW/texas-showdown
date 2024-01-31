@@ -210,20 +210,24 @@ function save() {
 }
 
 onMounted(() => {
-    get(`players/${username.value}/profile_info/`).then(response => {
-        try {
-          response.json().then(responseJson => {
-            newName.value = responseJson['name'];
-            selections['background'] = responseJson['background_color'];
-            selections['shirt'] = responseJson['shirt_color'];
-            selections['skin'] = responseJson['skin_color'];
-            selections['hat'] = responseJson['hat_color'];
-            updateProfilePic(selections['background']);
-          })
-        } catch (e) {
-          console.log(`Error getting profile info: ${e}`)
-        }
-    })
+    if (username.value) {
+        get(`players/${username.value}/profile_info/`).then(response => {
+            try {
+              response.json().then(responseJson => {
+                newName.value = responseJson['name'];
+                selections['background'] = responseJson['background_color'];
+                selections['shirt'] = responseJson['shirt_color'];
+                selections['skin'] = responseJson['skin_color'];
+                selections['hat'] = responseJson['hat_color'];
+                updateProfilePic(selections['background']);
+              })
+            } catch (e) {
+              console.log(`Error getting profile info: ${e}`)
+            }
+        })
+    } else {
+        updateProfilePic(selections['background']);
+    }
 })
 
 </script>
