@@ -213,6 +213,7 @@ onMounted(() => {
     get(`players/${username.value}/profile_info/`).then(response => {
         try {
           response.json().then(responseJson => {
+            newName.value = responseJson['name'];
             selections['background'] = responseJson['background_color'];
             selections['shirt'] = responseJson['shirt_color'];
             selections['skin'] = responseJson['skin_color'];
