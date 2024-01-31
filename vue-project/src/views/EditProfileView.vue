@@ -8,7 +8,7 @@ import BackgroundIcon from '../components/icons/IconBackground.vue';
 import SkintoneIcon from '../components/icons/IconSkintone.vue';
 import {
     username, name, is_guest, background_color, shirt_color, skin_color, hat_color,
-    postWithoutAuth, updateToken, updateUsername, post
+    postWithoutAuth, updateToken, updateUsername, post, get
 } from '../services/api.js';
 
 const profilePicCanvas: Ref<HTMLCanvasElement|null> = ref(null);
@@ -140,10 +140,6 @@ function updateProfilePic(color: string) {
     }
 }
 
-function cancel() {
-    router.push('/');
-}
-
 function postEditProfile() {
     post('players/edit_profile/', {
         'name': newName.value,
@@ -214,7 +210,19 @@ function save() {
 }
 
 onMounted(() => {
-    updateProfilePic(background_color.value);
+    get(`players/${username.value}/profile_info/`).then(response => {
+        try {
+          response.json().then(responseJson => {
+            selections['background'] = responseJson['background_color'];
+            selections['shirt'] = responseJson['shirt_color'];
+            selections['skin'] = responseJson['skin_color'];
+            selections['hat'] = responseJson['hat_color'];
+            updateProfilePic(selections['background']);
+          })
+        } catch (e) {
+          console.log(`Error getting profile info: ${e}`)
+        }
+    })
 })
 
 </script>
