@@ -363,7 +363,7 @@ getCurrentGame();
     <div class="current-game-background">
         <template v-for="player in reorderedPlayerSet" :key="player.position">
             <div class="player-card-container">
-                <div class="profile-pic-container">
+                <div class="profile-pic-container" :class="player.is_turn ? '' : 'not-turn'">
                     <ProfilePicComponent
                         :background_color="player.background_color"
                         :shirt_color="player.shirt_color"
@@ -466,6 +466,10 @@ getCurrentGame();
 </template>
 
 <style scoped>
+
+.not-turn {
+    opacity: 0.5;
+}
 
 .timeout-bar-container {
     display: flex;
