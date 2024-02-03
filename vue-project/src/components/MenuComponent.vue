@@ -78,6 +78,7 @@ defineExpose({
             <div class="button rye" @click="play()">
                 PLAY
             </div>
+            <div class="button button-danger rye" v-if="currentGame" @click="quitCurrentGame()">QUIT CURRENT GAME</div>
             <div class="button rye" v-if="username && !is_guest" @click="logout()">
                 LOG OUT
             </div>
@@ -87,7 +88,6 @@ defineExpose({
             <div class="button rye" v-if="!username || (username && is_guest)" @click="createAccount()">
                 CREATE ACCOUNT
             </div>
-            <div class="button button-danger rye" v-if="currentGame" @click="quitCurrentGame()">QUIT CURRENT GAME</div>
         </div>
     </div>
 </template>

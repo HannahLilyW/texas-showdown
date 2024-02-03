@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { get, post, startSocket, stopSocket, currentGame, hand, username } from '../services/api.js';
+import type { Player } from '../models';
 import { watch, ref, onBeforeUnmount, computed } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
@@ -13,6 +14,37 @@ let betAmount: Ref<number|null> = ref(null);
 
 const timeout: Ref<number> = ref(0);
 
+const reorderedPlayerSet: Ref<Player[]> = ref([]);
+
+function getReorderedPosition(originalPosition: number) {
+    if (currentGame.value) {
+        if (currentGame.value.num_players == 3) {
+            if (originalPosition == 0) return 0;
+            if (originalPosition == 1) return 2;
+            if (originalPosition == 2) return 1;
+        } else if (currentGame.value.num_players == 4) {
+            if (originalPosition == 0) return 0;
+            if (originalPosition == 1) return 2;
+            if (originalPosition == 2) return 3;
+            if (originalPosition == 3) return 1;
+        } else if (currentGame.value.num_players == 5) {
+            if (originalPosition == 0) return 0;
+            if (originalPosition == 1) return 2;
+            if (originalPosition == 2) return 4;
+            if (originalPosition == 3) return 3;
+            if (originalPosition == 4) return 1;
+        } else if (currentGame.value.num_players == 6) {
+            if (originalPosition == 0) return 0;
+            if (originalPosition == 1) return 2;
+            if (originalPosition == 2) return 4;
+            if (originalPosition == 3) return 5;
+            if (originalPosition == 4) return 3;
+            if (originalPosition == 5) return 1;
+        }
+    }
+    return originalPosition;
+}
+
 watch(currentGame, (newVal) => {
     error.value = '';
     if (
@@ -23,6 +55,17 @@ watch(currentGame, (newVal) => {
         // start the timer
         const secondsSinceServerTimeReset = Math.floor((new Date().getTime() - new Date(newVal.last_timer_reset).getTime()) / 1000);
         resetTimer(30 - secondsSinceServerTimeReset);
+    }
+    if (newVal) {
+        reorderedPlayerSet.value = [];
+        for (let player of newVal.player_set) {
+            let playerClone = JSON.parse(JSON.stringify(player));
+            playerClone.position = getReorderedPosition(playerClone.position);
+            reorderedPlayerSet.value.push(playerClone);
+        }
+        reorderedPlayerSet.value.sort((a, b) => {
+            return a.position - b.position;
+        })
     }
     getHand();
 })
@@ -285,7 +328,7 @@ getCurrentGame();
     <h2 class="center rye">WAITING FOR PLAYERS</h2>
     <div class="profiles">
         <div v-for="slot in currentGame.num_players" :key="slot">
-            <div class="profile-pic-container" v-if="slot <= currentGame.player_set.length">
+            <div class="waiting-profile-pic-container" v-if="slot <= currentGame.player_set.length">
                 <ProfilePicComponent
                     :background_color="currentGame.player_set[slot-1].background_color"
                     :shirt_color="currentGame.player_set[slot-1].shirt_color"
@@ -294,7 +337,7 @@ getCurrentGame();
                 ></ProfilePicComponent>
                 <pre class="name" :class="fontSize(currentGame.player_set[slot-1].name || '')">{{ currentGame.player_set[slot-1].name }}</pre>
             </div>
-            <div class="profile-pic-container" v-else>
+            <div class="waiting-profile-pic-container" v-else>
                 <div class="empty-slot">
                     <div class="empty-slot-inner">?</div>
                 </div>
@@ -304,10 +347,7 @@ getCurrentGame();
     </div>
     <div class="center" v-if="(currentGame.player_set.length  == currentGame.num_players)">
         <template v-if="username != currentGame.owner">
-            Waiting for {{ currentGame.owner_name }} to start the game. (Autostart in 30 seconds)
-        </template>
-        <template v-else>
-            Autostart in 30 seconds
+            Waiting for {{ currentGame.owner_name }} to start the game.
         </template>
         <div class="timeout-bar-container">
             <div class="timeout-bar" v-for="i in timeout" :key="i"></div>
@@ -321,38 +361,42 @@ getCurrentGame();
 </div>
 <div v-if="currentGame && currentGame.is_started">
     <div class="current-game-background">
-        <template v-for="player in currentGame.player_set" :key="player.position">
-            <div class="profile-pic-container">
-                <ProfilePicComponent
-                    :background_color="player.background_color"
-                    :shirt_color="player.shirt_color"
-                    :skin_color="player.skin_color"
-                    :hat_color="player.hat_color"
-                    :small="true"
-                ></ProfilePicComponent>
-                <div>
-                    <pre class="name" :class="fontSize(player.name || '')">
-                        {{ player.name }}
-                    </pre>
+        <template v-for="player in reorderedPlayerSet" :key="player.position">
+            <div class="player-card-container">
+                <div class="profile-pic-container">
+                    <ProfilePicComponent
+                        :background_color="player.background_color"
+                        :shirt_color="player.shirt_color"
+                        :skin_color="player.skin_color"
+                        :hat_color="player.hat_color"
+                        :small="true"
+                    ></ProfilePicComponent>
+                    <div>
+                        <pre class="name" :class="fontSize(player.name || '')">
+                            {{ player.name }}
+                        </pre>
+                    </div>
+                    <div class="score yellow-text rye">{{ player.tricks + player.score }} TRICK{{ player.tricks + player.score == 1 ? '' : 'S' }}</div>
                 </div>
-                <div class="score yellow-text rye">{{ player.tricks + player.score }} TRICK{{ player.tricks + player.score == 1 ? '' : 'S' }}</div>
-            </div>
-            <div class="player-play">
-                <template v-if="playersWaitingForContinue.length">
-                    <CardComponent
-                        v-if="lastTrickHistory.find(history => history.player == player.username)"
-                        :number="lastTrickHistory.find(history => history.player == player.username)?.card"
-                        :class="{active: player.is_turn}"
-                    >
-                    </CardComponent>
-                </template>
-                <template v-else>
-                    <CardComponent
-                        v-if="recentHistory.find(history => history.player == player.username)"
-                        :number="recentHistory.find(history => history.player == player.username)?.card"
-                    >
-                    </CardComponent>
-                </template>
+                <div class="player-play">
+                    <template v-if="playersWaitingForContinue.length">
+                        <CardComponent
+                            v-if="lastTrickHistory.find(history => history.player == player.username)"
+                            :number="lastTrickHistory.find(history => history.player == player.username)?.card"
+                            :class="{active: player.is_turn}"
+                        >
+                        </CardComponent>
+                        <div v-else class="card-placeholder"></div>
+                    </template>
+                    <template v-else>
+                        <CardComponent
+                            v-if="recentHistory.find(history => history.player == player.username)"
+                            :number="recentHistory.find(history => history.player == player.username)?.card"
+                        >
+                        </CardComponent>
+                        <div v-else class="card-placeholder"></div>
+                    </template>
+                </div>
             </div>
         </template>
     </div>
@@ -441,10 +485,17 @@ getCurrentGame();
     gap: 16px;
 }
 
+.waiting-profile-pic-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
 .profile-pic-container {
     display: flex;
     flex-direction: column;
     align-items: center;
+    width: 80px;
 }
 
 .empty-slot {
@@ -462,21 +513,40 @@ getCurrentGame();
     text-align: center;
     font-family: rye;
 }
-.current-game-background {
-    /* background-color: var(--color-button-shadow); */
-    /* width: 100vw; */
+.player-card-container {
     height: 100%;
-    display: grid;
-    grid-template-columns: fit-content(200px) 100px;
-    column-gap: 40px;
-    row-gap: 20px;
-    justify-items: center;
+    display: flex;
     align-items: center;
     justify-content: center;
+    gap: 8px;
+}
+
+
+@media (min-width: 360px) {
+
+    .player-card-container {
+        justify-self: end;
+    }
+    .player-card-container:nth-child(even) {
+        flex-direction: row-reverse;
+        justify-self: start;
+    }
+
+    .current-game-background {
+        display: grid;
+        grid-template-columns: 50% 50%;
+        row-gap: 20px;
+        column-gap: 8px;
+    }
 }
 
 .name-placeholder {
     height: 1em;
+}
+
+.card-placeholder {
+    width: 70px;
+    height: 90px;
 }
 
 .current-game-betting-round-background {
