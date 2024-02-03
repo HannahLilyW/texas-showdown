@@ -50,9 +50,10 @@ const router = createRouter({
             component: () => import('../views/ViewPlayerStatisticsView.vue')
         },
         {
-            path: '/edit-profile',
+            path: '/edit-profile/:next',
             name: 'edit-profile',
-            component: () => import('../views/EditProfileView.vue')
+            component: () => import('../views/EditProfileView.vue'),
+            props: true
         }
     ]
 })

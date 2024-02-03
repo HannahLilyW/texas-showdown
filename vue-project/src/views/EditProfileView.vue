@@ -11,6 +11,8 @@ import {
     postWithoutAuth, updateToken, updateUsername, post, get
 } from '../services/api.js';
 
+const props = defineProps(['next']);
+
 const profilePicCanvas: Ref<HTMLCanvasElement|null> = ref(null);
 
 const activeTab: Ref<string> = ref('background');
@@ -140,6 +142,14 @@ function updateProfilePic(color: string) {
     }
 }
 
+function goToNextPage() {
+    if (props.next == 'landing-page') {
+        router.push('/');
+    } else {
+        router.push(`/${props.next}`);
+    }
+}
+
 function postEditProfile() {
     post('players/edit_profile/', {
         'name': newName.value,
@@ -160,7 +170,7 @@ function postEditProfile() {
                 shirt_color.value = responseJson['shirt_color'];
                 skin_color.value = responseJson['skin_color'];
                 hat_color.value = responseJson['hat_color'];
-                router.push('/');
+                goToNextPage();
             })
         } catch (e) {
             error.value = `Error updating profile: ${e}`;

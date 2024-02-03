@@ -52,7 +52,7 @@ function playNow() {
                 router.push('/active-game');
             }
         } else {
-            router.push('/edit-profile');
+            router.push('/edit-profile/join-existing-game');
         }
     })
 }

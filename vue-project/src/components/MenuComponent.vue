@@ -24,7 +24,7 @@ function logIn() {
 }
 
 function editProfile() {
-    router.push('/edit-profile');
+    router.push('/edit-profile/landing-page');
 }
 
 function quitCurrentGame() {
@@ -42,7 +42,7 @@ function play() {
             router.push('/active-game');
         }
     } else {
-        router.push('/edit-profile');
+        router.push('/edit-profile/join-existing-game');
     }
 }
 
