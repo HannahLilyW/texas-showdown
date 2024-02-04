@@ -135,7 +135,6 @@ const lastTrickHistory = computed(() => {
 const lastTrickTaker = computed(() => {
     // Return the TurnHistory for the player who took the trick in the last trick
     // Figure out which color(s) was played most
-    console.log(lastTrickHistory.value)
     let colorFrequencies = [0, 0, 0, 0, 0, 0, 0, 0];
     const colors = [black, red, blue, brown, green, yellow, purple, gray];
     for (let turnHistory of lastTrickHistory.value) {
@@ -153,21 +152,14 @@ const lastTrickTaker = computed(() => {
             maxColors = maxColors.concat(colors[i]);
         }
     }
-    console.log(`maxColors: ${maxColors}`)
 
     // Figure out the losing turnHistory
     let maxNumber = 0;
     for (let turnHistory of lastTrickHistory.value) {
         if ((maxColors.indexOf(turnHistory.card || 0) != -1) && ((turnHistory.card || 0) > maxNumber)) {
-            console.log(`turnHistory.card: ${turnHistory.card || 0}`)
-            console.log(`maxNumber: ${maxNumber}`)
-            console.log(`${((turnHistory.card || 0) > maxNumber)}`)
-            console.log('update maxNumber')
             maxNumber = turnHistory.card || 0;
         }
-        console.log(`new maxNumber: ${maxNumber}`)
     }
-    console.log(`final maxNumber: ${maxNumber}`)
 
     return lastTrickHistory.value.find(turnHistory => turnHistory.card == maxNumber);
 })
