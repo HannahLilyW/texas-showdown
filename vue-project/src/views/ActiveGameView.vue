@@ -153,6 +153,7 @@ const lastTrickTaker = computed(() => {
             maxColors = maxColors.concat(colors[i]);
         }
     }
+    console.log(`maxColors: ${maxColors}`)
 
     // Figure out the losing turnHistory
     let maxNumber = 0;
@@ -161,6 +162,7 @@ const lastTrickTaker = computed(() => {
             maxNumber = turnHistory.card || 0;
         }
     }
+    console.log(`maxNumber: ${maxNumber}`)
 
     return lastTrickHistory.value.find(turnHistory => turnHistory.card == maxNumber);
 })
