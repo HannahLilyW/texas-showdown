@@ -158,10 +158,10 @@ const lastTrickTaker = computed(() => {
     // Figure out the losing turnHistory
     let maxNumber = 0;
     for (let turnHistory of lastTrickHistory.value) {
-        if ((maxColors.indexOf(turnHistory.card || 0) != -1) && (turnHistory.card || 0 > maxNumber)) {
-            console.log(`turnHistory.card: ${turnHistory.card}`)
+        if ((maxColors.indexOf(turnHistory.card || 0) != -1) && ((turnHistory.card || 0) > maxNumber)) {
+            console.log(`turnHistory.card: ${turnHistory.card || 0}`)
             console.log(`maxNumber: ${maxNumber}`)
-            console.log(`${(turnHistory.card || 0 > maxNumber)}`)
+            console.log(`${((turnHistory.card || 0) > maxNumber)}`)
             console.log('update maxNumber')
             maxNumber = turnHistory.card || 0;
         }
