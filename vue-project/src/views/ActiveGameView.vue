@@ -17,6 +17,9 @@ const timeout: Ref<number> = ref(0);
 const reorderedPlayerSet: Ref<Player[]> = ref([]);
 
 function getReorderedPosition(originalPosition: number) {
+    if (window.screen.width < 360) {
+        return originalPosition;
+    }
     if (currentGame.value) {
         if (currentGame.value.num_players == 3) {
             if (originalPosition == 0) return 0;
