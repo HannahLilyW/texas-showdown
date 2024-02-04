@@ -280,7 +280,9 @@ function drop(event: DragEvent, targetNumber: number) {
 }
 
 function activate(cardNumber: number) {
-    activeCard.value = cardNumber;
+    if (canPlay(cardNumber)) {
+        activeCard.value = cardNumber;
+    }
 }
 
 function playActiveCard() {
@@ -308,6 +310,64 @@ function fontSize(value: string) {
     } else {
         return 'tinyfont';
     }
+}
+
+const black = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const red = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+const blue = [21, 22, 23, 24, 25, 26, 27, 28, 29];
+const brown = [31, 32, 33, 34, 35, 36, 37, 38];
+const green = [41, 42, 43, 44, 45, 46, 47];
+const yellow = [51, 52, 53, 54, 55, 56];
+const purple = [61, 62, 63, 64, 65];
+const gray = [71, 72, 73, 74];
+
+function canPlay(cardNumber: number) {
+    if (!currentGame.value) {
+        return false;
+    }
+    if (!currentGame.value.player_set.find(player => player.username == username.value)?.is_turn) {
+        return false;
+    }
+    if (currentGame.value.turn == 0) {
+        if (cardNumber == 0) {
+            return true;
+        }
+        return false;
+    }
+    const firstTurnOfTrick = Math.floor(currentGame.value.turn / currentGame.value.num_players) * currentGame.value.num_players;
+    if (firstTurnOfTrick == currentGame.value.turn) {
+        return true;
+    }
+    let playedColors: Array<number> = [];
+    for (
+        let turnHistory of currentGame.value.turnhistory_set.filter(turn_history => 
+            (turn_history.hand == currentGame.value?.hand) && (turn_history.turn >= firstTurnOfTrick)
+        )
+    ) {
+        const colors = [black, red, blue, brown, green, yellow, purple, gray]
+        for (let color of colors) {
+            if ((turnHistory.card != null) && color.indexOf(turnHistory.card) != -1) {
+                playedColors = playedColors.concat(color);
+            }
+        }
+    }
+    let canPlayAnything = true;
+    if (hand.value) {
+        for (let handCard of hand.value) {
+            if (playedColors.indexOf(handCard) != -1) {
+                canPlayAnything = false;
+                break;
+            }
+        }
+        if (canPlayAnything) {
+            return true;
+        } else {
+            if (playedColors.indexOf(cardNumber) != -1) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 onBeforeUnmount(() => {
@@ -371,7 +431,7 @@ getCurrentGame();
                         :hat_color="player.hat_color"
                         :small="true"
                     ></ProfilePicComponent>
-                    <div>
+                    <div class="name-container">
                         <pre class="name" :class="fontSize(player.name || '')">
                             {{ player.name }}
                         </pre>
@@ -449,7 +509,10 @@ getCurrentGame();
     <div class="hand" v-if="hand">
         <CardComponent
             class="hand-card"
-            :class="{active: cardNumber == activeCard}"
+            :class="{
+                active: cardNumber == activeCard,
+                'cant-play': !canPlay(cardNumber)
+            }"
             :id="'handCard' + cardNumber"
             :number="cardNumber"
             v-for="cardNumber in hand"
@@ -548,6 +611,12 @@ getCurrentGame();
     height: 1em;
 }
 
+.name-container {
+    height: 25px;
+    display: flex;
+    align-items: center;
+}
+
 .card-placeholder {
     width: 70px;
     height: 90px;
@@ -582,6 +651,11 @@ getCurrentGame();
 
 .active {
     border: 4px solid var(--color-card-selected);
+}
+
+.cant-play {
+    opacity: 0.5;
+    cursor: auto;
 }
 
 input {
