@@ -163,8 +163,9 @@ const lastTrickTaker = computed(() => {
             console.log('update maxNumber')
             maxNumber = turnHistory.card || 0;
         }
+        console.log(`maxNumber: ${maxNumber}`)
     }
-    console.log(`maxNumber: ${maxNumber}`)
+    console.log(`final maxNumber: ${maxNumber}`)
 
     return lastTrickHistory.value.find(turnHistory => turnHistory.card == maxNumber);
 })
