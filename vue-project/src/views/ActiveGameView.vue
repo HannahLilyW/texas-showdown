@@ -135,6 +135,7 @@ const lastTrickHistory = computed(() => {
 const lastTrickTaker = computed(() => {
     // Return the TurnHistory for the player who took the trick in the last trick
     // Figure out which color(s) was played most
+    console.log(lastTrickHistory.value)
     let colorFrequencies = [0, 0, 0, 0, 0, 0, 0, 0];
     const colors = [black, red, blue, brown, green, yellow, purple, gray];
     for (let turnHistory of lastTrickHistory.value) {
