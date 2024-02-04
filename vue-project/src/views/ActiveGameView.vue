@@ -7,6 +7,15 @@ import router from '../router';
 import CardComponent from '../components/CardComponent.vue';
 import ProfilePicComponent from '../components/ProfilePicComponent.vue';
 
+const black = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const red = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
+const blue = [21, 22, 23, 24, 25, 26, 27, 28, 29];
+const brown = [31, 32, 33, 34, 35, 36, 37, 38];
+const green = [41, 42, 43, 44, 45, 46, 47];
+const yellow = [51, 52, 53, 54, 55, 56];
+const purple = [61, 62, 63, 64, 65];
+const gray = [71, 72, 73, 74];
+
 let loading: Ref<boolean> = ref(true);
 let activeCard: Ref<number|null> = ref(null);
 let error: Ref<string> = ref('');
@@ -121,6 +130,38 @@ const lastTrickHistory = computed(() => {
         }
     }
     return [];
+})
+
+const lastTrickTaker = computed(() => {
+    // Return the TurnHistory for the player who took the trick in the last trick
+    // Figure out which color(s) was played most
+    let colorFrequencies = [0, 0, 0, 0, 0, 0, 0, 0];
+    const colors = [black, red, blue, brown, green, yellow, purple, gray];
+    for (let turnHistory of lastTrickHistory.value) {
+        let i = 0;
+        for (let color of colors) {
+            if (color.indexOf(turnHistory.card || 0) != -1) {
+                colorFrequencies[i]++;
+            }
+            i++;
+        }
+    }
+    let maxColors: number[] = [];
+    for (let i = 0; i < colorFrequencies.length; i++) {
+        if (colorFrequencies[i] == Math.max(...colorFrequencies)) {
+            maxColors = maxColors.concat(colors[i]);
+        }
+    }
+
+    // Figure out the losing turnHistory
+    let maxNumber = 0;
+    for (let turnHistory of lastTrickHistory.value) {
+        if ((maxColors.indexOf(turnHistory.card || 0) != 0) && (turnHistory.card || 0 > maxNumber)) {
+            maxNumber = turnHistory.card || 0;
+        }
+    }
+
+    return lastTrickHistory.value.find(turnHistory => turnHistory.card == maxNumber);
 })
 
 const playersWaitingForContinue = computed(() => {
@@ -315,20 +356,14 @@ function fontSize(value: string) {
     }
 }
 
-const black = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
-const red = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
-const blue = [21, 22, 23, 24, 25, 26, 27, 28, 29];
-const brown = [31, 32, 33, 34, 35, 36, 37, 38];
-const green = [41, 42, 43, 44, 45, 46, 47];
-const yellow = [51, 52, 53, 54, 55, 56];
-const purple = [61, 62, 63, 64, 65];
-const gray = [71, 72, 73, 74];
-
 function canPlay(cardNumber: number) {
     if (!currentGame.value) {
         return false;
     }
     if (!currentGame.value.player_set.find(player => player.username == username.value)?.is_turn) {
+        return false;
+    }
+    if (currentGame.value.player_set.find(player => player.waiting_for_continue)) {
         return false;
     }
     if (currentGame.value.turn == 0) {
@@ -446,7 +481,7 @@ getCurrentGame();
                         <CardComponent
                             v-if="lastTrickHistory.find(history => history.player == player.username)"
                             :number="lastTrickHistory.find(history => history.player == player.username)?.card"
-                            :class="{active: player.is_turn}"
+                            :class="{active: lastTrickTaker?.card == lastTrickHistory.find(history => history.player == player.username)?.card}"
                         >
                         </CardComponent>
                         <div v-else class="card-placeholder"></div>
@@ -469,7 +504,7 @@ getCurrentGame();
             Game over! {{ winners }} won!
         </template>
         <template v-else-if="playersWaitingForContinue.length">
-            {{ currentGame.player_set.find(player => player.is_turn)?.name }} took the trick!
+            {{ currentGame.player_set.find(player => player.username == lastTrickTaker?.player)?.name }} took the trick!
             <br/>
             <template v-if="playersWaitingForContinue.length > 1">
                 Waiting for {{ playersWaitingForContinue.length }} players to click continue...
