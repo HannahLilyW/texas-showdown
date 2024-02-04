@@ -89,7 +89,7 @@ header {
   cursor: pointer;
 }
 
-@media(max-width: 400px) {
+@media(max-width: 420px) {
   #title {
     font-size: 18px;
   }
