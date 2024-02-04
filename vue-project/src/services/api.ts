@@ -199,3 +199,24 @@ export function stopSocket() {
         socket.close();
     }
 }
+
+function getCurrentGame() {
+    get('games/get_current_game/').then(response => {
+        if (response.status == 204) {
+            currentGame.value = null;
+        }
+        try {
+            response.json().then(responseJson => {
+                if (response.status == 200) {
+                    currentGame.value = responseJson;
+                } else {
+                    console.log(`unexpected response. status: ${response.status} response: ${responseJson}`)
+                }
+            })
+        } catch (e) {
+            console.log(`error getting current game: ${e}`)
+        }
+    })
+}
+
+getCurrentGame();

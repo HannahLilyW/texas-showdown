@@ -1,9 +1,20 @@
 <script setup lang="ts">
-import { get, post, startSocket, stopSocket, existingGames } from '../services/api.js';
-import { ref, onBeforeUnmount } from 'vue';
+import { get, post, startSocket, stopSocket, existingGames, currentGame } from '../services/api.js';
+import { ref, onBeforeUnmount, watch } from 'vue';
 import type { Ref } from 'vue';
 import type { Game } from '../models';
 import router from '../router';
+
+if (currentGame.value) {
+    router.push('/');
+}
+
+watch(currentGame, () => {
+    if (currentGame.value) {
+        router.push('/');
+    }
+});
+
 
 let loading: Ref<boolean> = ref(true);
 

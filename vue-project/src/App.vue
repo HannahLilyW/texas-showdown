@@ -25,12 +25,16 @@ function showMenu() {
   menu.value.show();
 }
 
+function goBack() {
+  router.go(-1);
+}
+
 </script>
 
 <template>
   <header>
     <div class="buttons-row" id="backButton">
-      <ArrowLeftIcon id="backButtonIcon" v-if="route.path != '/'" @click="goToLanding()"></ArrowLeftIcon>
+      <ArrowLeftIcon id="backButtonIcon" v-if="route.path != '/'" @click="goBack()"></ArrowLeftIcon>
     </div>
     <div class="title-wrapper">
       <div id="title" class="point rye" @click="goToLanding()">

@@ -1,9 +1,19 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
-import { post } from '../services/api.js';
+import { post, currentGame } from '../services/api.js';
 import InfoComponent from '../components/InfoComponent.vue';
+
+if (currentGame.value) {
+    router.push('/');
+}
+
+watch(currentGame, () => {
+    if (currentGame.value) {
+        router.push('/');
+    }
+});
 
 // Form data
 let numPlayers: Ref<string> = ref("3");
