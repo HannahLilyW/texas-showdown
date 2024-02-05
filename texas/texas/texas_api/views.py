@@ -15,10 +15,21 @@ import json
 import re
 import secrets  # Cryptographically secure randomness
 import math
+import random
 from threading import Timer
 
 
 TIMEOUT_SECONDS = 30
+
+
+black = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+red = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
+blue = [21, 22, 23, 24, 25, 26, 27, 28, 29]
+brown = [31, 32, 33, 34, 35, 36, 37, 38]
+green = [41, 42, 43, 44, 45, 46, 47]
+yellow = [51, 52, 53, 54, 55, 56]
+purple = [61, 62, 63, 64, 65]
+gray = [71, 72, 73, 74]
 
 
 # Timers for each game to track when to end them due to inactivity
@@ -35,48 +46,245 @@ def timeout(game_id):
     game = Game.objects.get(id=game_id)
     if not game.is_finished:
         # Check if there are any players we are waiting on to click continue.
-        # If there are, all those players lose,
-        # and the remaining ones win.
+        # If there are, make those players click continue.
         players_waiting_for_continue = []
         for player in game.player_set.all():
             if player.waiting_for_continue:
                 players_waiting_for_continue.append(player)
-                game.losers.add(player.user)
-                game.save()
-                TurnHistory.objects.create(
-                    game=game,
-                    turn=game.turn,
-                    hand=game.hand,
-                    player=player,
-                    end_game=True
-                )
-        if len(players_waiting_for_continue):
-            finish_game(game)
-            for other_player in game.player_set.all():
-                if other_player not in players_waiting_for_continue:
-                    game.winners.add(other_player.user)
-                    game.save()
-        else:
-            # Else, whoever's turn it currently is is the loser.
+                player.waiting_for_continue = False
+                player.save()
+        if not len(players_waiting_for_continue):
+            # Make whoever's turn it is play a random allowed card.
             player = Player.objects.filter(current_game=game, is_turn=True).first()
+            first_turn_of_trick = math.floor(game.turn / game.num_players) * game.num_players
+            is_first_turn_of_trick = first_turn_of_trick == game.turn
+            if game.turn == 0:
+                card = player.card_set.filter(number=0).first()
+            elif is_first_turn_of_trick:
+                # Player can play any of their cards
+                card = random.choice(player.card_set.all())
+            else:
+                # This is not the first turn of the trick.
+                # If the player has any cards with colors that have already been played in the trick,
+                # they must play one of those cards.
+                # Otherwise, they can play anything.
 
-            TurnHistory.objects.create(
-                game=game,
-                turn=game.turn,
-                hand=game.hand,
-                player=player,
-                end_game=True
-            )
-            finish_game(game)
+                # Get the cards that have already been played in the trick
+                turn_histories_in_trick = game.turnhistory_set.filter(hand=game.hand, turn__gte=first_turn_of_trick)
 
-            # This player should lose, and all other players should win.
-            game.losers.add(player.user)
-            game.save()
-            for other_player in game.player_set.all():
-                if other_player != player:
-                    game.winners.add(other_player.user)
+                # Get the colors which have already been played
+                played_colors = []
+                for turn_history in turn_histories_in_trick:
+                    for color in [black, red, blue, brown, green, yellow, purple, gray]:
+                        if turn_history.card.number in color:
+                            played_colors += color
+
+                # Check if the user has any cards in colors which have already been played
+                can_play_anything = True
+                for hand_card in player.card_set.all():
+                    if hand_card.number in played_colors:
+                        can_play_anything = False
+                        break
+                
+                if can_play_anything:
+                    card = random.choice(player.card_set.all())
+                else:
+                    card = random.choice(player.card_set.filter(number__in=played_colors))
+
+            take_turn(game, player, card)
+
+        reset_timer(game, timeout)
+
+
+def take_turn(game, player, card):
+    # Create the TurnHistory
+    turn_history = TurnHistory.objects.create(
+        game=game,
+        turn=game.turn,
+        hand=game.hand,
+        player=player,
+        card=card
+    )
+
+    # Update the game state
+    if game.turn < 59:
+        game.turn += 1
+    else:
+        game.turn = 0
+        game.hand += 1
+    game.save()
+
+    # Remove the card from this player's hand
+    card.player = None
+    card.save()
+
+    # Make it the next player's turn
+    player.is_turn = False
+    player.save()
+
+    first_turn_of_trick = math.floor(game.turn / game.num_players) * game.num_players
+    is_first_turn_of_trick = first_turn_of_trick == game.turn
+    if game.turn == 0:
+        # The next turn is the first turn of the hand.
+
+        first_turn_of_last_trick = 60 - game.num_players
+        turn_histories_in_last_trick = game.turnhistory_set.filter(hand=(game.hand - 1), turn__gte=first_turn_of_last_trick)
+
+        # Figure out which color(s) occured the most times
+        color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
+        colors = [black, red, blue, brown, green, yellow, purple, gray]
+        for turn_history in turn_histories_in_last_trick:
+            for index, color in enumerate(colors):
+                if turn_history.card.number in color:
+                    color_frequencies[index] += 1
+        max_colors = []
+        for index in range(len(color_frequencies)):
+            if color_frequencies[index] == max(color_frequencies):
+                max_colors += colors[index]
+
+        # For cards played in that (those) color(s), figure out which card had the highest number
+        max_number = 0
+        for turn_history in turn_histories_in_last_trick:
+            if (turn_history.card.number in max_colors) and (turn_history.card.number > max_number):
+                max_number = turn_history.card.number
+
+        player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
+        player_taking_trick.tricks += 1
+        player_taking_trick.save()
+
+        # If betting is enabled, transfer the pot to the player(s) that took the least tricks in this hand,
+        # if that (those) player(s) did not fold.
+        if game.betting:
+            # Figure out the player that took the least tricks this hand
+            # Find the lowest tricks
+            lowest_tricks = game.player_set.order_by('tricks')[0].tricks
+
+            # Get all players that did not fold with the lowest tricks.
+            # These players are the hand winners.
+            trick_winners = game.player_set.filter(tricks=lowest_tricks, fold=False).all()
+            if len(trick_winners):
+                for other_player in trick_winners:
+                    other_player.money += math.floor(game.pot / len(trick_winners))
+                    other_player.save()
+                game.pot = 0
+
+        # Transfer the tricks taken this round to each player's score.
+        # Determine if the game is finished.
+        for other_player in game.player_set.all():
+            other_player.score += other_player.tricks
+            other_player.tricks = 0
+            other_player.save()
+            if (not game.betting) and other_player.score >= 10:
+                finish_game(game)
+
+        if game.betting:
+            if game.player_set.filter(money__gt=0).count() == 1:
+                finish_game(game)
+
+                game.winners.add(game.player_set.filter(money__gt=0).first().user)
+                game.save()
+
+                # The remaining players (the ones with no money) are the losers.
+                for other_player in game.player_set.filter(money=0):
+                    game.losers.add(other_player.user)
                     game.save()
-        sio_update_game(game.id)
+
+                # Don't give players new cards if game is finished.
+                sio_update_game(game.id)
+                return Response('ok')
+        elif game.is_finished:
+            # Figure out the winner(s) of the game
+
+            # Find the lowest score
+            lowest_score = game.player_set.order_by('score')[0].score
+
+            # Get all players with the lowest score. These players are the winners.
+            for other_player in game.player_set.filter(score=lowest_score):
+                game.winners.add(other_player.user)
+                game.save()
+            
+            # The remaining players (the ones with higher scores) are the losers.
+            for other_player in game.player_set.filter(score__gt=lowest_score):
+                game.losers.add(other_player.user)
+                game.save()
+
+            # Don't give players new cards if game is finished.
+            sio_update_game(game.id)
+            return Response('ok')
+
+        # Shuffle the deck and give players their cards.
+        # The next player is the one who gets the 0.
+        deck = [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+            11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+            21, 22, 23, 24, 25, 26, 27, 28, 29,
+            31, 32, 33, 34, 35, 36, 37, 38,
+            41, 42, 43, 44, 45, 46, 47,
+            51, 52, 53, 54, 55, 56,
+            61, 62, 63, 64, 65,
+            71, 72, 73, 74
+        ]
+        shuffled_deck = []
+
+        for i in range(len(deck)):
+            card_num = secrets.choice(deck)
+            deck.remove(card_num)
+            shuffled_deck.append(card_num)
+            player_receiving_card = game.player_set.get(position=i % game.num_players)
+            card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
+            card.save()
+            if (card_num == 0):
+                player_receiving_card.is_turn = True
+                player_receiving_card.save()
+        
+        # If betting is enabled, start a new betting round.
+        if game.betting:
+            game.is_betting_round = True
+            game.save()
+
+        # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
+        for player in game.player_set.all():
+            player.waiting_for_continue = True
+            player.save()
+    elif is_first_turn_of_trick:
+        # The next turn is the first turn of the trick, but not the first turn of the hand.
+        # Analyze the last trick to figure out who goes first in this trick.
+        first_turn_of_last_trick = first_turn_of_trick - game.num_players
+        turn_histories_in_last_trick = game.turnhistory_set.filter(hand=game.hand, turn__lt=first_turn_of_trick, turn__gte=first_turn_of_last_trick)
+
+        # Figure out which color(s) occured the most times
+        color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
+        colors = [black, red, blue, brown, green, yellow, purple, gray]
+        for turn_history in turn_histories_in_last_trick:
+            for index, color in enumerate(colors):
+                if turn_history.card.number in color:
+                    color_frequencies[index] += 1
+        max_colors = []
+        for index in range(len(color_frequencies)):
+            if color_frequencies[index] == max(color_frequencies):
+                max_colors += colors[index]
+
+        # For cards played in that (those) color(s), figure out which card had the highest number
+        max_number = 0
+        for turn_history in turn_histories_in_last_trick:
+            if (turn_history.card.number in max_colors) and (turn_history.card.number > max_number):
+                max_number = turn_history.card.number
+
+        player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
+        player_taking_trick.is_turn = True
+        player_taking_trick.tricks += 1
+        player_taking_trick.save()
+
+        # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
+        for player in game.player_set.all():
+            player.waiting_for_continue = True
+            player.save()
+    else:
+        # The next turn is not the first turn of the trick.
+        # The next player is the one with position (current_player.position + 1) % num_players
+        next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
+        next_player.is_turn = True
+        next_player.save()
 
 
 def reset_timer(game, timeout_function):
@@ -875,14 +1083,6 @@ class CardViewSet(
 
     @action(detail=False, methods=['post'])
     def play(self, request, **kwargs):
-        black = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
-        red = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-        blue = [21, 22, 23, 24, 25, 26, 27, 28, 29]
-        brown = [31, 32, 33, 34, 35, 36, 37, 38]
-        green = [41, 42, 43, 44, 45, 46, 47]
-        yellow = [51, 52, 53, 54, 55, 56]
-        purple = [61, 62, 63, 64, 65]
-        gray = [71, 72, 73, 74]
 
         player = Player.objects.get(user=request.user)
         game = player.current_game
@@ -937,7 +1137,7 @@ class CardViewSet(
                 for color in [black, red, blue, brown, green, yellow, purple, gray]:
                     if turn_history.card.number in color:
                         played_colors += color
-            
+
             # Check if the user has any cards in colors which have already been played
             can_play_anything = True
             for hand_card in player.card_set.all():
@@ -949,194 +1149,7 @@ class CardViewSet(
                 if card.number not in played_colors:
                     return Response('You must play one of your cards which is a color that has already been played', status=status.HTTP_400_BAD_REQUEST)
 
-        # Create the TurnHistory
-        turn_history = TurnHistory.objects.create(
-            game=game,
-            turn=game.turn,
-            hand=game.hand,
-            player=player,
-            card=card
-        )
-
-        # Update the game state
-        if game.turn < 59:
-            game.turn += 1
-        else:
-            game.turn = 0
-            game.hand += 1
-        game.save()
-
-        # Remove the card from this player's hand
-        card.player = None
-        card.save()
-
-        # Make it the next player's turn
-        player.is_turn = False
-        player.save()
-
-        first_turn_of_trick = math.floor(game.turn / game.num_players) * game.num_players
-        is_first_turn_of_trick = first_turn_of_trick == game.turn
-        if game.turn == 0:
-            # The next turn is the first turn of the hand.
-
-            first_turn_of_last_trick = 60 - game.num_players
-            turn_histories_in_last_trick = game.turnhistory_set.filter(hand=(game.hand - 1), turn__gte=first_turn_of_last_trick)
-
-            # Figure out which color(s) occured the most times
-            color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
-            colors = [black, red, blue, brown, green, yellow, purple, gray]
-            for turn_history in turn_histories_in_last_trick:
-                for index, color in enumerate(colors):
-                    if turn_history.card.number in color:
-                        color_frequencies[index] += 1
-            max_colors = []
-            for index in range(len(color_frequencies)):
-                if color_frequencies[index] == max(color_frequencies):
-                    max_colors += colors[index]
-
-            # For cards played in that (those) color(s), figure out which card had the highest number
-            max_number = 0
-            for turn_history in turn_histories_in_last_trick:
-                if (turn_history.card.number in max_colors) and (turn_history.card.number > max_number):
-                    max_number = turn_history.card.number
-
-            player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
-            player_taking_trick.tricks += 1
-            player_taking_trick.save()
-
-            # If betting is enabled, transfer the pot to the player(s) that took the least tricks in this hand,
-            # if that (those) player(s) did not fold.
-            if game.betting:
-                # Figure out the player that took the least tricks this hand
-                # Find the lowest tricks
-                lowest_tricks = game.player_set.order_by('tricks')[0].tricks
-
-                # Get all players that did not fold with the lowest tricks.
-                # These players are the hand winners.
-                trick_winners = game.player_set.filter(tricks=lowest_tricks, fold=False).all()
-                if len(trick_winners):
-                    for other_player in trick_winners:
-                        other_player.money += math.floor(game.pot / len(trick_winners))
-                        other_player.save()
-                    game.pot = 0
-
-            # Transfer the tricks taken this round to each player's score.
-            # Determine if the game is finished.
-            for other_player in game.player_set.all():
-                other_player.score += other_player.tricks
-                other_player.tricks = 0
-                other_player.save()
-                if (not game.betting) and other_player.score >= 10:
-                    finish_game(game)
-
-            if game.betting:
-                if game.player_set.filter(money__gt=0).count() == 1:
-                    finish_game(game)
-
-                    game.winners.add(game.player_set.filter(money__gt=0).first().user)
-                    game.save()
-
-                    # The remaining players (the ones with no money) are the losers.
-                    for other_player in game.player_set.filter(money=0):
-                        game.losers.add(other_player.user)
-                        game.save()
-
-                    # Don't give players new cards if game is finished.
-                    sio_update_game(game.id)
-                    return Response('ok')
-            elif game.is_finished:
-                # Figure out the winner(s) of the game
-
-                # Find the lowest score
-                lowest_score = game.player_set.order_by('score')[0].score
-
-                # Get all players with the lowest score. These players are the winners.
-                for other_player in game.player_set.filter(score=lowest_score):
-                    game.winners.add(other_player.user)
-                    game.save()
-                
-                # The remaining players (the ones with higher scores) are the losers.
-                for other_player in game.player_set.filter(score__gt=lowest_score):
-                    game.losers.add(other_player.user)
-                    game.save()
-
-                # Don't give players new cards if game is finished.
-                sio_update_game(game.id)
-                return Response('ok')
-
-            # Shuffle the deck and give players their cards.
-            # The next player is the one who gets the 0.
-            deck = [
-                0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-                11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
-                21, 22, 23, 24, 25, 26, 27, 28, 29,
-                31, 32, 33, 34, 35, 36, 37, 38,
-                41, 42, 43, 44, 45, 46, 47,
-                51, 52, 53, 54, 55, 56,
-                61, 62, 63, 64, 65,
-                71, 72, 73, 74
-            ]
-            shuffled_deck = []
-
-            for i in range(len(deck)):
-                card_num = secrets.choice(deck)
-                deck.remove(card_num)
-                shuffled_deck.append(card_num)
-                player_receiving_card = game.player_set.get(position=i % game.num_players)
-                card = Card.objects.create(number=card_num, game=game, player=player_receiving_card)
-                card.save()
-                if (card_num == 0):
-                    player_receiving_card.is_turn = True
-                    player_receiving_card.save()
-            
-            # If betting is enabled, start a new betting round.
-            if game.betting:
-                game.is_betting_round = True
-                game.save()
-
-            # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
-            for player in game.player_set.all():
-                player.waiting_for_continue = True
-                player.save()
-        elif is_first_turn_of_trick:
-            # The next turn is the first turn of the trick, but not the first turn of the hand.
-            # Analyze the last trick to figure out who goes first in this trick.
-            first_turn_of_last_trick = first_turn_of_trick - game.num_players
-            turn_histories_in_last_trick = game.turnhistory_set.filter(hand=game.hand, turn__lt=first_turn_of_trick, turn__gte=first_turn_of_last_trick)
-
-            # Figure out which color(s) occured the most times
-            color_frequencies = [0, 0, 0, 0, 0, 0, 0, 0]
-            colors = [black, red, blue, brown, green, yellow, purple, gray]
-            for turn_history in turn_histories_in_last_trick:
-                for index, color in enumerate(colors):
-                    if turn_history.card.number in color:
-                        color_frequencies[index] += 1
-            max_colors = []
-            for index in range(len(color_frequencies)):
-                if color_frequencies[index] == max(color_frequencies):
-                    max_colors += colors[index]
-
-            # For cards played in that (those) color(s), figure out which card had the highest number
-            max_number = 0
-            for turn_history in turn_histories_in_last_trick:
-                if (turn_history.card.number in max_colors) and (turn_history.card.number > max_number):
-                    max_number = turn_history.card.number
-
-            player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
-            player_taking_trick.is_turn = True
-            player_taking_trick.tricks += 1
-            player_taking_trick.save()
-
-            # Wait for all players to click continue, to ensure everyone sees the results of the trick that just finished.
-            for player in game.player_set.all():
-                player.waiting_for_continue = True
-                player.save()
-        else:
-            # The next turn is not the first turn of the trick.
-            # The next player is the one with position (current_player.position + 1) % num_players
-            next_player = game.player_set.get(position=(player.position + 1) % game.num_players)
-            next_player.is_turn = True
-            next_player.save()
+        take_turn(game, player, card)
 
         reset_timer(game, timeout)
 
