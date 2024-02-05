@@ -593,6 +593,7 @@ getCurrentGame();
 .timeout-bar-container {
     display: flex;
     justify-content: center;
+    padding: 4px;
 }
 
 .timeout-bar {
