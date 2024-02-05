@@ -57,12 +57,14 @@ function getReorderedPosition(originalPosition: number) {
     return originalPosition;
 }
 
-watch(currentGame, (newVal) => {
+watch(currentGame, (newVal, oldVal) => {
     error.value = '';
     if (
-        newVal 
+        newVal
+        && oldVal
         && !newVal.is_started
         && (newVal.player_set.length  == newVal.num_players)
+        && !(oldVal.player_set.length  == oldVal.num_players)
     ) {
         // start the timer
         const secondsSinceServerTimeReset = Math.floor((new Date().getTime() - new Date(newVal.last_timer_reset).getTime()) / 1000);
@@ -83,7 +85,6 @@ watch(currentGame, (newVal) => {
 })
 
 function decrementTimer() {
-    console.log('decrement')
     if (timeout.value > 0) {
         timeout.value -= 1;
         setTimeout(decrementTimer, 1000);
