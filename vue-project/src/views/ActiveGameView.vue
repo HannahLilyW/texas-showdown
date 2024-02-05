@@ -83,16 +83,17 @@ watch(currentGame, (newVal) => {
 })
 
 function decrementTimer() {
+    console.log('decrement')
     if (timeout.value > 0) {
         timeout.value -= 1;
-        setTimeout(decrementTimer, 1000)
+        setTimeout(decrementTimer, 1000);
     }
 }
 
 function resetTimer(seconds: number) {
     if (seconds > 0) {
         timeout.value = seconds;
-        decrementTimer();
+        setTimeout(decrementTimer, 1000);
     }
 }
 
