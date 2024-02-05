@@ -22,6 +22,7 @@ let error: Ref<string> = ref('');
 let betAmount: Ref<number|null> = ref(null);
 
 const timeout: Ref<number> = ref(0);
+let timerStarted = false;
 
 const reorderedPlayerSet: Ref<Player[]> = ref([]);
 
@@ -68,6 +69,13 @@ watch(currentGame, (newVal, oldVal) => {
         // start the timer
         const secondsSinceServerTimeReset = Math.floor((new Date().getTime() - new Date(newVal.last_timer_reset).getTime()) / 1000);
         resetTimer(30 - secondsSinceServerTimeReset);
+    } else if (
+        newVal
+        && newVal.is_started
+        && (newVal.last_timer_reset)
+    ) {
+        const secondsSinceServerTimeReset = Math.floor((new Date().getTime() - new Date(newVal.last_timer_reset).getTime()) / 1000);
+        resetTimer(30 - secondsSinceServerTimeReset);
     }
     if (newVal) {
         reorderedPlayerSet.value = [];
@@ -86,14 +94,20 @@ watch(currentGame, (newVal, oldVal) => {
 function decrementTimer() {
     if (timeout.value > 0) {
         timeout.value -= 1;
+        timerStarted = true;
         setTimeout(decrementTimer, 1000);
+    } else {
+        timerStarted = false;
     }
 }
 
 function resetTimer(seconds: number) {
     if (seconds > 0) {
         timeout.value = seconds;
-        setTimeout(decrementTimer, 1000);
+        if (!timerStarted) {
+            timerStarted = true;
+            setTimeout(decrementTimer, 1000);
+        }
     }
 }
 
@@ -526,6 +540,9 @@ getCurrentGame();
             <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
             <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.name }}'s turn</template>
         </template>
+    </div>
+    <div class="timeout-bar-container">
+        <div class="timeout-bar" v-for="i in timeout" :key="i"></div>
     </div>
     <div class="buttons-row buttons-row-center" v-if="!currentGame.is_finished">
         <div class="button rye" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">CONTINUE</div>
