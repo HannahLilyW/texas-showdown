@@ -61,10 +61,9 @@ watch(currentGame, (newVal, oldVal) => {
     error.value = '';
     if (
         newVal
-        && oldVal
+        && ((oldVal && !(oldVal.player_set.length  == oldVal.num_players)) || !oldVal)
         && !newVal.is_started
         && (newVal.player_set.length  == newVal.num_players)
-        && !(oldVal.player_set.length  == oldVal.num_players)
     ) {
         // start the timer
         const secondsSinceServerTimeReset = Math.floor((new Date().getTime() - new Date(newVal.last_timer_reset).getTime()) / 1000);
