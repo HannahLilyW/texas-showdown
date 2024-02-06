@@ -492,7 +492,7 @@ getCurrentGame();
                     <div class="score yellow-text rye">{{ player.tricks + player.score }} TRICK{{ player.tricks + player.score == 1 ? '' : 'S' }}</div>
                 </div>
                 <div class="player-play">
-                    <template v-if="playersWaitingForContinue.length">
+                    <template v-if="playersWaitingForContinue.length || currentGame.is_finished">
                         <CardComponent
                             v-if="lastTrickHistory.find(history => history.player == player.username)"
                             :number="lastTrickHistory.find(history => history.player == player.username)?.card"
