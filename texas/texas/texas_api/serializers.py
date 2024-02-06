@@ -90,7 +90,10 @@ class BetTurnHistoryListField(serializers.RelatedField):
 
 class UsernameListField(serializers.RelatedField):
     def to_representation(self, value):
-        return value.username
+        return {
+            'username': value.username,
+            'name': value.first_name
+        }
 
 
 class GameSerializer(serializers.ModelSerializer):

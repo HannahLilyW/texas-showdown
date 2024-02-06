@@ -259,11 +259,11 @@ const winners = computed(() => {
      * else returns an empty string
      */
     if (currentGame.value && currentGame.value.is_finished) {
-        const tempWinners = currentGame.value.winners
-        let ret = currentGame.value.player_set.find(player => player.username == tempWinners[0])?.name
-        for  (let index in tempWinners) {
+        const tempWinners = currentGame.value.winners;
+        let ret = currentGame.value.winners[0].name;
+        for (let index in tempWinners) {
             if (Number(index) > 0) {
-                ret += `, ${currentGame.value.player_set.find(player => player.username == tempWinners[index])?.name}`;
+                ret += `, ${currentGame.value.winners[index].name}`;
             }
         }
         return (ret && ret.length) ? ret : 'No one';

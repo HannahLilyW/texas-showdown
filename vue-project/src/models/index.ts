@@ -15,8 +15,13 @@ export type Game = {
     turnhistory_set: TurnHistory[]
     betturnhistory_set: BetTurnHistory[]
     is_finished: boolean,
-    winners: string[],
+    winners: PlayerName[],
     last_timer_reset: Date
+}
+
+export type PlayerName = {
+    username: string,
+    name: string
 }
 
 export type GameMetadata = {
