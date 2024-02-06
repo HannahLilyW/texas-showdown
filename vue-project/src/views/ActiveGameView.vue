@@ -98,6 +98,9 @@ function decrementTimer() {
         setTimeout(decrementTimer, 1000);
     } else {
         timerStarted = false;
+        if (currentGame.value?.is_finished) {
+            router.push('/');
+        }
     }
 }
 
@@ -423,6 +426,13 @@ function canPlay(cardNumber: number) {
     return false;
 }
 
+function playAgain() {
+    post('games/leave_game/', {}).then(() => {
+        currentGame.value = null;
+        router.push('/join-existing-game');
+    })
+}
+
 onBeforeUnmount(() => {
     stopSocket();
     if (currentGame.value && currentGame.value.is_finished) {
@@ -561,6 +571,9 @@ getCurrentGame();
             <div class="button rye" v-else-if="typeof activeCard == 'number'" @click="playActiveCard()">PLAY</div>
         </template>
         <div class="error center red-text" v-if="error">{{ error }}</div>
+    </div>
+    <div class="buttons-row buttons-row-center" v-else>
+        <div class="button rye" @click="playAgain()">PLAY AGAIN</div>
     </div>
     <div class="hand" v-if="hand">
         <CardComponent
