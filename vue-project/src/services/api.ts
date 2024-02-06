@@ -201,6 +201,10 @@ export function stopSocket() {
 }
 
 function getCurrentGame() {
+    if (!username.value) {
+        currentGame.value = null;
+        return;
+    }
     get('games/get_current_game/').then(response => {
         if (response.status == 204) {
             currentGame.value = null;
