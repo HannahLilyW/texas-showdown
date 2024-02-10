@@ -456,7 +456,7 @@ function chooseTurn(player: Player) {
 
 onBeforeUnmount(() => {
     stopSocket();
-    if (currentGame.value && currentGame.value.is_finished) {
+    if (currentGame.value && (currentGame.value.is_finished || !currentGame.value.is_started)) {
         post('games/leave_game/', {}).then(() => {
             currentGame.value = null;
         })
