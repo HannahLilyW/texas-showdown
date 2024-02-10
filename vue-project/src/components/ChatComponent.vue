@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
 import { post, chats, currentGame } from '../services/api.js';
 
@@ -15,6 +15,7 @@ function hide() {
 
 function show() {
     showChat.value = true;
+    chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
 }
 
 function preventClose(event: Event) {
@@ -40,6 +41,10 @@ const postChat = () => {
     })
     newChat.value = '';
 }
+
+watch(chats, () => {
+    chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+})
 
 defineExpose({
   show
