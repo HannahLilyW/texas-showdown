@@ -22,6 +22,11 @@ const error: Ref<boolean|string> = ref(false);
 
 watch(newName, () => {
     invalid.value = !newName.value.length;
+    if (invalid.value) {
+        error.value = 'Please enter your name above';
+    } else {
+        error.value = false;
+    }
 })
 
 const invalid: Ref<boolean> = ref(!newName.value.length);
@@ -244,7 +249,7 @@ onMounted(() => {
 
 <template>
 <div class="edit-profile-container">
-    <input type="text" placeholder="Enter your name" v-model="newName" maxlength="32">
+    <input type="text" placeholder="Enter your name" v-model="newName" maxlength="32" class="name-input">
     <div>
         <canvas height="100" width="100" id="profilePicCanvas" ref="profilePicCanvas"></canvas>
     </div>
@@ -267,10 +272,10 @@ onMounted(() => {
             <div class="color" :class="color" @click="updateProfilePic(color)"></div>
         </div>
     </div>
+    <div class="error red-text" v-if="error">{{ error }}</div>
     <div class="buttons-row">
         <div class="button rye" @click="save()" :class="{disabled: invalid}">SAVE</div>
     </div>
-    <div class="error" v-if="error">{{ error }}</div>
 </div>
 </template>
 
@@ -316,4 +321,8 @@ input {
     border-radius: 8px;
 }
 
+.name-input {
+    font-size: 20px;
+    height: 40px;
+}
 </style>

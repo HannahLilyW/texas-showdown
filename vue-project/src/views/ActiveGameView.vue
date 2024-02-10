@@ -434,7 +434,8 @@ function playAgain() {
 }
 
 function shouldDefocusPlayer(player: Player) {
-    if (currentGame.value?.player_set.find(p => p.username == username.value)?.choose_turn) {
+    const me = currentGame.value?.player_set.find(p => p.username == username.value)
+    if (me?.choose_turn && !me?.waiting_for_continue) {
         return false;
     }
     if (player.is_turn || player.choose_turn) {
