@@ -43,7 +43,9 @@ const postChat = () => {
 }
 
 watch(chats, () => {
-    chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+    setTimeout(() => {
+        chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+    }, 100)
 })
 
 defineExpose({
