@@ -6,6 +6,10 @@ import type { Ref } from 'vue';
 import router from '../router';
 import CardComponent from '../components/CardComponent.vue';
 import ProfilePicComponent from '../components/ProfilePicComponent.vue';
+import ChatIcon from '../components/icons/IconChat.vue';
+import ChatComponent from '../components/ChatComponent.vue';
+
+let chat = ref();
 
 const black = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const red = [11, 12, 13, 14, 15, 16, 17, 18, 19, 20];
@@ -454,6 +458,10 @@ function chooseTurn(player: Player) {
     }
 }
 
+function openChat() {
+    chat.value.show();
+}
+
 onBeforeUnmount(() => {
     stopSocket();
     if (currentGame.value && (currentGame.value.is_finished || !currentGame.value.is_started)) {
@@ -629,9 +637,20 @@ getCurrentGame();
         ></CardComponent>
     </div>
 </div>
+<div class="chat-placeholder"></div>
+<div class="buttons-row fixed-bottom">
+    <div class="chat-button button" @click="openChat()">
+        <ChatIcon></ChatIcon>
+    </div>
+</div>
+<ChatComponent ref="chat"></ChatComponent>
 </template>
 
 <style scoped>
+
+.chat-placeholder {
+    height: 60px;
+}
 
 .defocus {
     opacity: 0.5;

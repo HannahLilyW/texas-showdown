@@ -51,6 +51,7 @@ export const hat_color: Ref<string> = ref('black');
 export const existingGames: Ref<Game[] | null> = ref(null);
 export const currentGame: Ref<Game | null> = ref(null);
 export const hand: Ref<number[] | null> = ref(null);
+export const chats: Ref<Array<Map<string, string>>> = ref([]);
 
 export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {
@@ -190,6 +191,10 @@ export function startSocket() {
 
         if (eventName == 'update_existing_games') {
             existingGames.value = args[0];
+        }
+
+        if (eventName == 'chat') {
+            chats.value = chats.value + args[0];
         }
     });
 }

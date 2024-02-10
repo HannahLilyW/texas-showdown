@@ -10,7 +10,7 @@ from rest_framework.decorators import action
 from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory, BetTurnHistory, color_choices
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer, AdminGameSerializer
-from texas.sio_events import sio_leave_room, sio_update_game, sio_update_existing_games
+from texas.sio_events import sio_leave_room, sio_update_game, sio_update_existing_games, sio_chat
 import json
 import re
 import secrets  # Cryptographically secure randomness
@@ -986,6 +986,18 @@ class GameViewSet(
 
         reset_timer(game, timeout)
 
+        return Response('ok')
+    
+    @action(detail=False, methods=['post'])
+    def chat(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        chat = request.data.get('chat')
+        if len(chat) > 256:
+            return Response('Chat too long', status=status.HTTP_400_BAD_REQUEST)
+        sio_chat(game.id, player.user.username, chat)
         return Response('ok')
 
 

@@ -101,17 +101,6 @@ defineExpose({
     border: 4px solid gold;
 }
 
-.modal-parent {
-    position: fixed;
-    height: 100%;
-    width: 100%;
-    left: 0;
-    top: 0;
-    background: rgba(0, 0, 0, 0.3);
-    cursor: auto;
-    z-index: 3;
-}
-
 .sidebar {
     position: fixed;
     top: 0;

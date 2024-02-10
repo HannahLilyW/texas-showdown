@@ -61,6 +61,11 @@ div, a {
   justify-content: center;
 }
 
+.fixed-bottom {
+  position: fixed;
+  bottom: 8px;
+}
+
 .button {
   background-color: var(--color-button);
   border: 0px;
@@ -206,4 +211,15 @@ input {
   max-width: 136px;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.modal-parent {
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  left: 0;
+  top: 0;
+  background: rgba(0, 0, 0, 0.3);
+  cursor: auto;
+  z-index: 3;
 }

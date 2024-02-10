@@ -88,6 +88,26 @@ async def async_sio_update_existing_games():
     await sio_server.emit('update_existing_games', existing_games, room='join_existing_game')
 
 
+async def async_sio_chat(game_id, username, chat):
+    def sync_get_game():
+        return Game.objects.get(id=int(game_id))
+    get_game = sync_to_async(sync_get_game)
+    try:
+        await get_game()
+    except ObjectDoesNotExist as e:
+        log.error(f'object does not exist: {e}')
+        return
+    await sio_server.emit(
+        'chat',
+        {
+            'username': username,
+            'chat': chat
+        },
+        room=f'room{game_id}'
+    )
+
+
 sio_leave_room = async_to_sync(async_sio_leave_room, force_new_loop=True)
 sio_update_game = async_to_sync(async_sio_update_game, force_new_loop=True)
 sio_update_existing_games = async_to_sync(async_sio_update_existing_games, force_new_loop=True)
+sio_chat = async_to_sync(async_sio_chat, force_new_loop=True)
