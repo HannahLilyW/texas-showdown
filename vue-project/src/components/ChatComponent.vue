@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
-import { post, chats } from '../services/api.js';
+import { post, chats, currentGame } from '../services/api.js';
 
 let showChat: Ref<boolean> = ref(false);
 
@@ -36,10 +36,6 @@ const postChat = () => {
     })
 }
 
-// watch(chats, newVal => {
-//     console.log(JSON.stringify(newVal))
-// })
-
 defineExpose({
   show
 })
@@ -47,10 +43,10 @@ defineExpose({
 
 <template>
     <div class="modal-parent" v-if="showChat" @click="hide()">
-        <div v-for="chat in chats">
-            {{ chat }}
-        </div>
         <div class="sidebar" @click="preventClose($event)">
+            <div v-for="chat in chats">
+                {{ currentGame?.player_set.find(player => player.username == chat['username'])?.name }}: {{ chat['chat'] }}
+            </div>
             <input class="chat-input" type="text" maxlength="256" v-model="newChat" @keyup.enter="postChat">
         </div>
     </div>
