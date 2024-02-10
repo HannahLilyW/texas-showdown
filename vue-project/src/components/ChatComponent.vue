@@ -46,7 +46,7 @@ watch(chats, () => {
     setTimeout(() => {
         chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
     }, 100)
-})
+}, {deep: true})
 
 defineExpose({
   show
