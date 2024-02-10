@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { post, chats, currentGame } from '../services/api.js';
 
@@ -39,13 +39,18 @@ const postChat = () => {
 defineExpose({
   show
 })
+
 </script>
 
 <template>
     <div class="modal-parent" v-if="showChat" @click="hide()">
         <div class="sidebar" @click="preventClose($event)">
-            <div v-for="chat in chats">
-                {{ currentGame?.player_set.find(player => player.username == chat['username'])?.name }}: {{ chat['chat'] }}
+            <div class="chats">
+                <div v-for="chat in chats" class="chat">
+                    <span class="yellow-text">
+                        {{ currentGame?.player_set.find(player => player.username == chat['username'])?.name }}:
+                    </span> {{ chat['chat'] }}
+                </div>
             </div>
             <input class="chat-input" type="text" maxlength="256" v-model="newChat" @keyup.enter="postChat">
         </div>
@@ -73,6 +78,15 @@ defineExpose({
 .chat-input {
     margin: 4px;
     height: 40px;
+    min-height: 40px;
+}
+
+.chat {
+    padding-left: 4px;
+}
+
+.chats {
+    overflow: auto;
 }
 
 </style>
