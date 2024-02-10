@@ -36,9 +36,9 @@ const postChat = () => {
     })
 }
 
-watch(chats, newVal => {
-    console.log(JSON.stringify(newVal))
-})
+// watch(chats, newVal => {
+//     console.log(JSON.stringify(newVal))
+// })
 
 defineExpose({
   show
@@ -47,6 +47,9 @@ defineExpose({
 
 <template>
     <div class="modal-parent" v-if="showChat" @click="hide()">
+        <div v-for="chat in chats">
+            {{ chat }}
+        </div>
         <div class="sidebar" @click="preventClose($event)">
             <input class="chat-input" type="text" maxlength="256" v-model="newChat" @keyup.enter="postChat">
         </div>
