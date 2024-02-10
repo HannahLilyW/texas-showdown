@@ -194,7 +194,7 @@ export function startSocket() {
         }
 
         if (eventName == 'chat') {
-            console.log(`args[0]: ${args[0]}`)
+            console.log(`args[0]: ${JSON.stringify(args[0])}`)
             chats.value = chats.value + args[0];
         }
     });
