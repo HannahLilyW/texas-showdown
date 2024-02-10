@@ -37,11 +37,7 @@ const postChat = () => {
 }
 
 watch(chats, newVal => {
-    console.log('chats')
-    for (let chat of newVal) {
-        console.log(chat['username'])
-        console.log(chat['chat'])
-    }
+    console.log(JSON.stringify(newVal))
 })
 
 defineExpose({
