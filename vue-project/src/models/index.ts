@@ -70,3 +70,8 @@ export type BetTurnHistory = {
     bet_amount: number,
     player_money: number
 }
+
+export type Chat = {
+    username: string,
+    chat: string
+}

@@ -2,7 +2,7 @@ import router from '../router';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import { io, Socket } from "socket.io-client";
-import type { Game } from '../models';
+import type { Game, Chat } from '../models';
 
 
 function setCookie(key: string, value: string) {
@@ -51,7 +51,7 @@ export const hat_color: Ref<string> = ref('black');
 export const existingGames: Ref<Game[] | null> = ref(null);
 export const currentGame: Ref<Game | null> = ref(null);
 export const hand: Ref<number[] | null> = ref(null);
-export const chats: Ref<Array<Map<string, string>>> = ref([]);
+export const chats: Ref<Array<Chat>> = ref([]);
 
 export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {

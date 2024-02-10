@@ -37,7 +37,11 @@ const postChat = () => {
 }
 
 watch(chats, newVal => {
-    console.log(newVal.toString());
+    console.log('chats')
+    for (let chat of newVal) {
+        console.log(chat['username'])
+        console.log(chat['chat'])
+    }
 })
 
 defineExpose({
