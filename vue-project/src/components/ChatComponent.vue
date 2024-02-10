@@ -7,6 +7,8 @@ let showChat: Ref<boolean> = ref(false);
 
 let newChat: Ref<string> = ref("");
 
+const chatsRef = ref();
+
 function hide() {
     showChat.value = false;
 }
@@ -23,17 +25,20 @@ const postChat = () => {
     post('games/chat/', {
         'chat': newChat.value
     }).then(response => {
+
         try {
             response.json().then(responseJson => {
                 if (response.status != 200) {
                     console.error(`error posting chat. response status: ${response.status} json: ${responseJson.toString()}`);
                     return;
                 }
+                chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
             })
         } catch (e) {
             console.error(`error posting chat: ${e}`);
         }
     })
+    newChat.value = '';
 }
 
 defineExpose({
@@ -45,7 +50,7 @@ defineExpose({
 <template>
     <div class="modal-parent" v-if="showChat" @click="hide()">
         <div class="sidebar" @click="preventClose($event)">
-            <div class="chats">
+            <div class="chats" ref="chatsRef">
                 <div v-for="chat in chats" class="chat">
                     <span class="yellow-text">
                         {{ currentGame?.player_set.find(player => player.username == chat['username'])?.name }}:
