@@ -433,6 +433,26 @@ function playAgain() {
     })
 }
 
+function shouldDefocusPlayer(player: Player) {
+    if (currentGame.value?.player_set.find(p => p.username == username.value)?.choose_turn) {
+        return false;
+    }
+    if (player.is_turn || player.choose_turn) {
+        return false;
+    }
+    return true;
+}
+
+function shouldShowPlayerButtons() {
+    return !!currentGame.value?.player_set.find(player => player.username == username.value)?.choose_turn && !currentGame.value?.player_set.find(player => player.waiting_for_continue);
+}
+
+function chooseTurn(player: Player) {
+    if (currentGame.value?.player_set.find(p => p.username == username.value)?.choose_turn) {
+        post('/players/choose_turn/', {'username': player.username}).then(() => {});
+    }
+}
+
 onBeforeUnmount(() => {
     stopSocket();
     if (currentGame.value && currentGame.value.is_finished) {
@@ -486,7 +506,10 @@ getCurrentGame();
     <div class="current-game-background">
         <template v-for="player in reorderedPlayerSet" :key="player.position">
             <div class="player-card-container">
-                <div class="profile-pic-container" :class="player.is_turn ? '' : 'not-turn'">
+                <div class="profile-pic-container" :class="{
+                    'defocus': shouldDefocusPlayer(player),
+                    'button': shouldShowPlayerButtons()
+                }" @click="chooseTurn(player)">
                     <ProfilePicComponent
                         :background_color="player.background_color"
                         :shirt_color="player.shirt_color"
@@ -546,34 +569,44 @@ getCurrentGame();
             <template v-if="!(hand?.includes(0))">Waiting for {{ currentGame.player_set.find(player => player.is_turn)?.name }} to play the 0...</template>
             <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn! You must play the 0</template>
         </template>
-        <template v-else>
+        <template v-else-if="currentGame.player_set.find(player => player.is_turn)">
             <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
             <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.name }}'s turn</template>
+        </template>
+        <template v-else-if="currentGame.player_set.find(player => player.choose_turn)">
+            <template v-if="(currentGame.player_set.find(player => player.username == username)?.choose_turn)">
+                Choose who goes first next!
+            </template>
+            <template v-else>Waiting for {{ currentGame.player_set.find(player => player.choose_turn)?.name }} to choose who goes first next...</template>
         </template>
     </div>
     <div class="timeout-bar-container">
         <div class="timeout-bar" v-for="i in timeout" :key="i"></div>
     </div>
-    <div class="buttons-row buttons-row-center" v-if="!currentGame.is_finished">
-        <div class="button rye" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">CONTINUE</div>
-        <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">
-            <template v-if="currentGame.is_betting_round">
-                <form v-if="canOpen || canRaise">
-                    <label for="betAmount">Amount to {{ canOpen ? 'Open With' : 'Raise To' }}: $</label>
-                    <input id="betAmount" type="number" v-model="betAmount" :min="1" :max="currentGame.player_set.find(player => player.username == username)?.money">
-                </form>
-                <div class="button" v-if="canOpen" @click="open()">Open</div>
-                <div class="button" v-if="canCheck" @click="check()">Check</div>
-                <div class="button" v-if="canRaise" @click="raise()">Raise</div>
-                <div class="button" v-if="canCall" @click="call()">Call</div>
-                <div class="button" v-if="canFold" @click="fold()">Fold</div>
+    <div id="playActionButtonsContainer">
+        <div class="buttons-row buttons-row-center" v-if="!currentGame.is_finished">
+            <div class="button rye" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">CONTINUE</div>
+            <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">
+                <template v-if="currentGame.is_betting_round">
+                    <form v-if="canOpen || canRaise">
+                        <label for="betAmount">Amount to {{ canOpen ? 'Open With' : 'Raise To' }}: $</label>
+                        <input id="betAmount" type="number" v-model="betAmount" :min="1" :max="currentGame.player_set.find(player => player.username == username)?.money">
+                    </form>
+                    <div class="button" v-if="canOpen" @click="open()">Open</div>
+                    <div class="button" v-if="canCheck" @click="check()">Check</div>
+                    <div class="button" v-if="canRaise" @click="raise()">Raise</div>
+                    <div class="button" v-if="canCall" @click="call()">Call</div>
+                    <div class="button" v-if="canFold" @click="fold()">Fold</div>
+                </template>
+                <div class="button rye" v-else-if="typeof activeCard == 'number'" @click="playActiveCard()">PLAY</div>
             </template>
-            <div class="button rye" v-else-if="typeof activeCard == 'number'" @click="playActiveCard()">PLAY</div>
-        </template>
-        <div class="error center red-text" v-if="error">{{ error }}</div>
-    </div>
-    <div class="buttons-row buttons-row-center" v-else>
-        <div class="button rye" @click="playAgain()">PLAY AGAIN</div>
+            <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.choose_turn)">
+            </template>
+            <div class="error center red-text" v-if="error">{{ error }}</div>
+        </div>
+        <div class="buttons-row buttons-row-center" v-else>
+            <div class="button rye" @click="playAgain()">PLAY AGAIN</div>
+        </div>
     </div>
     <div class="hand" v-if="hand">
         <CardComponent
@@ -599,7 +632,7 @@ getCurrentGame();
 
 <style scoped>
 
-.not-turn {
+.defocus {
     opacity: 0.5;
 }
 
@@ -633,6 +666,8 @@ getCurrentGame();
     flex-direction: column;
     align-items: center;
     width: 90px;
+    padding-left: 0px;
+    padding-right: 0px;
 }
 
 .empty-slot {
@@ -655,7 +690,7 @@ getCurrentGame();
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
+    margin-bottom: 8px;
 }
 
 
@@ -663,6 +698,7 @@ getCurrentGame();
 
     .player-card-container {
         justify-self: end;
+        margin-bottom: 0px;
     }
     .player-card-container:nth-child(even) {
         flex-direction: row-reverse;
@@ -671,7 +707,7 @@ getCurrentGame();
 
     .current-game-background {
         display: grid;
-        grid-template-columns: 50% 50%;
+        grid-template-columns: 1fr 1fr;
         row-gap: 20px;
         column-gap: 8px;
     }
@@ -726,6 +762,10 @@ getCurrentGame();
 .cant-play {
     opacity: 0.5;
     cursor: auto;
+}
+
+#playActionButtonsContainer {
+    height: 50px;
 }
 
 input {

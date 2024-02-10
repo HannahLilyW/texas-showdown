@@ -53,6 +53,7 @@ class PlayerNameListField(serializers.RelatedField):
             'hat_color': value.hat_color.lower(),
             'position': value.position,
             'is_turn': value.is_turn,
+            'choose_turn': value.choose_turn,
             'waiting_for_continue': value.waiting_for_continue,
             'tricks': value.tricks,
             'score': value.score,

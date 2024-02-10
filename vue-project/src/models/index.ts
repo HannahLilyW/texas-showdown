@@ -39,6 +39,7 @@ export type Player = {
     hat_color?: string,
     position: number,
     is_turn: boolean,
+    choose_turn: boolean,
     waiting_for_continue: boolean,
     tricks: number,
     score: number,

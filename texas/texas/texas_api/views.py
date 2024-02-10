@@ -30,6 +30,7 @@ green = [41, 42, 43, 44, 45, 46, 47]
 yellow = [51, 52, 53, 54, 55, 56]
 purple = [61, 62, 63, 64, 65]
 gray = [71, 72, 73, 74]
+max_cards_in_suit = [color[-1] for color in [black, red, blue, brown, green, yellow, purple, gray]]
 
 
 # Timers for each game to track when to end them due to inactivity
@@ -56,42 +57,56 @@ def timeout(game_id):
         if not len(players_waiting_for_continue):
             # Make whoever's turn it is play a random allowed card.
             player = Player.objects.filter(current_game=game, is_turn=True).first()
-            first_turn_of_trick = math.floor(game.turn / game.num_players) * game.num_players
-            is_first_turn_of_trick = first_turn_of_trick == game.turn
-            if game.turn == 0:
-                card = player.card_set.filter(number=0).first()
-            elif is_first_turn_of_trick:
-                # Player can play any of their cards
-                card = random.choice(player.card_set.all())
-            else:
-                # This is not the first turn of the trick.
-                # If the player has any cards with colors that have already been played in the trick,
-                # they must play one of those cards.
-                # Otherwise, they can play anything.
-
-                # Get the cards that have already been played in the trick
-                turn_histories_in_trick = game.turnhistory_set.filter(hand=game.hand, turn__gte=first_turn_of_trick)
-
-                # Get the colors which have already been played
-                played_colors = []
-                for turn_history in turn_histories_in_trick:
-                    for color in [black, red, blue, brown, green, yellow, purple, gray]:
-                        if turn_history.card.number in color:
-                            played_colors += color
-
-                # Check if the user has any cards in colors which have already been played
-                can_play_anything = True
-                for hand_card in player.card_set.all():
-                    if hand_card.number in played_colors:
-                        can_play_anything = False
-                        break
-                
-                if can_play_anything:
+            if player:
+                first_turn_of_trick = math.floor(game.turn / game.num_players) * game.num_players
+                is_first_turn_of_trick = first_turn_of_trick == game.turn
+                if game.turn == 0:
+                    card = player.card_set.filter(number=0).first()
+                elif is_first_turn_of_trick:
+                    # Player can play any of their cards
                     card = random.choice(player.card_set.all())
                 else:
-                    card = random.choice(player.card_set.filter(number__in=played_colors))
+                    # This is not the first turn of the trick.
+                    # If the player has any cards with colors that have already been played in the trick,
+                    # they must play one of those cards.
+                    # Otherwise, they can play anything.
 
-            take_turn(game, player, card)
+                    # Get the cards that have already been played in the trick
+                    turn_histories_in_trick = game.turnhistory_set.filter(hand=game.hand, turn__gte=first_turn_of_trick)
+
+                    # Get the colors which have already been played
+                    played_colors = []
+                    for turn_history in turn_histories_in_trick:
+                        for color in [black, red, blue, brown, green, yellow, purple, gray]:
+                            if turn_history.card.number in color:
+                                played_colors += color
+
+                    # Check if the user has any cards in colors which have already been played
+                    can_play_anything = True
+                    for hand_card in player.card_set.all():
+                        if hand_card.number in played_colors:
+                            can_play_anything = False
+                            break
+                    
+                    if can_play_anything:
+                        card = random.choice(player.card_set.all())
+                    else:
+                        card = random.choice(player.card_set.filter(number__in=played_colors))
+                take_turn(game, player, card)
+            else:
+                # It's no one's turn, so it must be someone's choose_turn.
+                player = Player.objects.filter(current_game=game, choose_turn=True).first()
+                # Make them choose a random player in the game.
+                player_picked = random.choice(game.player_set.all())
+                if (player_picked.user.username == player.user.username):
+                    player.is_turn = True
+                    player.choose_turn = False
+                    player.save()
+                else:
+                    player_picked.is_turn = True
+                    player_picked.save()
+                    player.choose_turn = False
+                    player.save()
 
         reset_timer(game, timeout)
 
@@ -271,7 +286,17 @@ def take_turn(game, player, card):
                 max_number = turn_history.card.number
 
         player_taking_trick = turn_histories_in_last_trick.get(card__number=max_number).player
-        player_taking_trick.is_turn = True
+
+        choose_next_player = False
+        for turn_history in turn_histories_in_last_trick:
+            if (turn_history.card.number in max_cards_in_suit):
+                choose_next_player = True
+        if choose_next_player:
+            # If there were any highest cards of suit played, player gets to choose who goes next.
+            player_taking_trick.choose_turn = True
+        else:
+            # Otherwise it's their turn.
+            player_taking_trick.is_turn = True
         player_taking_trick.tricks += 1
         player_taking_trick.save()
 
@@ -314,6 +339,7 @@ def leave_game_timeout(game_id):
             player.current_game = None
             player.position = None
             player.is_turn = False
+            player.choose_turn = False
             player.waiting_for_continue = False
             player.tricks = 0
             player.score = 0
@@ -561,6 +587,7 @@ class GameViewSet(
         player.current_game = None
         player.position = None
         player.is_turn = False
+        player.choose_turn = False
         player.waiting_for_continue = False
         player.tricks = 0
         player.score = 0
@@ -1074,6 +1101,49 @@ class PlayerViewSet(
             'skin_color': player.skin_color.lower(),
             'hat_color': player.hat_color.lower()
         })
+    
+    @action(detail=False, methods=['post'])
+    def choose_turn(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_finished:
+            return Response('Game is finished', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_betting_round:
+            return Response('In a betting round', status=status.HTTP_400_BAD_REQUEST)
+        if not player.choose_turn:
+            return Response('You cannot do this now', status=status.HTTP_400_BAD_REQUEST)
+        # Ensure we are not waiting for any players to click "continue"
+        for other_player in game.player_set.all():
+            if other_player.waiting_for_continue:
+                return Response('Cannot choose now, waiting for at least 1 player to click continue', status=status.HTTP_400_BAD_REQUEST)
+
+        username_picked = request.data.get('username', None)
+        if not isinstance(username_picked, str):
+        # Validation
+            return Response('Username must be a string', status=status.HTTP_400_BAD_REQUEST)
+        user_picked = User.objects.filter(username=username_picked).first()
+        if user_picked is None:
+            return Response('User not found', status=status.HTTP_404_NOT_FOUND)
+        player_picked = Player.objects.get(user=user_picked)
+        game_picked = player.current_game
+        if (not game_picked) or (game_picked.id != game.id):
+            return Response('Player is not in your game', status=status.HTTP_400_BAD_REQUEST)
+
+        if player.user.username == player_picked.user.username:
+            player.choose_turn = False
+            player.is_turn = True
+            player.save()
+        else:
+            player.choose_turn = False
+            player.save()
+            player_picked.is_turn = True
+            player_picked.save()
+
+        reset_timer(game, timeout)
+
+        return Response('ok')
 
 
 class CardViewSet(

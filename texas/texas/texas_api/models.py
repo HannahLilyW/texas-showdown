@@ -44,6 +44,7 @@ class Player(models.Model):
     current_game = models.ForeignKey(Game, on_delete=models.SET_NULL, null=True)
     position = models.IntegerField(null=True) # used to determine turn order
     is_turn = models.BooleanField(default=False)
+    choose_turn = models.BooleanField(default=False)
     waiting_for_continue = models.BooleanField(default=False)
     tricks = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
