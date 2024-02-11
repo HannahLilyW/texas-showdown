@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, nextTick } from 'vue';
 import type { Ref } from 'vue';
 import { post, chats, currentGame, unread } from '../services/api.js';
 
@@ -18,8 +18,10 @@ function hide() {
 function show() {
     showChat.value = true;
     unread.value = false;
-    chatsRef.value?.scrollTo({top: chatsRef.value.offsetHeight})
-    newChatInput.value.focus();
+    nextTick(() => {
+        chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+        newChatInput.value.focus();
+    })
 }
 
 function preventClose(event: Event) {
