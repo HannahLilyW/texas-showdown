@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { get, post, startSocket, stopSocket, currentGame, hand, username, chats, unread } from '../services/api.js';
+import { get, post, startSocket, stopSocket, currentGame, hand, username, chats, unread, leaveGame } from '../services/api.js';
 import type { Player } from '../models';
 import { watch, ref, onBeforeUnmount, computed } from 'vue';
 import type { Ref } from 'vue';
@@ -435,8 +435,7 @@ function canPlay(cardNumber: number) {
 }
 
 function playAgain() {
-    post('games/leave_game/', {}).then(() => {
-        currentGame.value = null;
+    leaveGame(() => {
         router.push('/join-existing-game');
     })
 }
@@ -458,7 +457,7 @@ function shouldShowPlayerButtons() {
 
 function chooseTurn(player: Player) {
     if (currentGame.value?.player_set.find(p => p.username == username.value)?.choose_turn) {
-        post('/players/choose_turn/', {'username': player.username}).then(() => {});
+        post('players/choose_turn/', {'username': player.username}).then(() => {});
     }
 }
 
@@ -469,9 +468,7 @@ function openChat() {
 onBeforeUnmount(() => {
     stopSocket();
     if (currentGame.value && (currentGame.value.is_finished || !currentGame.value.is_started)) {
-        post('games/leave_game/', {}).then(() => {
-            currentGame.value = null;
-        })
+        leaveGame();
     }
 });
 

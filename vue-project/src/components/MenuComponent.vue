@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
-import { username, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, post } from '../services/api.js';
+import { username, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, leaveGame } from '../services/api.js';
 import ProfilePicComponent from './ProfilePicComponent.vue';
 
 let showMenu: Ref<boolean> = ref(false);
@@ -28,8 +28,7 @@ function editProfile() {
 }
 
 function quitCurrentGame() {
-    post('games/leave_game/', {}).then(() => {
-        currentGame.value = null;
+    leaveGame(() => {
         router.push('/');
     })
 }

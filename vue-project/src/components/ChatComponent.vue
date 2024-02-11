@@ -98,6 +98,7 @@ defineExpose({
     margin: 4px;
     height: 40px;
     min-height: 40px;
+    font-size: 16px;
 }
 
 .chat {

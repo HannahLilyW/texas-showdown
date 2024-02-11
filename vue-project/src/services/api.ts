@@ -206,6 +206,16 @@ export function stopSocket() {
     }
 }
 
+export function leaveGame(callback?: Function) {
+    post('games/leave_game/', {}).then(() => {
+        currentGame.value = null;
+        chats.value = [];
+        if (callback) {
+            callback();
+        }
+    })
+}
+
 function getCurrentGame() {
     if (!username.value) {
         currentGame.value = null;
