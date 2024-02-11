@@ -8,6 +8,7 @@ let showChat: Ref<boolean> = ref(false);
 let newChat: Ref<string> = ref("");
 
 const chatsRef = ref();
+const newChatInput = ref();
 
 function hide() {
     showChat.value = false;
@@ -17,7 +18,8 @@ function hide() {
 function show() {
     showChat.value = true;
     unread.value = false;
-    chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+    chatsRef.value?.scrollTo({top: chatsRef.value.offsetHeight})
+    newChatInput.value.focus();
 }
 
 function preventClose(event: Event) {
@@ -46,7 +48,7 @@ const postChat = () => {
 
 watch(chats, () => {
     setTimeout(() => {
-        chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+        chatsRef.value?.scrollTo({top: chatsRef.value.offsetHeight})
     }, 100)
 }, {deep: true})
 
@@ -66,7 +68,7 @@ defineExpose({
                     </span> {{ chat['chat'] }}
                 </div>
             </div>
-            <input class="chat-input" type="text" maxlength="256" v-model="newChat" @keyup.enter="postChat">
+            <input class="chat-input" type="text" maxlength="256" v-model="newChat" ref="newChatInput" @keyup.enter="postChat">
         </div>
     </div>
 </template>
