@@ -34,7 +34,7 @@ const unread: Ref<boolean> = ref(false);
 
 watch(chats, () => {
     unread.value = true;
-})
+}, {deep: true})
 
 function getReorderedPosition(originalPosition: number) {
     if (window.screen.width < 360) {
