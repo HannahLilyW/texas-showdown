@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { get, post, startSocket, stopSocket, currentGame, hand, username } from '../services/api.js';
+import { get, post, startSocket, stopSocket, currentGame, hand, username, chats } from '../services/api.js';
 import type { Player } from '../models';
 import { watch, ref, onBeforeUnmount, computed } from 'vue';
 import type { Ref } from 'vue';
@@ -29,6 +29,12 @@ const timeout: Ref<number> = ref(0);
 let timerStarted = false;
 
 const reorderedPlayerSet: Ref<Player[]> = ref([]);
+
+const unread: Ref<boolean> = ref(false);
+
+watch(chats, () => {
+    unread.value = true;
+})
 
 function getReorderedPosition(originalPosition: number) {
     if (window.screen.width < 360) {
@@ -460,6 +466,7 @@ function chooseTurn(player: Player) {
 
 function openChat() {
     chat.value.show();
+    unread.value = false;
 }
 
 onBeforeUnmount(() => {
@@ -641,12 +648,23 @@ getCurrentGame();
 <div class="buttons-row fixed-bottom">
     <div class="chat-button button" @click="openChat()">
         <ChatIcon></ChatIcon>
+        <div class="unread-dot" v-if="unread"></div>
     </div>
 </div>
 <ChatComponent ref="chat"></ChatComponent>
 </template>
 
 <style scoped>
+
+.unread-dot {
+    height: 12px;
+    width: 12px;
+    border-radius: 50%;
+    background-color: var(--color-card-yellow);
+    position: absolute;
+    left: 40px;
+    top: 10px;
+}
 
 .chat-placeholder {
     height: 60px;
