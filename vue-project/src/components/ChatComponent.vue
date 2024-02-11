@@ -19,7 +19,7 @@ function show() {
     showChat.value = true;
     unread.value = false;
     nextTick(() => {
-        chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+        chatsRef.value.scrollTo({top: chatsRef.value.scrollHeight})
         newChatInput.value.focus();
     })
 }
@@ -39,7 +39,7 @@ const postChat = () => {
                     console.error(`error posting chat. response status: ${response.status} json: ${responseJson.toString()}`);
                     return;
                 }
-                chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
+                chatsRef.value.scrollTo({top: chatsRef.value.scrollHeight})
             })
         } catch (e) {
             console.error(`error posting chat: ${e}`);
@@ -50,7 +50,7 @@ const postChat = () => {
 
 watch(chats, () => {
     setTimeout(() => {
-        chatsRef.value?.scrollTo({top: chatsRef.value.offsetHeight})
+        chatsRef.value?.scrollTo({top: chatsRef.value.scrollHeight})
     }, 100)
 }, {deep: true})
 
