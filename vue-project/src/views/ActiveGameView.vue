@@ -33,6 +33,7 @@ const reorderedPlayerSet: Ref<Player[]> = ref([]);
 const unread: Ref<boolean> = ref(false);
 
 watch(chats, () => {
+    console.log('here')
     unread.value = true;
 }, {deep: true})
 
@@ -465,8 +466,8 @@ function chooseTurn(player: Player) {
 }
 
 function openChat() {
-    chat.value.show();
     unread.value = false;
+    chat.value.show();
 }
 
 onBeforeUnmount(() => {
