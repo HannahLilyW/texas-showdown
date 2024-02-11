@@ -52,6 +52,7 @@ export const existingGames: Ref<Game[] | null> = ref(null);
 export const currentGame: Ref<Game | null> = ref(null);
 export const hand: Ref<number[] | null> = ref(null);
 export const chats: Ref<Array<Chat>> = ref([]);
+export const unread: Ref<boolean> = ref(false);
 
 export async function postWithoutAuth(url: string, data: Record<string, any>) {
     const response = await fetch(`${baseUrl}${url}`, {

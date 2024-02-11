@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, watch } from 'vue';
 import type { Ref } from 'vue';
-import { post, chats, currentGame } from '../services/api.js';
+import { post, chats, currentGame, unread } from '../services/api.js';
 
 let showChat: Ref<boolean> = ref(false);
 
@@ -11,10 +11,12 @@ const chatsRef = ref();
 
 function hide() {
     showChat.value = false;
+    unread.value = false;
 }
 
 function show() {
     showChat.value = true;
+    unread.value = false;
     chatsRef.value.scrollTo({top: chatsRef.value.offsetHeight})
 }
 

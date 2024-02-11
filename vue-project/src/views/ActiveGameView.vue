@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { get, post, startSocket, stopSocket, currentGame, hand, username, chats } from '../services/api.js';
+import { get, post, startSocket, stopSocket, currentGame, hand, username, chats, unread } from '../services/api.js';
 import type { Player } from '../models';
 import { watch, ref, onBeforeUnmount, computed } from 'vue';
 import type { Ref } from 'vue';
@@ -30,10 +30,7 @@ let timerStarted = false;
 
 const reorderedPlayerSet: Ref<Player[]> = ref([]);
 
-const unread: Ref<boolean> = ref(false);
-
 watch(chats, () => {
-    console.log('here')
     unread.value = true;
 }, {deep: true})
 
@@ -466,7 +463,6 @@ function chooseTurn(player: Player) {
 }
 
 function openChat() {
-    unread.value = false;
     chat.value.show();
 }
 
