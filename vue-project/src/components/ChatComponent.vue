@@ -91,6 +91,7 @@ defineExpose({
     flex-direction: column;
     gap: 4px;
     align-items: stretch;
+    scrollbar-color: var(--color-button) var(--color-background);
 }
 
 .chat-input {
