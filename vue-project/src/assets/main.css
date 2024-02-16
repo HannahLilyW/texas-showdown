@@ -7,11 +7,11 @@
 
 @font-face {
   font-family: 'rosario';
-  src: url('@/assets/fonts/Rosario-Regular.ttf') format('truetype');
+  src: url('@/assets/fonts/Rosario-VariableFont_wght.ttf') format('truetype');
 }
 
 * {
-  font-family: rosario;
+  font-family: rosario, sans-serif;
   color: var(--color-text);
   text-decoration: none;
 }
@@ -222,4 +222,8 @@ input {
   background: rgba(0, 0, 0, 0.3);
   cursor: auto;
   z-index: 3;
+}
+
+b {
+  font-weight: bold;
 }
