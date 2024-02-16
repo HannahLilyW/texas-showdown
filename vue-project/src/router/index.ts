@@ -54,6 +54,11 @@ const router = createRouter({
             name: 'edit-profile',
             component: () => import('../views/EditProfileView.vue'),
             props: true
+        },
+        {
+            path: '/join-private-game',
+            name: 'join-private-game',
+            component: () => import('../views/JoinPrivateGameView.vue')
         }
     ]
 })

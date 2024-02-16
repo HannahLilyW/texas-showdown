@@ -12,11 +12,12 @@ export type Game = {
     player_set: Player[],
     turn: number,
     hand: number,
-    turnhistory_set: TurnHistory[]
-    betturnhistory_set: BetTurnHistory[]
+    turnhistory_set: TurnHistory[],
+    betturnhistory_set: BetTurnHistory[],
     is_finished: boolean,
     winners: PlayerName[],
-    last_timer_reset: Date
+    last_timer_reset: Date,
+    is_private: boolean
 }
 
 export type PlayerName = {

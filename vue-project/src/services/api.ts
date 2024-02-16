@@ -196,6 +196,7 @@ export function startSocket() {
 
         if (eventName == 'chat') {
             chats.value.push(args[0]);
+            unread.value = true;
         }
     });
 }
@@ -210,6 +211,7 @@ export function leaveGame(callback?: Function) {
     post('games/leave_game/', {}).then(() => {
         currentGame.value = null;
         chats.value = [];
+        unread.value = false;
         if (callback) {
             callback();
         }

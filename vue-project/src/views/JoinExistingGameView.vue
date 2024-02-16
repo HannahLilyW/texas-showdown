@@ -22,6 +22,10 @@ function createNewGame() {
     router.push('/create-new-game');
 }
 
+function joinPrivateGame() {
+    router.push('/join-private-game');
+}
+
 function getExistingGames() {
     get('games/get_existing_games/').then(response => {
         response.json().then(responseJson => {
@@ -56,8 +60,8 @@ onBeforeUnmount(() => {
 
 <template>
 <div class="buttons-row buttons-row-center">
-    <div class="button rye" @click=createNewGame()>CREATE GAME</div>
-    <div class="button rye">JOIN PRIVATE GAME</div>
+    <div class="button rye" @click="createNewGame()">CREATE GAME</div>
+    <div class="button rye" @click="joinPrivateGame()">JOIN PRIVATE GAME</div>
 </div>
 <h2 class="rye center">PUBLIC GAMES</h2>
 <template v-if="!loading">

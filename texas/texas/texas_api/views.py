@@ -483,10 +483,11 @@ class GameViewSet(
 
     @action(detail=False, methods=['get'])
     def get_existing_games(self, request):
-        # Get games that have not started yet and still need players.
+        # Get public games that have not started yet and still need players.
         games = Game.objects.annotate(Count('player')).filter(
             num_players__gt=F('player__count'),
-            is_started=False
+            is_started=False,
+            is_private=False
         )
         serializer = GameSerializer(games, many=True)
         return Response(serializer.data)
@@ -504,6 +505,43 @@ class GameViewSet(
             return Response('Game is not finished', status=status.HTTP_400_BAD_REQUEST)
         serializer = GameSerializer(game)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def join_game_by_code(self, request):
+        # Verify user is not already in a game
+        player = Player.objects.get(user=request.user)
+        if player.current_game:
+            return Response('You are already in a game', status=status.HTTP_400_BAD_REQUEST)
+        room_code = request.data.get('room_code', None)
+        if not room_code:
+            return Response('No room code supplied', status=status.HTTP_400_BAD_REQUEST)
+        if type(room_code) is not str:
+            return Response('Invalid room code', status=status.HTTP_400_BAD_REQUEST)
+        if len(room_code) != 4:
+            return Response('Invalid room code', status=status.HTTP_400_BAD_REQUEST)
+        room_code = room_code.upper()
+        if not re.match(r'^[A-Z]+$', room_code):
+            return Response('Invalid room code', status=status.HTTP_400_BAD_REQUEST)
+        game = Game.objects.filter(
+            room_code=room_code,
+            is_started=False
+        ).first()
+        if not game:
+            return Response('Invalid room code', status=status.HTTP_400_BAD_REQUEST)
+        if len(game.player_set.all()) == game.num_players:
+            return Response('Game is full', status=status.HTTP_400_BAD_REQUEST)
+
+        player.position = len(game.player_set.all())
+        player.current_game = game
+        player.save()
+
+        sio_update_game(game.id)
+        sio_update_existing_games()
+
+        if len(game.player_set.all()) == game.num_players:
+            reset_timer(game, autostart_game)
+
+        return Response('ok')
 
     @action(detail=False, methods=['post'])
     def join_game(self, request):
@@ -522,6 +560,12 @@ class GameViewSet(
             game = Game.objects.get(id=game_id)
         except Exception as e:
             return Response('Invalid game id', status=status.HTTP_400_BAD_REQUEST)
+        if game.is_private:
+            room_code = request.data.get('room_code', None)
+            if not room_code:
+                return Response('No room code supplied', status=status.HTTP_400_BAD_REQUEST)
+            if game.room_code != room_code:
+                return Response('Wrong room code supplied', status=status.HTTP_400_BAD_REQUEST)
         if game.is_started:
             return Response('Game already started', status=status.HTTP_400_BAD_REQUEST)
         if len(game.player_set.all()) == game.num_players:
@@ -538,6 +582,16 @@ class GameViewSet(
             reset_timer(game, autostart_game)
 
         return Response('ok')
+
+    @action(detail=False, methods=['get'])
+    def get_room_code(self, request):
+        player = Player.objects.get(user=request.user)
+        game = player.current_game
+        if not game:
+            return Response('You are not in a game', status=status.HTTP_400_BAD_REQUEST)
+        if not game.room_code:
+            return Response('Your game has no room code', status=status.HTTP_400_BAD_REQUEST)
+        return Response({'room_code': game.room_code})
 
     @action(detail=False, methods=['post'])
     def leave_game(self, request):

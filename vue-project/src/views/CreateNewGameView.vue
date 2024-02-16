@@ -22,13 +22,10 @@ let publicInput: Ref<string> = ref("public");
 
 let error: Ref<string> = ref("");
 
-function cancel() {
-    router.push('/');
-}
-
 function createNewGame() {
     post('games/', {
         'num_players': Number(numPlayers.value),
+        'is_private': Boolean(publicInput.value == 'private'),
         // 'betting': Boolean(betting.value == 'true')
         'betting': false
     }).then(response => {

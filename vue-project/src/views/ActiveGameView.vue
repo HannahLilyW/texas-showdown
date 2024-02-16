@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { get, post, startSocket, stopSocket, currentGame, hand, username, chats, unread, leaveGame } from '../services/api.js';
+import { get, post, startSocket, stopSocket, currentGame, hand, username, unread, leaveGame } from '../services/api.js';
 import type { Player } from '../models';
 import { watch, ref, onBeforeUnmount, computed } from 'vue';
 import type { Ref } from 'vue';
@@ -24,15 +24,12 @@ let loading: Ref<boolean> = ref(true);
 let activeCard: Ref<number|null> = ref(null);
 let error: Ref<string> = ref('');
 let betAmount: Ref<number|null> = ref(null);
+let roomCode: Ref<string> = ref('');
 
 const timeout: Ref<number> = ref(0);
 let timerStarted = false;
 
 const reorderedPlayerSet: Ref<Player[]> = ref([]);
-
-watch(chats, () => {
-    unread.value = true;
-}, {deep: true})
 
 function getReorderedPosition(originalPosition: number) {
     if (window.screen.width < 360) {
@@ -94,6 +91,13 @@ watch(currentGame, (newVal, oldVal) => {
         }
         reorderedPlayerSet.value.sort((a, b) => {
             return a.position - b.position;
+        })
+    }
+    if (newVal && !roomCode.value && newVal.is_private) {
+        get('games/get_room_code/').then(response => {
+            response.json().then(responseJson => {
+                roomCode.value = responseJson['room_code'];
+            })
         })
     }
     getHand();
@@ -465,6 +469,35 @@ function openChat() {
     chat.value.show();
 }
 
+const phonetic: {[letter: string]: string} = {
+    'A': 'ALPHA',
+    'B': 'BRAVO',
+    'C': 'CHARLIE',
+    'D': 'DELTA',
+    'E': 'ECHO',
+    'F': 'FOXTROT',
+    'G': 'GOLF',
+    'H': 'HOTEL',
+    'I': 'INDIA',
+    'J': 'JULIET',
+    'K': 'KILO',
+    'L': 'LIMA',
+    'M': 'MIKE',
+    'N': 'NOVEMBER',
+    'O': 'OSCAR',
+    'P': 'PAPA',
+    'Q': 'QUEBEC',
+    'R': 'ROMEO',
+    'S': 'SIERRA',
+    'T': 'TANGO',
+    'U': 'UNIFORM',
+    'V': 'VICTOR',
+    'W': 'WHISKEY',
+    'X': 'X-RAY',
+    'Y': 'YANKEE',
+    'Z': 'ZULU'
+}
+
 onBeforeUnmount(() => {
     stopSocket();
     if (currentGame.value && (currentGame.value.is_finished || !currentGame.value.is_started)) {
@@ -479,6 +512,21 @@ getCurrentGame();
 <template>
 <div v-if="currentGame && !currentGame.is_started">
     <h2 class="center rye">WAITING FOR PLAYERS</h2>
+    <div v-if="currentGame.is_private">
+        <div class="buttons-row buttons-row-center">
+            <div class="room-code-container">
+                <div class="center rye">ROOM CODE:</div>
+                <div class="room-code">
+                    <div class="rye room-code-letter" v-for="letter in roomCode" :key="letter">
+                        {{ letter }}
+                    </div>
+                    <div class="rye room-code-phonetic" v-for="letter in roomCode" :key="letter">
+                        {{ phonetic[letter] }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
     <div class="profiles">
         <div v-for="slot in currentGame.num_players" :key="slot">
             <div class="waiting-profile-pic-container" v-if="slot <= currentGame.player_set.length">
@@ -803,6 +851,28 @@ getCurrentGame();
 input {
     padding: 4px;
     margin: 4px;
+}
+
+.room-code-container {
+    background-color: var(--color-background-dark);
+    padding: 8px;
+    margin: 8px;
+    border-radius: 8px;
+}
+
+.room-code {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    justify-items: center;
+    column-gap: 4px;
+}
+
+.room-code-letter {
+    font-size: 40px;
+}
+
+.room-code-phonetic {
+    font-size: 10px;
 }
 
 </style>

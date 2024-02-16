@@ -1,3 +1,5 @@
+import random
+
 from rest_framework import serializers
 from texas_api.models import Game, Player, TurnHistory
 from django.contrib.auth.models import User
@@ -6,7 +8,7 @@ from django.contrib.auth.models import User
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['created_by', 'num_players', 'betting']
+        fields = ['created_by', 'num_players', 'betting', 'is_private']
     
     def validate(self, data):
         super().validate(data)
@@ -33,6 +35,13 @@ class CreateGameSerializer(serializers.ModelSerializer):
         player.current_game = game
         player.position = 0
         player.save()
+        if game.is_private:
+            alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'
+            room_code = ''
+            for i in range(4):
+                room_code += random.choice(alphabet)
+            game.room_code = room_code
+            game.save()
         return game
 
     def to_representation(self, instance):
@@ -106,8 +115,8 @@ class GameSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Game
-        fields = '__all__'
-    
+        exclude = ('room_code', )
+
     def to_representation(self, instance):
         # Return usernames rather than user ids
         ret = super().to_representation(instance)

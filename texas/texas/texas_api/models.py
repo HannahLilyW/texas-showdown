@@ -8,6 +8,8 @@ class Game(models.Model):
     owner = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='owner')
     num_players = models.IntegerField()
     betting = models.BooleanField()
+    is_private = models.BooleanField(default=False)
+    room_code = models.CharField(max_length=8, null=True)
     is_started = models.BooleanField(default=False)
     is_betting_round = models.BooleanField(default=False)
     pot = models.IntegerField(default=0)
