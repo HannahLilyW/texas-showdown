@@ -17,7 +17,6 @@ watch(currentGame, () => {
 
 // Form data
 let numPlayers: Ref<string> = ref("3");
-let betting: Ref<string> = ref("false");
 let publicInput: Ref<string> = ref("public");
 
 let error: Ref<string> = ref("");
@@ -25,9 +24,7 @@ let error: Ref<string> = ref("");
 function createNewGame() {
     post('games/', {
         'num_players': Number(numPlayers.value),
-        'is_private': Boolean(publicInput.value == 'private'),
-        // 'betting': Boolean(betting.value == 'true')
-        'betting': false
+        'is_private': Boolean(publicInput.value == 'private')
     }).then(response => {
         try {
             response.json().then(responseJson => {

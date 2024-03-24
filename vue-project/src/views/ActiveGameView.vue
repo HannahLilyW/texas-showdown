@@ -23,7 +23,6 @@ const gray = [71, 72, 73, 74];
 let loading: Ref<boolean> = ref(true);
 let activeCard: Ref<number|null> = ref(null);
 let error: Ref<string> = ref('');
-let betAmount: Ref<number|null> = ref(null);
 let roomCode: Ref<string> = ref('');
 
 const timeout: Ref<number> = ref(0);
@@ -203,70 +202,6 @@ const playersWaitingForContinue = computed(() => {
     }
     return [];
 })
-
-const canCheck = computed(() => {
-    if (currentGame.value) {
-        return (currentGame.value.is_betting_round && (currentGame.value.player_set.filter(player => player.bet > 0).length == 0));
-    }
-    return false;
-})
-
-function check() {
-    post('games/check/', {}).then(() => {})
-}
-
-const canOpen = computed(() => {
-    if (currentGame.value) {
-        return (currentGame.value.is_betting_round && (currentGame.value.player_set.filter(player => player.bet > 0).length == 0));
-    }
-    return false;
-})
-
-function open() {
-    post('games/open_betting/', {'bet': betAmount.value}).then(() => {})
-}
-
-const canFold = computed(() => {
-    if (currentGame.value) {
-        if (currentGame.value.player_set.filter(player => player.username == username.value)[0].fold) {
-            return false;
-        }
-        return (currentGame.value.is_betting_round && (currentGame.value.player_set.filter(player => player.bet > 0).length > 0));
-    }
-    return false;
-})
-
-function fold() {
-    post('games/fold/', {}).then(() => {})
-}
-
-const canCall = computed(() => {
-    if (currentGame.value) {
-        if (currentGame.value.player_set.filter(player => player.username == username.value)[0].fold) {
-            return false;
-        }
-        return (currentGame.value.is_betting_round && (currentGame.value.player_set.filter(player => player.bet > 0).length > 0));
-    }
-    return false;
-})
-
-function call() {
-    post('games/call/', {}).then(() => {})
-}
-
-const canRaise = computed(() => {
-    if (currentGame.value) {
-        if (currentGame.value.player_set.filter(player => player.username == username.value)[0].fold) {
-            return false;
-        }
-        return (currentGame.value.is_betting_round && (currentGame.value.player_set.filter(player => player.bet > 0).length > 0));
-    }
-    return false;
-})
-
-function raise() {
-    post('games/raise_bet/', {'bet': betAmount.value}).then(() => {})
-}
 
 const winners = computed(() => {
     /**
@@ -604,7 +539,6 @@ getCurrentGame();
             </div>
         </template>
     </div>
-    <div class="pot" v-if="currentGame.betting">Pot: ${{ currentGame.pot }}</div>
     <div class="game-status center">
         <template v-if="currentGame.is_finished">
             Game over! {{ winners }} won!
@@ -618,10 +552,6 @@ getCurrentGame();
             <template v-else>
                 Waiting for {{ currentGame.player_set.find(player => player.username == playersWaitingForContinue[0])?.name }} to click continue...
             </template>
-        </template>
-        <template v-else-if="currentGame.is_betting_round">
-            <template v-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">Your turn!</template>
-            <template v-else>{{ currentGame.player_set.find(player => player.is_turn)?.name }}'s turn</template>
         </template>
         <template v-else-if="currentGame.turn == 0">
             <template v-if="!(hand?.includes(0))">Waiting for {{ currentGame.player_set.find(player => player.is_turn)?.name }} to play the 0...</template>
@@ -645,18 +575,7 @@ getCurrentGame();
         <div class="buttons-row buttons-row-center" v-if="!currentGame.is_finished">
             <div class="button rye" v-if="playersWaitingForContinue.includes(username)" @click="continueGame()">CONTINUE</div>
             <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.is_turn)">
-                <template v-if="currentGame.is_betting_round">
-                    <form v-if="canOpen || canRaise">
-                        <label for="betAmount">Amount to {{ canOpen ? 'Open With' : 'Raise To' }}: $</label>
-                        <input id="betAmount" type="number" v-model="betAmount" :min="1" :max="currentGame.player_set.find(player => player.username == username)?.money">
-                    </form>
-                    <div class="button" v-if="canOpen" @click="open()">Open</div>
-                    <div class="button" v-if="canCheck" @click="check()">Check</div>
-                    <div class="button" v-if="canRaise" @click="raise()">Raise</div>
-                    <div class="button" v-if="canCall" @click="call()">Call</div>
-                    <div class="button" v-if="canFold" @click="fold()">Fold</div>
-                </template>
-                <div class="button rye" v-else-if="typeof activeCard == 'number'" @click="playActiveCard()">PLAY</div>
+                <div class="button rye" v-if="typeof activeCard == 'number'" @click="playActiveCard()">PLAY</div>
             </template>
             <template v-else-if="(currentGame.player_set.find(player => player.username == username)?.choose_turn)">
             </template>
@@ -806,18 +725,6 @@ getCurrentGame();
 .card-placeholder {
     width: 70px;
     height: 90px;
-}
-
-.current-game-betting-round-background {
-    background-color: var(--color-button-shadow);
-    width: 100vw;
-    height: 100%;
-    display: grid;
-    grid-template-columns: fit-content(200px) min-content;
-    column-gap: 40px;
-    justify-items: center;
-    align-items: center;
-    justify-content: center;
 }
 
 .player-play {

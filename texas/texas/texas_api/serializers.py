@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['created_by', 'num_players', 'betting', 'is_private']
+        fields = ['created_by', 'num_players', 'is_private']
     
     def validate(self, data):
         super().validate(data)
@@ -66,9 +66,7 @@ class PlayerNameListField(serializers.RelatedField):
             'waiting_for_continue': value.waiting_for_continue,
             'tricks': value.tricks,
             'score': value.score,
-            'money': value.money,
-            'bet': value.bet,
-            'fold': value.fold
+            'money': value.money
         }
 
 
@@ -86,18 +84,6 @@ class TurnHistoryListField(serializers.RelatedField):
         }
 
 
-class BetTurnHistoryListField(serializers.RelatedField):
-    def to_representation(self, value):
-        return {
-            'bet_turn': value.bet_turn,
-            'hand': value.hand,
-            'player': value.player.user.username,
-            'bet_action': value.bet_action,
-            'bet_amount': value.bet_amount,
-            'player_money': value.player_money
-        }
-
-
 class UsernameListField(serializers.RelatedField):
     def to_representation(self, value):
         return {
@@ -109,7 +95,6 @@ class UsernameListField(serializers.RelatedField):
 class GameSerializer(serializers.ModelSerializer):
     player_set = PlayerNameListField(many=True, read_only=True)
     turnhistory_set = TurnHistoryListField(many=True, read_only=True)
-    betturnhistory_set = BetTurnHistoryListField(many=True, read_only=True)
     winners = UsernameListField(many=True, read_only=True)
     losers = UsernameListField(many=True, read_only=True)
 
