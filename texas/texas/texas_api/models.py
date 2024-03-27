@@ -47,7 +47,9 @@ class Player(models.Model):
     waiting_for_continue = models.BooleanField(default=False)
     tricks = models.IntegerField(default=0)
     score = models.IntegerField(default=0)
-    money = models.IntegerField(default=0)
+    money = models.IntegerField(default=100)
+
+    last_gift = models.DateTimeField(auto_now_add=True)
 
     background_color = models.CharField(max_length=10, choices=color_choices, default='BLANK')
     shirt_color = models.CharField(max_length=10, choices=color_choices, default='BLACK')

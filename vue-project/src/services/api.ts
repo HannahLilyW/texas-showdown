@@ -47,6 +47,8 @@ export const background_color: Ref<string> = ref('blank');
 export const shirt_color: Ref<string> = ref('black');
 export const skin_color: Ref<string> = ref('black');
 export const hat_color: Ref<string> = ref('black');
+export const money: Ref<number> = ref(0);
+export const last_gift: Ref<Date | null> = ref(null);
 
 export const existingGames: Ref<Game[] | null> = ref(null);
 export const currentGame: Ref<Game | null> = ref(null);
@@ -139,7 +141,24 @@ export function updateUsername(newUsername: string) {
     username.value = newUsername;
 }
 
-export function updateOwnProfileInfo() {
+export function checkForGift(onAvailableGift: Function) {
+    if (last_gift.value) {
+        const hoursSinceLastGift = Math.abs(new Date().getTime() - new Date(last_gift.value).getTime()) / 3600000;
+        if (hoursSinceLastGift > 20) {
+            post(`players/claim_gift/`, {}).then(response => {
+                if (response.status == 200) {
+                    response.json().then(responseJson => {
+                        const giftAmount = responseJson['gift_amount'];
+                        money.value = money.value + giftAmount;
+                        onAvailableGift(giftAmount);
+                    })
+                }
+            })
+        }
+    }
+}
+
+export function updateOwnProfileInfo(callback?: Function) {
     get(`players/${username.value}/profile_info/`).then(response => {
         try {
             response.json().then(responseJson => {
@@ -149,6 +168,12 @@ export function updateOwnProfileInfo() {
                 shirt_color.value = responseJson['shirt_color'];
                 skin_color.value = responseJson['skin_color'];
                 hat_color.value = responseJson['hat_color'];
+                money.value = responseJson['money'];
+                last_gift.value = responseJson['last_gift'];
+
+                if (callback) {
+                    callback();
+                }
             })
         } catch (e) {
             console.log(`Error getting profile info: ${e}`)
@@ -170,6 +195,8 @@ export function logout() {
         shirt_color.value = 'black';
         skin_color.value = 'black';
         hat_color.value = 'black';
+        money.value = 0;
+        last_gift.value = null;
         router.push('/');
     })
 }
@@ -226,17 +253,18 @@ function getCurrentGame() {
     get('games/get_current_game/').then(response => {
         if (response.status == 204) {
             currentGame.value = null;
-        }
-        try {
-            response.json().then(responseJson => {
-                if (response.status == 200) {
-                    currentGame.value = responseJson;
-                } else {
-                    console.log(`unexpected response. status: ${response.status} response: ${responseJson}`)
-                }
-            })
-        } catch (e) {
-            console.log(`error getting current game: ${e}`)
+        } else {
+            try {
+                response.json().then(responseJson => {
+                    if (response.status == 200) {
+                        currentGame.value = responseJson;
+                    } else {
+                        console.log(`unexpected response. status: ${response.status} response: ${responseJson}`)
+                    }
+                })
+            } catch (e) {
+                console.log(`error getting current game: ${e}`)
+            }
         }
     })
 }

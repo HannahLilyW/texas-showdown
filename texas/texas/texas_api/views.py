@@ -1,3 +1,10 @@
+import json
+import re
+import secrets  # Cryptographically secure randomness
+import math
+import random
+from threading import Timer
+from datetime import datetime, timezone
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -11,12 +18,6 @@ from texas.logging import log
 from texas_api.models import Game, Player, Card, TurnHistory, color_choices
 from texas_api.serializers import CreateGameSerializer, GameSerializer, FinishedGameListSerializer, PlayerStatisticSerializer, AdminGameSerializer
 from texas.sio_events import sio_leave_room, sio_update_game, sio_update_existing_games, sio_chat
-import json
-import re
-import secrets  # Cryptographically secure randomness
-import math
-import random
-from threading import Timer
 
 
 TIMEOUT_SECONDS = 30
@@ -678,6 +679,17 @@ class PlayerViewSet(
         players = Player.objects.all()
         serializer = PlayerStatisticSerializer(players, many=True)
         return Response(serializer.data)
+    
+    @action(detail=False, methods=['post'])
+    def claim_gift(self, request):
+        player = Player.objects.get(user=request.user)
+        if (datetime.now(timezone.utc) - player.last_gift).total_seconds() > (20*60*60):  # 20 hours
+            player.money += 100
+            player.last_gift = datetime.now()
+            player.save()
+            return Response({'gift_amount': 100})
+        else:
+            return Response('Cannot claim gift now', status=status.HTTP_400_BAD_REQUEST)
 
     @action(detail=False, methods=['post'])
     def edit_profile(self, request):
@@ -772,7 +784,9 @@ class PlayerViewSet(
             'background_color': player.background_color.lower(),
             'shirt_color': player.shirt_color.lower(),
             'skin_color': player.skin_color.lower(),
-            'hat_color': player.hat_color.lower()
+            'hat_color': player.hat_color.lower(),
+            'money': player.money,
+            'last_gift': player.last_gift
         })
     
     @action(detail=False, methods=['post'])

@@ -8,7 +8,7 @@ import BackgroundIcon from '../components/icons/IconBackground.vue';
 import SkintoneIcon from '../components/icons/IconSkintone.vue';
 import {
     username, name, is_guest, background_color, shirt_color, skin_color, hat_color,
-    postWithoutAuth, updateToken, updateUsername, post, get
+    postWithoutAuth, updateToken, updateUsername, updateOwnProfileInfo, post, get
 } from '../services/api.js';
 
 const props = defineProps(['next']);
@@ -83,10 +83,6 @@ const colorsToHex: Record<string, string> = {
     "skin3": "#ffcd94",
     "skin4": "#ffcab6",
     "blank": "#00000000"
-}
-
-function randomColor() {
-    return colors[Math.floor(Math.random() * colors.length)];
 }
 
 let selections: Record<string, string> = {
@@ -209,6 +205,7 @@ function save() {
                         if (responseJson['token'] && responseJson['username']) {
                             updateToken(responseJson['token']);
                             updateUsername(responseJson['username']);
+                            updateOwnProfileInfo();
                             postEditProfile();
                         } else {
                             error.value = 'Error creating account: Bad response from server';

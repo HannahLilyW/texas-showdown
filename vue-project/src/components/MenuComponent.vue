@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
-import { username, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, leaveGame } from '../services/api.js';
+import { username, money, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, leaveGame } from '../services/api.js';
 import ProfilePicComponent from './ProfilePicComponent.vue';
 
 let showMenu: Ref<boolean> = ref(false);
@@ -74,6 +74,9 @@ defineExpose({
                 <pre class="name" :class="fontSize(name)">{{ name }}</pre>
                 <pre class="username" :class="fontSize(username)">{{ username }}</pre>
             </div>
+            <div class="coins-container">
+                <div class="coins"><div class="coin-icon"></div>{{ money }}</div>
+            </div>
             <div class="button rye" @click="play()">
                 PLAY
             </div>
@@ -92,14 +95,6 @@ defineExpose({
 </template>
 
 <style>
-#profilePic {
-    background-color: lightblue;
-    border-radius: 8px;
-    height: 100px;
-    width: 100px;
-    border: 4px solid gold;
-}
-
 .sidebar {
     position: fixed;
     top: 0;
@@ -113,6 +108,11 @@ defineExpose({
     flex-direction: column;
     gap: 4px;
     align-items: stretch;
+}
+
+.coins-container {
+    display: flex;
+    justify-content: center;
 }
 
 #profile {
