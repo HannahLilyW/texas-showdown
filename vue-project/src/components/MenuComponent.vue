@@ -2,7 +2,7 @@
 import { ref } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
-import { username, money, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, leaveGame } from '../services/api.js';
+import { username, money, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, leaveGame, updateOwnProfileInfo } from '../services/api.js';
 import ProfilePicComponent from './ProfilePicComponent.vue';
 
 let showMenu: Ref<boolean> = ref(false);
@@ -12,6 +12,7 @@ function hide() {
 }
 
 function show() {
+    updateOwnProfileInfo();
     showMenu.value = true;
 }
 
