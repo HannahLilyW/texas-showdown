@@ -8,7 +8,7 @@ from django.contrib.auth.models import User
 class CreateGameSerializer(serializers.ModelSerializer):
     class Meta:
         model = Game
-        fields = ['created_by', 'num_players', 'is_private']
+        fields = ['created_by', 'num_players', 'is_private', 'buy_in']
     
     def validate(self, data):
         super().validate(data)
@@ -21,6 +21,10 @@ class CreateGameSerializer(serializers.ModelSerializer):
         player = Player.objects.get(user=self.context['request'].user)
         if player.current_game:
             raise serializers.ValidationError('User already has a current game')
+        
+        # Ensure the player creating the game has enough money
+        if data['buy_in'] > player.money:
+            raise serializers.ValidationError('Player does not have enough money to start this game')
 
         # request.user is inserted by Django Rest Framework based on the provided token,
         # so we don't need to do any extra validation here.

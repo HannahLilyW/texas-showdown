@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { get, post, startSocket, stopSocket, existingGames, currentGame } from '../services/api.js';
+import { get, post, startSocket, stopSocket, existingGames, currentGame, joinableExistingGames } from '../services/api.js';
 import { ref, onBeforeUnmount, watch } from 'vue';
 import type { Ref } from 'vue';
 import type { Game } from '../models';
@@ -65,11 +65,12 @@ onBeforeUnmount(() => {
 </div>
 <h2 class="rye center">PUBLIC GAMES</h2>
 <template v-if="!loading">
-    <div class="buttons-column" v-if="existingGames && existingGames.length">
-        <div class="button" v-for="game in existingGames" @click="joinGame(game)" :key="game.id">
+    <div class="buttons-column" v-if="joinableExistingGames && joinableExistingGames.length">
+        <div class="button" v-for="game in joinableExistingGames" @click="joinGame(game)" :key="game.id">
             <div>
                 <div>{{ game.owner_name }}'s game</div>
                 <div class="subtitle">{{ game.player_set.length }} of {{ game.num_players }} players</div>
+                <div class="subtitle rye coins">BUY IN: <div class="coin-icon"></div>{{ game.buy_in }} • WIN UP TO <div class="coin-icon"></div>{{ game.buy_in * game.num_players }}</div>
             </div>
         </div>
     </div>
@@ -83,6 +84,5 @@ onBeforeUnmount(() => {
 <style scoped>
 .subtitle {
     font-size: 0.8em;
-    opacity: 0.5;
 }
 </style>

@@ -151,6 +151,10 @@ div, a {
   align-items: center;
 }
 
+.radio-row-wrap {
+  flex-wrap: wrap;
+}
+
 .radio-row-center {
   justify-content: center;
 }
@@ -234,12 +238,19 @@ b {
   border-radius: 50%;
   background-color: var(--color-card-yellow);
   color: rgba(255,255,255, 0.25);
-  border: 1px solid rgba(0,0,0, 0.5);
-  border-right: 3px solid rgba(0,0,0, 0.5);
+  border: 1px solid rgba(0,0,0, 0.4);
+  border-bottom: 3px solid rgba(0,0,0, 0.4);
 }
 
 .coins {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
+  font-family: rye;
+}
+
+.coins-container {
+  display: flex;
+  justify-content: center;
 }

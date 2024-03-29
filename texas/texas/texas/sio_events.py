@@ -77,7 +77,8 @@ async def async_sio_update_existing_games():
     def sync_get_existing_games():
         games = Game.objects.annotate(Count('player')).filter(
             num_players__gt=F('player__count'),
-            is_started=False
+            is_started=False,
+            is_private=False
         )
         serializer = GameSerializer(games, many=True)
         return serializer.data

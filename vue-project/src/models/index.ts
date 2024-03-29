@@ -10,6 +10,7 @@ export type Game = {
     player_set: Player[],
     turn: number,
     hand: number,
+    buy_in: number,
     turnhistory_set: TurnHistory[],
     is_finished: boolean,
     winners: PlayerName[],

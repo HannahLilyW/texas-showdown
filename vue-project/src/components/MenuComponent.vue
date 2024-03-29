@@ -74,9 +74,7 @@ defineExpose({
                 <pre class="name" :class="fontSize(name)">{{ name }}</pre>
                 <pre class="username" :class="fontSize(username)">{{ username }}</pre>
             </div>
-            <div class="coins-container">
-                <div class="coins"><div class="coin-icon"></div>{{ money }}</div>
-            </div>
+            <div class="coins"><div class="coin-icon"></div>{{ money }}</div>
             <div class="button rye" @click="play()">
                 PLAY
             </div>
@@ -108,11 +106,6 @@ defineExpose({
     flex-direction: column;
     gap: 4px;
     align-items: stretch;
-}
-
-.coins-container {
-    display: flex;
-    justify-content: center;
 }
 
 #profile {

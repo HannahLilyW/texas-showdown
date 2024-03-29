@@ -17,6 +17,7 @@ class Game(models.Model):
     winners = models.ManyToManyField(User, blank=True, related_name='winner')
     losers = models.ManyToManyField(User, blank=True, related_name='loser')
     last_timer_reset = models.DateTimeField(auto_now_add=True)
+    buy_in = models.IntegerField(default=0)
 
 
 color_choices = [

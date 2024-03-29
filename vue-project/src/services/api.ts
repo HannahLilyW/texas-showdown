@@ -1,5 +1,5 @@
 import router from '../router';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { Ref } from 'vue';
 import { io, Socket } from "socket.io-client";
 import type { Game, Chat } from '../models';
@@ -51,6 +51,11 @@ export const money: Ref<number> = ref(0);
 export const last_gift: Ref<Date | null> = ref(null);
 
 export const existingGames: Ref<Game[] | null> = ref(null);
+
+export const joinableExistingGames = computed(() => {
+    return existingGames.value?.filter(x => x.buy_in <= money.value);
+})
+
 export const currentGame: Ref<Game | null> = ref(null);
 export const hand: Ref<number[] | null> = ref(null);
 export const chats: Ref<Array<Chat>> = ref([]);

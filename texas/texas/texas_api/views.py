@@ -38,6 +38,17 @@ max_cards_in_suit = [color[-1] for color in [black, red, blue, brown, green, yel
 timers = {}
 
 
+def distribute_money(finished_game):
+    # Distribute game pot evenly to all winners of the finished game.
+    num_winners = len(finished_game.winners.all())
+    for winner in finished_game.winners.all():
+        winning_player = Player.objects.get(user=winner)
+        winning_player.money += math.floor(finished_game.pot / num_winners)
+        winning_player.save()
+    finished_game.pot = 0
+    finished_game.save()
+
+
 def finish_game(game):
     game.is_finished = True
     game.save()
@@ -192,6 +203,8 @@ def take_turn(game, player, card):
             for other_player in game.player_set.filter(score__gt=lowest_score):
                 game.losers.add(other_player.user)
                 game.save()
+            
+            distribute_money(game)
 
             # Don't give players new cards if game is finished.
             sio_update_game(game.id)
@@ -318,6 +331,10 @@ def leave_game_timeout(game_id):
 
 
 def init_game(game):
+    for player in game.player_set.all():
+        player.money -= game.buy_in
+        player.save()
+        game.pot += game.buy_in
     deck = [
         0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
         11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
@@ -493,6 +510,10 @@ class GameViewSet(
         if len(game.player_set.all()) == game.num_players:
             return Response('Game is full', status=status.HTTP_400_BAD_REQUEST)
 
+        # Verify player has enough money to join this game
+        if game.buy_in > player.money:
+            return Response('You do not have enough coins to join this game', status=status.HTTP_400_BAD_REQUEST)
+
         player.position = len(game.player_set.all())
         player.current_game = game
         player.save()
@@ -532,6 +553,10 @@ class GameViewSet(
             return Response('Game already started', status=status.HTTP_400_BAD_REQUEST)
         if len(game.player_set.all()) == game.num_players:
             return Response('Game is full', status=status.HTTP_400_BAD_REQUEST)
+        
+        # Verify player has enough money to join this game
+        if game.buy_in > player.money:
+            return Response('You do not have enough coins to join this game', status=status.HTTP_400_BAD_REQUEST)
 
         player.position = len(game.player_set.all())
         player.current_game = game
@@ -598,6 +623,8 @@ class GameViewSet(
                 if other_player != player:
                     game.winners.add(other_player.user)
                     game.save()
+
+            distribute_money(game)
         # Else, the game is already finished and nothing more needs to be done to the game state.
 
         player.current_game = None
