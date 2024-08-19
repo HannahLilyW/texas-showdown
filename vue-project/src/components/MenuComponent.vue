@@ -12,7 +12,9 @@ function hide() {
 }
 
 function show() {
-    updateOwnProfileInfo();
+    if (username.value) {
+        updateOwnProfileInfo();
+    }
     showMenu.value = true;
 }
 
