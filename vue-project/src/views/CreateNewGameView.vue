@@ -48,7 +48,7 @@ function createNewGame() {
 <template>
 <h2 class="center rye">NEW GAME</h2>
 <br/>
-<form>
+<form class="form-center">
     <div class="center rye">PLAYERS</div>
     <div class="radio-row radio-row-center">
         <input id="numPlayers3" type="radio" v-model="numPlayers" value="3" selected>
@@ -138,12 +138,6 @@ input {
     width: auto;
     padding: 4px;
     margin: 4px;
-}
-
-form {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
 }
 
 </style>

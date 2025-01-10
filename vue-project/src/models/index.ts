@@ -42,7 +42,13 @@ export type Player = {
     waiting_for_continue: boolean,
     tricks: number,
     score: number,
-    money: number
+    money: number,
+}
+
+export type Card = {
+    // This type is only used for single player games!
+    player: string,
+    number: number
 }
 
 export type PlayerStatistic = {

@@ -1,0 +1,123 @@
+.defocus {
+    opacity: 0.5;
+}
+
+.timeout-bar-container {
+    display: flex;
+    justify-content: center;
+    padding: 4px;
+}
+
+.timeout-bar {
+    width: 8px;
+    height: 4px;
+    background-color: var(--color-text);
+}
+
+.profiles {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 16px;
+}
+
+.waiting-profile-pic-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.profile-pic-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90px;
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+.empty-slot {
+    height: 100px;
+    width: 100px;
+    border: 2px dashed var(--color-text);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.empty-slot-inner {
+    font-size: 50px;
+    text-align: center;
+    font-family: rye;
+}
+.player-card-container {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+}
+
+
+@media (min-width: 360px) {
+
+    .player-card-container {
+        justify-self: end;
+        margin-bottom: 0px;
+    }
+    .player-card-container:nth-child(even) {
+        flex-direction: row-reverse;
+        justify-self: start;
+    }
+
+    .current-game-background {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        row-gap: 20px;
+        column-gap: 8px;
+    }
+}
+
+.name-placeholder {
+    height: 1em;
+}
+
+.name-container {
+    height: 25px;
+    display: flex;
+    align-items: center;
+}
+
+.card-placeholder {
+    width: 70px;
+    height: 90px;
+}
+
+.player-play {
+    height: 94px;
+}
+
+.hand {
+    display: flex;
+    gap: 4px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.hand-card {
+    cursor: pointer;
+}
+
+.active {
+    border: 4px solid var(--color-card-selected);
+}
+
+.cant-play {
+    opacity: 0.5;
+    cursor: auto;
+}
+
+#playActionButtonsContainer {
+    height: 50px;
+}

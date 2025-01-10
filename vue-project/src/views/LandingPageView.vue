@@ -58,6 +58,10 @@ function playNow() {
     })
 }
 
+function soloPlay() {
+    router.push('/solo-play');
+}
+
 getCurrentGame();
 
 </script>
@@ -65,7 +69,8 @@ getCurrentGame();
 <template>
     <nav>
         <div class="buttons-row buttons-row-center">
-            <div class="button button-big rye" @click="playNow()">PLAY</div>
+            <div class="button button-big rye" @click="soloPlay()">SINGLE PLAYER</div>
+            <div class="button button-big rye" @click="playNow()">MULTIPLAYER</div>
         </div>
     </nav>
     <div class="rules">

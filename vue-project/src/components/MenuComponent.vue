@@ -36,7 +36,7 @@ function quitCurrentGame() {
     })
 }
 
-function play() {
+function multiplayer() {
     if (username.value) {
         if (!currentGame.value) {
             router.push('/join-existing-game');
@@ -46,6 +46,10 @@ function play() {
     } else {
         router.push('/edit-profile/join-existing-game');
     }
+}
+
+function soloPlay() {
+    router.push('/solo-play');
 }
 
 function fontSize(value: string) {
@@ -77,9 +81,12 @@ defineExpose({
                 <pre class="name" :class="fontSize(name)">{{ name }}</pre>
                 <pre class="username" :class="fontSize(username)">{{ username }}</pre>
             </div>
-            <div class="coins"><div class="coin-icon"></div>{{ money }}</div>
-            <div class="button rye" @click="play()">
-                PLAY
+            <div class="coins" v-if="username"><div class="coin-icon"></div>{{ money }}</div>
+            <div class="button rye" @click="soloPlay()">
+                SINGLE PLAYER
+            </div>
+            <div class="button rye" @click="multiplayer()">
+                MULTIPLAYER
             </div>
             <div class="button button-danger rye" v-if="currentGame" @click="quitCurrentGame()">QUIT CURRENT GAME</div>
             <div class="button rye" v-if="username && !is_guest" @click="logout()">

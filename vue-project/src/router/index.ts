@@ -59,6 +59,11 @@ const router = createRouter({
             path: '/join-private-game',
             name: 'join-private-game',
             component: () => import('../views/JoinPrivateGameView.vue')
+        },
+        {
+            path: '/solo-play',
+            name: 'solo-play',
+            component: () => import('../views/SoloPlayView.vue')
         }
     ]
 })
