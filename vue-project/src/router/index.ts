@@ -64,6 +64,11 @@ const router = createRouter({
             path: '/solo-play',
             name: 'solo-play',
             component: () => import('../views/SoloPlayView.vue')
+        },
+        {
+            path: '/rules',
+            name: 'rules',
+            component: () => import('../views/RulesView.vue')
         }
     ]
 })

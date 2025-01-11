@@ -26,6 +26,10 @@ function logIn() {
   router.push('/login');
 }
 
+function rules() {
+  router.push('/rules');
+}
+
 function editProfile() {
     router.push('/edit-profile/landing-page');
 }
@@ -52,6 +56,8 @@ function soloPlay() {
     router.push('/solo-play');
 }
 
+function toggleMusic() {}
+
 function fontSize(value: string) {
     if (value.length <= 19) {
         return '';
@@ -69,6 +75,7 @@ defineExpose({
 </script>
 
 <template>
+    <audio src="../assets/sounds/oldwesternmusic.mp3"></audio>
     <div class="modal-parent" v-if="showMenu" @click="hide()">
         <div class="sidebar">
             <div id="profile" class="point" v-if="username" @click="editProfile()">
@@ -97,6 +104,12 @@ defineExpose({
             </div>
             <div class="button rye" v-if="!username || (username && is_guest)" @click="createAccount()">
                 CREATE ACCOUNT
+            </div>
+            <div class="button rye" @click="rules()">
+                RULES
+            </div>
+            <div class="button rye" @click="toggleMusic()">
+                TOGGLE MUSIC
             </div>
         </div>
     </div>
