@@ -88,6 +88,10 @@ div, a {
   padding: 4px 12px;
 }
 
+.buttons-row-space-between {
+  justify-content: space-between;
+}
+
 .button-danger {
   filter: hue-rotate(330deg) saturate(200%);
 }

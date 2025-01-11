@@ -1,11 +1,20 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
 import { username, money, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, leaveGame, updateOwnProfileInfo } from '../services/api.js';
 import ProfilePicComponent from './ProfilePicComponent.vue';
+import MusicIcon from './icons/IconMusic.vue';
+import '../assets/switch.css';
 
 let showMenu: Ref<boolean> = ref(false);
+
+let music = ref();
+let musicCheckbox = ref();
+
+const musicUnpaused = computed(() => {
+    return !music.value.paused;
+})
 
 function hide() {
     showMenu.value = false;
@@ -56,7 +65,16 @@ function soloPlay() {
     router.push('/solo-play');
 }
 
-function toggleMusic() {}
+function toggleMusic(event: Event) {
+    event.stopPropagation();
+    if (music.value.paused) {
+        music.value.play();
+        musicCheckbox.value.checked = true;
+    } else {
+        music.value.pause();
+        musicCheckbox.value.checked = false;
+    }
+}
 
 function fontSize(value: string) {
     if (value.length <= 19) {
@@ -75,7 +93,7 @@ defineExpose({
 </script>
 
 <template>
-    <audio src="../assets/sounds/oldwesternmusic.mp3" type="audio/mpeg"></audio>
+    <audio autoplay src="/sounds/oldwesternmusic.mp3" type="audio/mpeg" ref="music"></audio>
     <div class="modal-parent" v-if="showMenu" @click="hide()">
         <div class="sidebar">
             <div id="profile" class="point" v-if="username" @click="editProfile()">
@@ -108,14 +126,34 @@ defineExpose({
             <div class="button rye" @click="rules()">
                 RULES
             </div>
-            <div class="button rye" @click="toggleMusic()">
-                TOGGLE MUSIC
+            <div class="button rye relative buttons-row buttons-row-space-between" @click="toggleMusic($event)">
+                    <MusicIcon class="icon-small"></MusicIcon>
+                    <div class="rye">MUSIC</div>
+                    <label class="switch">
+                        <input type="checkbox" v-model="musicUnpaused" ref="musicCheckbox" readonly>
+                        <span class="slider round"></span>
+                    </label>
+                <div class="button-overlay">
+                </div>
             </div>
         </div>
     </div>
 </template>
 
 <style>
+
+.relative {
+    position: relative;
+}
+
+.button-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+
+}
 .sidebar {
     position: fixed;
     top: 0;
