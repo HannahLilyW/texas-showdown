@@ -11,7 +11,7 @@ import CardComponent from '../components/CardComponent.vue';
         <p class="center">
             To start, the following deck of 60 cards is evenly dealt between players:
         </p>
-        <img src="../assets/images/deck.PNG" width="250px">
+        <img src="../assets/images/deck.jpg" width="250px"/>
         <br>
         <p class="center">The circled number at the top left is how many cards are in the suit. The meter on the left shows how high the card is in the suit.</p>
         <div class="buttons-row buttons-row-center">
