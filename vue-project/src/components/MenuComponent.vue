@@ -75,7 +75,7 @@ defineExpose({
 </script>
 
 <template>
-    <audio src="../assets/sounds/oldwesternmusic.mp3"></audio>
+    <audio src="../assets/sounds/oldwesternmusic.mp3" type="audio/mpeg"></audio>
     <div class="modal-parent" v-if="showMenu" @click="hide()">
         <div class="sidebar">
             <div id="profile" class="point" v-if="username" @click="editProfile()">
