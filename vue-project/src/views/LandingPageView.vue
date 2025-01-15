@@ -3,6 +3,7 @@ import router from '../router';
 import { username, currentGame, get } from '../services/api.js';
 import { ref } from 'vue';
 import type { Ref } from 'vue';
+import { music } from '../services/music.js';
 
 let loading: Ref<boolean> = ref(true);
 
@@ -44,6 +45,9 @@ function getCurrentGame(callback?: Function) {
 }
 
 function playNow() {
+    if (localStorage.getItem("music") != "false") {
+        music.value.play();
+    }
     getCurrentGame(() => {
         if (username.value) {
             if (!currentGame.value) {
@@ -58,6 +62,9 @@ function playNow() {
 }
 
 function soloPlay() {
+    if (localStorage.getItem("music") != "false") {
+        music.value.play();
+    }
     router.push('/solo-play');
 }
 

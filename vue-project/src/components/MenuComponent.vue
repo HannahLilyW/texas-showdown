@@ -3,18 +3,14 @@ import { ref, computed } from 'vue';
 import type { Ref } from 'vue';
 import router from '../router';
 import { username, money, logout, name, background_color, shirt_color, skin_color, hat_color, is_guest, currentGame, leaveGame, updateOwnProfileInfo } from '../services/api.js';
+import { music } from '../services/music.js';
 import ProfilePicComponent from './ProfilePicComponent.vue';
 import MusicIcon from './icons/IconMusic.vue';
 import '../assets/switch.css';
 
 let showMenu: Ref<boolean> = ref(false);
 
-let music = ref();
 let musicCheckbox = ref();
-
-const musicUnpaused = computed(() => {
-    return !music.value.paused;
-})
 
 function hide() {
     showMenu.value = false;
@@ -25,6 +21,11 @@ function show() {
         updateOwnProfileInfo();
     }
     showMenu.value = true;
+    if (music.value.paused) {
+        musicCheckbox.value.checked = false;
+    } else {
+        musicCheckbox.value.checked = true;
+    }
 }
 
 function createAccount() {
@@ -50,6 +51,9 @@ function quitCurrentGame() {
 }
 
 function multiplayer() {
+    if (localStorage.getItem("music") != "false") {
+        music.value.play();
+    }
     if (username.value) {
         if (!currentGame.value) {
             router.push('/join-existing-game');
@@ -62,6 +66,9 @@ function multiplayer() {
 }
 
 function soloPlay() {
+    if (localStorage.getItem("music") != "false") {
+        music.value.play();
+    }
     router.push('/solo-play');
 }
 
@@ -70,9 +77,11 @@ function toggleMusic(event: Event) {
     if (music.value.paused) {
         music.value.play();
         musicCheckbox.value.checked = true;
+        localStorage.setItem("music", "true");
     } else {
         music.value.pause();
         musicCheckbox.value.checked = false;
+        localStorage.setItem("music", "false");
     }
 }
 
@@ -93,8 +102,7 @@ defineExpose({
 </script>
 
 <template>
-    <audio autoplay src="/sounds/oldwesternmusic.mp3" type="audio/mpeg" ref="music"></audio>
-    <div class="modal-parent" v-if="showMenu" @click="hide()">
+    <div class="modal-parent" v-show="showMenu" @click="hide()">
         <div class="sidebar">
             <div id="profile" class="point" v-if="username" @click="editProfile()">
                 <ProfilePicComponent
@@ -130,7 +138,7 @@ defineExpose({
                     <MusicIcon class="icon-small"></MusicIcon>
                     <div class="rye">MUSIC</div>
                     <label class="switch">
-                        <input type="checkbox" v-model="musicUnpaused" ref="musicCheckbox" readonly>
+                        <input type="checkbox" ref="musicCheckbox" readonly>
                         <span class="slider round"></span>
                     </label>
                 <div class="button-overlay">
